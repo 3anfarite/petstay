@@ -1,49 +1,76 @@
 // SearchBar.tsx
 import { useColors } from '@/hooks/use-theme-color';
-import { AntDesign, Feather } from '@expo/vector-icons';
+import { Feather } from '@expo/vector-icons';
 import React from 'react';
-import { Modal, Platform, Pressable, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import {
+  Animated,
+  Easing,
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
+import ExpandingModal from './search-modal';
 
 interface Props {
-  onPress: () => void;
+  onPress?: () => void;
 }
 
 export const SearchBar: React.FC<Props> = ({ onPress }) => {
   const c = useColors();
   const [visible, setVisible] = React.useState(false);
-  const styles = makeStyles(c)
+  const [measured, setMeasured] = React.useState<null | { x: number; y: number; width: number; height: number }>(null);
+  // attach ref directly to the TouchableOpacity so we measure the actual touchable bounds
+  const containerRef = React.useRef<any>(null);
+  const labelAnim = React.useRef(new Animated.Value(0)).current; // 0 visible -> 1 hidden
+  const styles = makeStyles(c);
+
+  const open = () => {
+    containerRef.current?.measureInWindow((x: number, y: number, width: number, height: number) => {
+      setMeasured({ x, y, width, height });
+      // fade out label while modal expands
+      Animated.timing(labelAnim, { toValue: 1, duration: 300, easing: Easing.out(Easing.cubic), useNativeDriver: false }).start();
+      setVisible(true);
+    });
+  };
+
+  const labelOpacity = labelAnim.interpolate({ inputRange: [0, 1], outputRange: [1, 0], extrapolate: 'clamp' });
 
   return (
-   <>
-    <TouchableOpacity style={[styles.container, { backgroundColor: c.bg2, borderColor: c.border }]} 
-         onPress={() => setVisible(true)}>
-        <Feather name="search" size={20} color={c.text} />
-      <Text style={[styles.label, { color: c.textMuted }]}>Where to?</Text>
-    </TouchableOpacity>
-      <Modal
-        visible={visible}
-        animationType="slide"
-        presentationStyle="fullScreen"
-        onRequestClose={() => setVisible(false)}
+    <>
+      <TouchableOpacity
+        ref={containerRef}
+        activeOpacity={0.9}
+        style={[styles.container, { backgroundColor: c.bg2, borderColor: c.border }]}
+        onPress={() => {
+          // call optional external handler if provided
+          onPress?.();
+          open();
+        }}
       >
-        <View style={[styles.modal, { backgroundColor: c.bg }]}>
-          {/* close button */}
-          <Pressable
-            style={styles.close}
-            onPress={() => setVisible(false)}
-            hitSlop={12}
-          >
-            <AntDesign name="close" size={24} color={c.text} />
-          </Pressable>
+        <Feather name="search" size={20} color={c.text} />
+        <Animated.Text style={[styles.label, { color: c.textMuted, opacity: labelOpacity }]}>Where to?</Animated.Text>
+      </TouchableOpacity>
 
-          {/* placeholder content */}
-          <View style={styles.center}>
-            <Text style={{ color: c.text, fontSize: 18 }}>Modal content here</Text>
-          </View>
+      <ExpandingModal
+        visible={visible}
+        startRect={measured}
+        onRequestClose={() => {
+          // start label fade immediately when close is requested from inside the modal
+          Animated.timing(labelAnim, { toValue: 0, duration: 200, easing: Easing.in(Easing.cubic), useNativeDriver: false }).start();
+        }}
+        onCloseCompleted={() => {
+          // actual visibility cleanup after modal animation finishes
+          setVisible(false);
+          setMeasured(null);
+        }}
+      >
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 }}>
+          <Animated.Text style={{ color: c.text, fontSize: 18 }}>Modal content here</Animated.Text>
         </View>
-      </Modal>
-   </>
+      </ExpandingModal>
+    </>
   );
 };
 
