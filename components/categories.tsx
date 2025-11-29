@@ -1,13 +1,16 @@
 
 import { dummyCategories } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
-import { useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { IconSymbol } from './ui/icon-symbol';
 
-export const Categories = () => {
+interface CategoriesProps {
+  selectedCategory: string;
+  onCategorySelect: (category: string) => void;
+}
+
+export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesProps) => {
   const c = useColors();
-  const [activeIndex, setActiveIndex] = useState(0);
 
   return (
     <FlatList
@@ -19,11 +22,11 @@ export const Categories = () => {
         paddingHorizontal: 16,
         paddingVertical: 12,
       }}
-      renderItem={({ item, index }) => {
-        const isActive = activeIndex === index;
+      renderItem={({ item }) => {
+        const isActive = selectedCategory === item.name;
         return (
           <TouchableOpacity
-            onPress={() => setActiveIndex(index)}
+            onPress={() => onCategorySelect(item.name)}
             style={[
               styles.cat,
               {

@@ -1,5 +1,10 @@
 export const dummyCategories = [
   {
+    id: '0',
+    name: 'All',
+    icon: 'square.grid.2x2',
+  },
+  {
     id: '1',
     name: 'Boarding',
     icon: 'house.fill',

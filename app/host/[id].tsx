@@ -1,5 +1,5 @@
-import { GalleryList } from '@/components/host/GalleryList';
-import { ServiceList } from '@/components/host/ServiceList';
+import { GalleryList } from '@/components/host/gallery-list';
+import { ServiceList } from '@/components/host/service-list';
 import { dummyHosts } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';

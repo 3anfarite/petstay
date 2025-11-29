@@ -10,6 +10,7 @@ type HostCardProps = {
   price: string;
   services: string[];
   image: string;
+  verified?: boolean;
   onPress?: () => void;
 };
 
@@ -20,6 +21,7 @@ export default function HostCard({
   price,
   services,
   image,
+  verified,
   onPress,
 }: HostCardProps) {
   const c = useColors();
@@ -42,7 +44,10 @@ export default function HostCard({
             <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
           </View>
         </View>
-        <Text style={styles.nameText}>{name}</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+          <Text style={styles.nameText}>{name}</Text>
+          {verified && <Ionicons name="checkmark-circle" size={14} color={c.primary} style={{ marginTop: 4 }} />}
+        </View>
         <Text style={styles.dateText}>Oct 20 - 25</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.priceText}>{price}</Text>

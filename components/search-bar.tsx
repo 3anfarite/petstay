@@ -5,19 +5,19 @@ import React from 'react';
 import {
   Animated,
   Easing,
-  Platform,
   StyleSheet,
   TouchableOpacity
 } from 'react-native';
 
-import { FilterModalContent } from './FilterModal';
+import { FilterModalContent, FilterState } from './filter-modal';
 import ExpandingModal from './search-modal';
 
 interface Props {
   onPress?: () => void;
+  onApply?: (filters: FilterState) => void;
 }
 
-export const SearchBar: React.FC<Props> = ({ onPress }) => {
+export const SearchBar: React.FC<Props> = ({ onPress, onApply }) => {
   const c = useColors();
   const [visible, setVisible] = React.useState(false);
   const [measured, setMeasured] = React.useState<null | { x: number; y: number; width: number; height: number }>(null);
@@ -66,7 +66,7 @@ export const SearchBar: React.FC<Props> = ({ onPress }) => {
           setMeasured(null);
         }}
       >
-        <FilterModalContent onClose={() => { }} />
+        <FilterModalContent onClose={() => { }} onApply={onApply} />
       </ExpandingModal>
     </>
   );
@@ -85,24 +85,7 @@ const makeStyles = (c: ReturnType<typeof useColors>) =>
       gap: 8,
       backgroundColor: c.bg2,
 
-      // --- iOS Shadow (uses specific properties) ---
-      ...Platform.select({
-        ios: {
-          shadowColor: 'black', // The color of the shadow
-          shadowOffset: { width: 0, height: 3 }, // X and Y offset
-          shadowOpacity: 1, // The shadow's transparency (0.0 to 1.0)
-          shadowRadius: 5, // The blur radius
-        },
-        // --- Android Shadow (uses 'elevation') ---
-        android: {
-          elevation: 5, // Higher number for a more prominent lift
-        },
-        // --- Web Shadow (uses standard CSS 'boxShadow') ---
-        web: {
-          // The CSS equivalent: '0px 3px 5px rgba(0, 0, 0, 0.1)'
-          boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)',
-        },
-      }),
+      borderWidth: 1,
     },
     label: {
       fontSize: 16,

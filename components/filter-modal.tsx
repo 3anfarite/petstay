@@ -1,7 +1,7 @@
-import { dummyCategories } from '@/constants/dummyData';
+import { dummyCategories, dummyHosts } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
     Platform,
     ScrollView,
@@ -15,17 +15,47 @@ import {
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-export function FilterModalContent({ onClose }: { onClose: () => void }) {
+export type FilterState = {
+    location: string;
+    selectedService: string | null;
+    minPrice: string;
+    maxPrice: string;
+    isVerified: boolean;
+};
+
+export function FilterModalContent({ onClose, onApply }: { onClose: () => void, onApply?: (filters: FilterState) => void }) {
     const c = useColors();
     const styles = makeStyles(c);
     const insets = useSafeAreaInsets();
 
     const [location, setLocation] = useState('');
     const [selectedService, setSelectedService] = useState<string | null>(null);
-    const [petType, setPetType] = useState<'dog' | 'cat'>('dog');
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [isVerified, setIsVerified] = useState(false);
+
+    const filteredCount = useMemo(() => {
+        return dummyHosts.filter(host => {
+            const matchesLocation = location ? host.location.toLowerCase().includes(location.toLowerCase()) : true;
+            const matchesService = selectedService ? host.services.includes(selectedService) : true;
+            const matchesMinPrice = minPrice ? host.price >= parseInt(minPrice) : true;
+            const matchesMaxPrice = maxPrice ? host.price <= parseInt(maxPrice) : true;
+            const matchesVerified = isVerified ? host.verified : true;
+
+            return matchesLocation && matchesService && matchesMinPrice && matchesMaxPrice && matchesVerified;
+        }).length;
+    }, [location, selectedService, minPrice, maxPrice, isVerified]);
+
+    const handleApply = () => {
+        onApply?.({
+            location,
+            selectedService,
+            minPrice,
+            maxPrice,
+            isVerified
+        });
+        onClose();
+    };
 
     return (
         <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -38,7 +68,6 @@ export function FilterModalContent({ onClose }: { onClose: () => void }) {
                 <TouchableOpacity onPress={() => {
                     setLocation('');
                     setSelectedService(null);
-                    setPetType('dog');
                     setMinPrice('');
                     setMaxPrice('');
                     setIsVerified(false);
@@ -61,55 +90,6 @@ export function FilterModalContent({ onClose }: { onClose: () => void }) {
                             value={location}
                             onChangeText={setLocation}
                         />
-                    </View>
-                </View>
-
-                {/* Pet Type Section */}
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Pet Type</Text>
-                    <View style={styles.petTypeContainer}>
-                        <TouchableOpacity
-                            style={[
-                                styles.petTypeButton,
-                                petType === 'dog' && styles.petTypeButtonActive,
-                            ]}
-                            onPress={() => setPetType('dog')}
-                        >
-                            <Ionicons
-                                name="paw"
-                                size={20}
-                                color={petType === 'dog' ? 'white' : c.text}
-                            />
-                            <Text
-                                style={[
-                                    styles.petTypeText,
-                                    petType === 'dog' && styles.petTypeTextActive,
-                                ]}
-                            >
-                                Dog
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[
-                                styles.petTypeButton,
-                                petType === 'cat' && styles.petTypeButtonActive,
-                            ]}
-                            onPress={() => setPetType('cat')}
-                        >
-                            <Ionicons
-                                name="logo-octocat"
-                                size={20}
-                                color={petType === 'cat' ? 'white' : c.text}
-                            />
-                            <Text
-                                style={[
-                                    styles.petTypeText,
-                                    petType === 'cat' && styles.petTypeTextActive,
-                                ]}
-                            >
-                                Cat
-                            </Text>
-                        </TouchableOpacity>
                     </View>
                 </View>
 
@@ -190,8 +170,8 @@ export function FilterModalContent({ onClose }: { onClose: () => void }) {
 
             {/* Footer */}
             <View style={[styles.footer, { paddingBottom: insets.bottom + 60 }]}>
-                <TouchableOpacity style={styles.searchButton} onPress={onClose}>
-                    <Text style={styles.searchButtonText}>Show 120+ homes</Text>
+                <TouchableOpacity style={styles.searchButton} onPress={handleApply}>
+                    <Text style={styles.searchButtonText}>Show {filteredCount} homes</Text>
                 </TouchableOpacity>
             </View>
         </View>
