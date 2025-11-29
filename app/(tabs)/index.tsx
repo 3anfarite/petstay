@@ -8,22 +8,27 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 
 
 
+import { useRouter } from "expo-router";
+
 export default function Home() {
+  const router = useRouter();
 
-   const c = useColors();
-    // const styles = makeStyles(c);
-  
+  const c = useColors();
+  // const styles = makeStyles(c);
 
-const insets = useSafeAreaInsets();
-console.log(insets);
-console.log(Platform.OS);
+
+  const insets = useSafeAreaInsets();
+  console.log(insets);
+  console.log(Platform.OS);
 
 
   return (
-    <SafeAreaView style={{backgroundColor: c.bg2 ,
-      paddingTop: Platform.OS === 'ios' ? StatusBar.currentHeight : -24}} >
+    <SafeAreaView style={{
+      backgroundColor: c.bg2,
+      paddingTop: Platform.OS === 'ios' ? StatusBar.currentHeight : -24
+    }} >
       <>
-        <SearchBar onPress={() => console.log("Search bar pressed")} /> 
+        <SearchBar />
         <Categories />
         <FlatList
           data={dummyHosts}
@@ -36,12 +41,12 @@ console.log(Platform.OS);
               price={`${item.price}`}
               services={item.services}
               image={item.image}
-              onPress={() => console.log(`Pressed ${item.name}`)}
-              />
-            )}
-            contentContainerStyle={{ padding: 16 }}
+              onPress={() => router.push(`/host/${item.id}`)}
             />
-        </>
+          )}
+          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
+        />
+      </>
     </SafeAreaView>
   );
 }

@@ -1,11 +1,9 @@
 import { useColors } from '@/hooks/use-theme-color';
-import { AntDesign } from '@expo/vector-icons';
 import React from 'react';
 import {
   Animated,
   Dimensions,
   Easing,
-  Pressable,
   StyleSheet
 } from 'react-native';
 
@@ -78,12 +76,15 @@ export const SearchModal: React.FC<Props> = ({ visible, startRect, onRequestClos
           overflow: 'hidden',
         }}
       >
-        <Pressable style={styles.close} onPress={handleClose} hitSlop={12}>
-          <AntDesign name="close" size={24} color={c.text} />
-        </Pressable>
+
 
         <Animated.View style={{ flex: 1, opacity: contentOpacity }} pointerEvents="auto">
-          {children}
+          {React.Children.map(children, (child) => {
+            if (React.isValidElement(child)) {
+              return React.cloneElement(child as React.ReactElement<any>, { onClose: handleClose });
+            }
+            return child;
+          })}
         </Animated.View>
       </Animated.View>
     </Animated.View>

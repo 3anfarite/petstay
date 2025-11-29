@@ -1,0 +1,379 @@
+import { dummyCategories } from '@/constants/dummyData';
+import { useColors } from '@/hooks/use-theme-color';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import {
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
+
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+export function FilterModalContent({ onClose }: { onClose: () => void }) {
+    const c = useColors();
+    const styles = makeStyles(c);
+    const insets = useSafeAreaInsets();
+
+    const [location, setLocation] = useState('');
+    const [selectedService, setSelectedService] = useState<string | null>(null);
+    const [petType, setPetType] = useState<'dog' | 'cat'>('dog');
+    const [minPrice, setMinPrice] = useState('');
+    const [maxPrice, setMaxPrice] = useState('');
+    const [isVerified, setIsVerified] = useState(false);
+
+    return (
+        <View style={[styles.container, { paddingTop: insets.top }]}>
+            {/* Header */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={onClose}>
+                    <Text style={styles.cancelText}>Cancel</Text>
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Filters</Text>
+                <TouchableOpacity onPress={() => {
+                    setLocation('');
+                    setSelectedService(null);
+                    setPetType('dog');
+                    setMinPrice('');
+                    setMaxPrice('');
+                    setIsVerified(false);
+                }}>
+                    <Text style={styles.resetText}>Reset</Text>
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+                {/* Location Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Location</Text>
+                    <View style={styles.inputContainer}>
+                        <Ionicons name="location-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Where to?"
+                            placeholderTextColor={c.textMuted}
+                            value={location}
+                            onChangeText={setLocation}
+                        />
+                    </View>
+                </View>
+
+                {/* Pet Type Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Pet Type</Text>
+                    <View style={styles.petTypeContainer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.petTypeButton,
+                                petType === 'dog' && styles.petTypeButtonActive,
+                            ]}
+                            onPress={() => setPetType('dog')}
+                        >
+                            <Ionicons
+                                name="paw"
+                                size={20}
+                                color={petType === 'dog' ? 'white' : c.text}
+                            />
+                            <Text
+                                style={[
+                                    styles.petTypeText,
+                                    petType === 'dog' && styles.petTypeTextActive,
+                                ]}
+                            >
+                                Dog
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[
+                                styles.petTypeButton,
+                                petType === 'cat' && styles.petTypeButtonActive,
+                            ]}
+                            onPress={() => setPetType('cat')}
+                        >
+                            <Ionicons
+                                name="logo-octocat"
+                                size={20}
+                                color={petType === 'cat' ? 'white' : c.text}
+                            />
+                            <Text
+                                style={[
+                                    styles.petTypeText,
+                                    petType === 'cat' && styles.petTypeTextActive,
+                                ]}
+                            >
+                                Cat
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+
+                {/* Services Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Service</Text>
+                    <View style={styles.chipsContainer}>
+                        {dummyCategories.map((cat) => {
+                            const isSelected = selectedService === cat.name;
+                            return (
+                                <TouchableOpacity
+                                    key={cat.id}
+                                    style={[
+                                        styles.chip,
+                                        isSelected && styles.chipActive,
+                                    ]}
+                                    onPress={() => setSelectedService(isSelected ? null : cat.name)}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.chipText,
+                                            isSelected && styles.chipTextActive,
+                                        ]}
+                                    >
+                                        {cat.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+
+                {/* Price Range Section */}
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Price Range (per night)</Text>
+                    <View style={styles.priceRow}>
+                        <View style={styles.priceInputContainer}>
+                            <Text style={styles.currencyPrefix}>$</Text>
+                            <TextInput
+                                style={styles.priceInput}
+                                placeholder="Min"
+                                placeholderTextColor={c.textMuted}
+                                keyboardType="numeric"
+                                value={minPrice}
+                                onChangeText={setMinPrice}
+                            />
+                        </View>
+                        <Text style={styles.priceSeparator}>-</Text>
+                        <View style={styles.priceInputContainer}>
+                            <Text style={styles.currencyPrefix}>$</Text>
+                            <TextInput
+                                style={styles.priceInput}
+                                placeholder="Max"
+                                placeholderTextColor={c.textMuted}
+                                keyboardType="numeric"
+                                value={maxPrice}
+                                onChangeText={setMaxPrice}
+                            />
+                        </View>
+                    </View>
+                </View>
+
+                {/* Verified Only Toggle */}
+                <View style={[styles.section, styles.rowBetween]}>
+                    <View>
+                        <Text style={styles.sectionTitle}>Verified Hosts Only</Text>
+                        <Text style={styles.sectionSubtitle}>Only show hosts with verified ID</Text>
+                    </View>
+                    <Switch
+                        value={isVerified}
+                        onValueChange={setIsVerified}
+                        trackColor={{ false: c.border, true: c.primary }}
+                        thumbColor={'white'}
+                    />
+                </View>
+
+            </ScrollView>
+
+            {/* Footer */}
+            <View style={[styles.footer, { paddingBottom: insets.bottom + 60 }]}>
+                <TouchableOpacity style={styles.searchButton} onPress={onClose}>
+                    <Text style={styles.searchButtonText}>Show 120+ homes</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
+}
+
+const makeStyles = (c: any) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: c.bg,
+        },
+        header: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingHorizontal: 20,
+            paddingVertical: 16,
+            borderBottomWidth: 1,
+            borderBottomColor: c.border,
+        },
+        headerTitle: {
+            fontSize: 18,
+            fontWeight: 'bold',
+            color: c.text,
+        },
+        cancelText: {
+            fontSize: 16,
+            color: c.textMuted,
+        },
+        resetText: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: c.primary,
+        },
+        scrollContent: {
+            padding: 20,
+            paddingBottom: 100,
+        },
+        section: {
+            marginBottom: 24,
+        },
+        sectionTitle: {
+            fontSize: 16,
+            fontWeight: '700',
+            color: c.text,
+            marginBottom: 12,
+        },
+        sectionSubtitle: {
+            fontSize: 14,
+            color: c.textMuted,
+            marginTop: 4,
+        },
+        inputContainer: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: c.bg2,
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            height: 50,
+            borderWidth: 1,
+            borderColor: c.border,
+        },
+        inputIcon: {
+            marginRight: 8,
+        },
+        input: {
+            flex: 1,
+            fontSize: 16,
+            color: c.text,
+            height: '100%',
+        },
+        petTypeContainer: {
+            flexDirection: 'row',
+            gap: 12,
+        },
+        petTypeButton: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingVertical: 12,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: c.border,
+            backgroundColor: c.bg2,
+            gap: 8,
+        },
+        petTypeButtonActive: {
+            backgroundColor: c.primary,
+            borderColor: c.primary,
+        },
+        petTypeText: {
+            fontSize: 16,
+            fontWeight: '600',
+            color: c.text,
+        },
+        petTypeTextActive: {
+            color: 'white',
+        },
+        chipsContainer: {
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            gap: 10,
+        },
+        chip: {
+            paddingVertical: 8,
+            paddingHorizontal: 16,
+            borderRadius: 20,
+            borderWidth: 1,
+            borderColor: c.border,
+            backgroundColor: c.bg2,
+        },
+        chipActive: {
+            backgroundColor: c.primary,
+            borderColor: c.primary,
+        },
+        chipText: {
+            fontSize: 14,
+            color: c.text,
+            fontWeight: '500',
+        },
+        chipTextActive: {
+            color: 'white',
+            fontWeight: '600',
+        },
+        priceRow: {
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 12,
+        },
+        priceInputContainer: {
+            flex: 1,
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: c.bg2,
+            borderRadius: 12,
+            paddingHorizontal: 12,
+            height: 50,
+            borderWidth: 1,
+            borderColor: c.border,
+        },
+        currencyPrefix: {
+            fontSize: 16,
+            color: c.text,
+            marginRight: 4,
+        },
+        priceInput: {
+            flex: 1,
+            fontSize: 16,
+            color: c.text,
+            height: '100%',
+        },
+        priceSeparator: {
+            fontSize: 20,
+            color: c.textMuted,
+        },
+        rowBetween: {
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+        },
+        footer: {
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: 20,
+            backgroundColor: c.bg,
+            borderTopWidth: 1,
+            borderTopColor: c.border,
+            paddingBottom: Platform.OS === 'ios' ? 40 : 20,
+        },
+        searchButton: {
+            backgroundColor: c.primary,
+            paddingVertical: 16,
+            borderRadius: 16,
+            alignItems: 'center',
+        },
+        searchButtonText: {
+            color: 'white',
+            fontSize: 16,
+            fontWeight: 'bold',
+        },
+    });

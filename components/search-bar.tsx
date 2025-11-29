@@ -7,10 +7,10 @@ import {
   Easing,
   Platform,
   StyleSheet,
-  TouchableOpacity,
-  View,
+  TouchableOpacity
 } from 'react-native';
 
+import { FilterModalContent } from './FilterModal';
 import ExpandingModal from './search-modal';
 
 interface Props {
@@ -66,9 +66,7 @@ export const SearchBar: React.FC<Props> = ({ onPress }) => {
           setMeasured(null);
         }}
       >
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 }}>
-          <Animated.Text style={{ color: c.text, fontSize: 18 }}>Modal content here</Animated.Text>
-        </View>
+        <FilterModalContent onClose={() => { }} />
       </ExpandingModal>
     </>
   );
@@ -76,49 +74,49 @@ export const SearchBar: React.FC<Props> = ({ onPress }) => {
 
 const makeStyles = (c: ReturnType<typeof useColors>) =>
   StyleSheet.create({
-  container: {
-    height: 48,
-    borderRadius: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    gap: 8,
-    backgroundColor: c.bg2,
+    container: {
+      height: 48,
+      borderRadius: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      marginHorizontal: 16,
+      marginVertical: 8,
+      gap: 8,
+      backgroundColor: c.bg2,
 
-  // --- iOS Shadow (uses specific properties) ---
-  ...Platform.select({
-    ios: {
-      shadowColor: 'black', // The color of the shadow
-      shadowOffset: { width: 0, height: 3 }, // X and Y offset
-      shadowOpacity: 1, // The shadow's transparency (0.0 to 1.0)
-      shadowRadius: 5, // The blur radius
+      // --- iOS Shadow (uses specific properties) ---
+      ...Platform.select({
+        ios: {
+          shadowColor: 'black', // The color of the shadow
+          shadowOffset: { width: 0, height: 3 }, // X and Y offset
+          shadowOpacity: 1, // The shadow's transparency (0.0 to 1.0)
+          shadowRadius: 5, // The blur radius
+        },
+        // --- Android Shadow (uses 'elevation') ---
+        android: {
+          elevation: 5, // Higher number for a more prominent lift
+        },
+        // --- Web Shadow (uses standard CSS 'boxShadow') ---
+        web: {
+          // The CSS equivalent: '0px 3px 5px rgba(0, 0, 0, 0.1)'
+          boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)',
+        },
+      }),
     },
-    // --- Android Shadow (uses 'elevation') ---
-    android: {
-      elevation: 5, // Higher number for a more prominent lift
+    label: {
+      fontSize: 16,
     },
-    // --- Web Shadow (uses standard CSS 'boxShadow') ---
-    web: {
-      // The CSS equivalent: '0px 3px 5px rgba(0, 0, 0, 0.1)'
-      boxShadow: '0px 3px 5px rgba(0, 0, 0, 0.1)',
-    },
-  }),
-  },
-  label: {
-    fontSize: 16,
-  },
     bar: {
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginVertical: 8,
-  },
-  modal: { flex: 1 },
-  close: { position: 'absolute', top: 56, right: 20, zIndex: 1 },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-});
+      height: 48,
+      borderRadius: 24,
+      borderWidth: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginHorizontal: 16,
+      marginVertical: 8,
+    },
+    modal: { flex: 1 },
+    close: { position: 'absolute', top: 56, right: 20, zIndex: 1 },
+    center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  });
