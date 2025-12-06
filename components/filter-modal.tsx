@@ -169,7 +169,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
             </ScrollView>
 
             {/* Footer */}
-            <View style={[styles.footer, { paddingBottom: insets.bottom + 60 }]}>
+            <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
                 <TouchableOpacity style={styles.searchButton} onPress={handleApply}>
                     <Text style={styles.searchButtonText}>Show {filteredCount} homes</Text>
                 </TouchableOpacity>
@@ -182,7 +182,7 @@ const makeStyles = (c: any) =>
     StyleSheet.create({
         container: {
             flex: 1,
-            backgroundColor: c.bg,
+            backgroundColor: c.bg2,
         },
         header: {
             flexDirection: 'row',
@@ -340,7 +340,7 @@ const makeStyles = (c: any) =>
             left: 0,
             right: 0,
             padding: 20,
-            backgroundColor: c.bg,
+            backgroundColor: c.bg2,
             borderTopWidth: 1,
             borderTopColor: c.border,
             paddingBottom: Platform.OS === 'ios' ? 40 : 20,

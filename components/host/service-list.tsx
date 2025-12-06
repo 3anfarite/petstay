@@ -45,7 +45,7 @@ export function ServiceList({
                                     styles.serviceName,
                                     {
                                         color: isSelected ? c.primary : c.text,
-                                        fontWeight: isSelected ? '700' : '500',
+                                        fontWeight: isSelected ? '900' : '100',
                                     },
                                 ]}
                             >

@@ -4,6 +4,7 @@ import {
   Animated,
   Dimensions,
   Easing,
+  Modal,
   StyleSheet
 } from 'react-native';
 
@@ -63,31 +64,33 @@ export const SearchModal: React.FC<Props> = ({ visible, startRect, onRequestClos
   const contentOpacity = anim.interpolate({ inputRange: [0.6, 1], outputRange: [0, 1], extrapolate: 'clamp' });
 
   return (
-    <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 999 }]}>
-      <Animated.View
-        style={{
-          position: 'absolute',
-          top,
-          left,
-          width,
-          height,
-          borderRadius,
-          backgroundColor: c.bg,
-          overflow: 'hidden',
-        }}
-      >
+    <Modal transparent visible={rendered} animationType="none" onRequestClose={handleClose}>
+      <Animated.View pointerEvents="box-none" style={[StyleSheet.absoluteFill, { zIndex: 999 }]}>
+        <Animated.View
+          style={{
+            position: 'absolute',
+            top,
+            left,
+            width,
+            height,
+            borderRadius,
+            backgroundColor: c.bg2,
+            overflow: 'hidden',
+          }}
+        >
 
 
-        <Animated.View style={{ flex: 1, opacity: contentOpacity }} pointerEvents="auto">
-          {React.Children.map(children, (child) => {
-            if (React.isValidElement(child)) {
-              return React.cloneElement(child as React.ReactElement<any>, { onClose: handleClose });
-            }
-            return child;
-          })}
+          <Animated.View style={{ flex: 1, opacity: contentOpacity }} pointerEvents="auto">
+            {React.Children.map(children, (child) => {
+              if (React.isValidElement(child)) {
+                return React.cloneElement(child as React.ReactElement<any>, { onClose: handleClose });
+              }
+              return child;
+            })}
+          </Animated.View>
         </Animated.View>
       </Animated.View>
-    </Animated.View>
+    </Modal>
   );
 };
 

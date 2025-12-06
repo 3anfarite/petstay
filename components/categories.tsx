@@ -11,16 +11,18 @@ interface CategoriesProps {
 
 export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesProps) => {
   const c = useColors();
+  //console.log('Selected service:', selectedCategory);
 
   return (
     <FlatList
       data={dummyCategories}
       horizontal
       showsHorizontalScrollIndicator={false}
+      style={{ flexGrow: 0 }}
       contentContainerStyle={{
         gap: 24,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        //paddingVertical: 12,
       }}
       renderItem={({ item }) => {
         const isActive = selectedCategory === item.name;

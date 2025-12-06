@@ -1,16 +1,14 @@
 import { Categories } from "@/components/categories";
-import HostCard from "@/components/host-card";
+import { FilterState } from "@/components/filter-modal";
+import { EmptyHostList } from "@/components/home/empty-host-list";
+import { HostList } from "@/components/home/host-list";
 import { SearchBar } from "@/components/search-bar";
 import { dummyCategories, dummyHosts } from "@/constants/dummyData";
 import { useColors } from '@/hooks/use-theme-color';
-import { useState } from 'react';
-import { FlatList, Platform, StatusBar, StyleSheet } from "react-native";
-import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
-
-
-
-import { FilterState } from "@/components/filter-modal";
 import { useRouter } from "expo-router";
+import { useState } from 'react';
+import { Platform, StatusBar, View } from "react-native";
+import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Home() {
   const router = useRouter();
@@ -18,12 +16,7 @@ export default function Home() {
   const [filters, setFilters] = useState<FilterState | null>(null);
 
   const c = useColors();
-  // const styles = makeStyles(c);
-
-
   const insets = useSafeAreaInsets();
-  console.log(insets);
-  console.log(Platform.OS);
 
   const filteredHosts = dummyHosts.filter((host) => {
     // Category filter (always active unless overridden by search filters?)
@@ -48,47 +41,42 @@ export default function Home() {
   });
 
   return (
-    <SafeAreaView style={{
-      backgroundColor: c.bg2,
-      paddingTop: Platform.OS === 'ios' ? StatusBar.currentHeight : -24
-    }} >
+    <SafeAreaView
+      edges={['top', 'left', 'right']}
+      style={{
+        flex: 1,
+        backgroundColor: c.bg2,
+        paddingTop: Platform.OS === 'ios' ? StatusBar.currentHeight : -24
+      }} >
       <>
-        <SearchBar onApply={setFilters} />
-        <Categories
-          selectedCategory={filters?.selectedService || selectedCategory}
-          onCategorySelect={(cat) => {
-            setSelectedCategory(cat);
-            if (cat === 'All') {
-              setFilters(null);
-            } else if (filters?.selectedService) {
-              setFilters({ ...filters, selectedService: null });
-            }
-          }}
-        />
-        <FlatList
-          data={filteredHosts}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <HostCard
-              name={item.name}
-              rating={item.rating}
-              location={item.location}
-              price={`${item.price}`}
-              services={item.services}
-              image={item.image}
-              verified={item.verified}
-              onPress={() => router.push(`/host/${item.id}`)}
+        <View>
+          <SearchBar onApply={setFilters} />
+          <Categories
+            selectedCategory={filters?.selectedService || selectedCategory}
+            onCategorySelect={(cat) => {
+              setSelectedCategory(cat);
+              if (cat === 'All') {
+                setFilters(null);
+              } else if (filters?.selectedService) {
+                setFilters({ ...filters, selectedService: null });
+              }
+            }}
+          />
+        </View>
+        <View style={{ flex: 1 }}>
+          {filteredHosts.length === 0 ? (
+            <EmptyHostList
+              selectedCategory={selectedCategory}
+              selectedService={filters?.selectedService}
+            />
+          ) : (
+            <HostList
+              hosts={filteredHosts}
+              onHostPress={(id) => router.push(`/host/${id}`)}
             />
           )}
-          contentContainerStyle={{ padding: 16, paddingBottom: 100 }}
-        />
+        </View>
       </>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 8 },
-  subtitle: { fontSize: 16, color: "gray" },
-});
