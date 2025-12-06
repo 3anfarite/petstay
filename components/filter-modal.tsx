@@ -37,7 +37,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
     const filteredCount = useMemo(() => {
         return dummyHosts.filter(host => {
             const matchesLocation = location ? host.location.toLowerCase().includes(location.toLowerCase()) : true;
-            const matchesService = selectedService ? host.services.includes(selectedService) : true;
+            const matchesService = (selectedService && selectedService !== 'All') ? host.services.includes(selectedService) : true;
             const matchesMinPrice = minPrice ? host.price >= parseInt(minPrice) : true;
             const matchesMaxPrice = maxPrice ? host.price <= parseInt(maxPrice) : true;
             const matchesVerified = isVerified ? host.verified : true;

@@ -24,7 +24,7 @@ export default function Home() {
     // Let's make them additive for now, or if a service is selected in filters, it overrides category tab.
 
     let matchesCategory = true;
-    if (filters?.selectedService) {
+    if (filters?.selectedService && filters.selectedService !== 'All') {
       matchesCategory = host.services.includes(filters.selectedService);
     } else if (selectedCategory !== 'All') {
       matchesCategory = host.services.includes(selectedCategory);
