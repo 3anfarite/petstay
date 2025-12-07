@@ -1,5 +1,6 @@
 import { dummyCategories, dummyHosts } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import {
@@ -62,9 +63,9 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
             {/* Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={onClose}>
-                    <Text style={styles.cancelText}>Cancel</Text>
+                    <Text style={styles.cancelText}>{i18n.t('cancel')}</Text>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Filters</Text>
+                <Text style={styles.headerTitle}>{i18n.t('filter_title')}</Text>
                 <TouchableOpacity onPress={() => {
                     setLocation('');
                     setSelectedService(null);
@@ -72,7 +73,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
                     setMaxPrice('');
                     setIsVerified(false);
                 }}>
-                    <Text style={styles.resetText}>Reset</Text>
+                    <Text style={styles.resetText}>{i18n.t('filter_reset')}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -80,12 +81,12 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
 
                 {/* Location Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Location</Text>
+                    <Text style={styles.sectionTitle}>{i18n.t('filter_location')}</Text>
                     <View style={styles.inputContainer}>
                         <Ionicons name="location-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
                         <TextInput
                             style={styles.input}
-                            placeholder="Where to?"
+                            placeholder={i18n.t('search_placeholder')}
                             placeholderTextColor={c.textMuted}
                             value={location}
                             onChangeText={setLocation}
@@ -95,7 +96,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
 
                 {/* Services Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Service</Text>
+                    <Text style={styles.sectionTitle}>{i18n.t('filter_service')}</Text>
                     <View style={styles.chipsContainer}>
                         {dummyCategories.map((cat) => {
                             const isSelected = selectedService === cat.name;
@@ -124,13 +125,13 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
 
                 {/* Price Range Section */}
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Price Range (per night)</Text>
+                    <Text style={styles.sectionTitle}>{i18n.t('filter_price_range')}</Text>
                     <View style={styles.priceRow}>
                         <View style={styles.priceInputContainer}>
                             <Text style={styles.currencyPrefix}>$</Text>
                             <TextInput
                                 style={styles.priceInput}
-                                placeholder="Min"
+                                placeholder={i18n.t('filter_min')}
                                 placeholderTextColor={c.textMuted}
                                 keyboardType="numeric"
                                 value={minPrice}
@@ -142,7 +143,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
                             <Text style={styles.currencyPrefix}>$</Text>
                             <TextInput
                                 style={styles.priceInput}
-                                placeholder="Max"
+                                placeholder={i18n.t('filter_max')}
                                 placeholderTextColor={c.textMuted}
                                 keyboardType="numeric"
                                 value={maxPrice}
@@ -155,8 +156,8 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
                 {/* Verified Only Toggle */}
                 <View style={[styles.section, styles.rowBetween]}>
                     <View>
-                        <Text style={styles.sectionTitle}>Verified Hosts Only</Text>
-                        <Text style={styles.sectionSubtitle}>Only show hosts with verified ID</Text>
+                        <Text style={styles.sectionTitle}>{i18n.t('filter_verified_title')}</Text>
+                        <Text style={styles.sectionSubtitle}>{i18n.t('filter_verified_subtitle')}</Text>
                     </View>
                     <Switch
                         value={isVerified}
@@ -171,7 +172,7 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
             {/* Footer */}
             <View style={[styles.footer, { paddingBottom: insets.bottom + 20 }]}>
                 <TouchableOpacity style={styles.searchButton} onPress={handleApply}>
-                    <Text style={styles.searchButtonText}>Show {filteredCount} homes</Text>
+                    <Text style={styles.searchButtonText}>{i18n.t('show_homes', { count: filteredCount })}</Text>
                 </TouchableOpacity>
             </View>
         </View>

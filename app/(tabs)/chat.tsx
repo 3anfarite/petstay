@@ -1,10 +1,9 @@
 import { useColors } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-
-const TAGS = ['All', 'Hosts', 'Support'];
 
 const CHATS = [
   {
@@ -59,6 +58,13 @@ export default function ChatScreen() {
   const c = useColors();
   const [selectedTag, setSelectedTag] = useState('All');
 
+  // Translate tags dynamically
+  const tags = [
+    { id: 'All', label: i18n.t('chat_filter_all') },
+    { id: 'Hosts', label: i18n.t('chat_filter_hosts') },
+    { id: 'Support', label: i18n.t('chat_filter_support') },
+  ];
+
   const filteredChats = CHATS.filter(chat => {
     if (selectedTag === 'All') return true;
     return chat.type === selectedTag;
@@ -67,15 +73,15 @@ export default function ChatScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg2 }]}>
       <View style={styles.header}>
-        <Text style={[styles.title, { color: c.text }]}>Inbox</Text>
+        <Text style={[styles.title, { color: c.text }]}>{i18n.t('chat_title')}</Text>
       </View>
 
       <View style={styles.tagsContainer}>
-        {TAGS.map((tag) => {
-          const isActive = selectedTag === tag;
+        {tags.map((tag) => {
+          const isActive = selectedTag === tag.id;
           return (
             <TouchableOpacity
-              key={tag}
+              key={tag.id}
               style={[
                 styles.tag,
                 {
@@ -83,13 +89,13 @@ export default function ChatScreen() {
                   borderColor: isActive ? c.primary : c.border,
                 }
               ]}
-              onPress={() => setSelectedTag(tag)}
+              onPress={() => setSelectedTag(tag.id)}
             >
               <Text style={[
                 styles.tagText,
                 { color: isActive ? 'white' : c.text }
               ]}>
-                {tag}
+                {tag.label}
               </Text>
             </TouchableOpacity>
           );

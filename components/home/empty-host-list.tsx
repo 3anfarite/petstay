@@ -1,5 +1,6 @@
 import { dummyCategories } from "@/constants/dummyData";
 import { useColors } from "@/hooks/use-theme-color";
+import i18n from "@/i18n";
 import { StyleSheet, Text, View } from "react-native";
 import { IconSymbol } from "../ui/icon-symbol";
 
@@ -23,7 +24,7 @@ export function EmptyHostList({ selectedCategory, selectedService }: EmptyHostLi
                 color={c.textMuted}
             />
             <Text style={[styles.emptyText, { color: c.textMuted }]}>
-                No {categoryName} available at the moment
+                {i18n.t('empty_no_homes', { category: categoryName })}
             </Text>
         </View>
     );

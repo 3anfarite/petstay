@@ -1,5 +1,6 @@
 // SearchBar.tsx
 import { useColors } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
 import { Feather } from '@expo/vector-icons';
 import React from 'react';
 import {
@@ -50,7 +51,7 @@ export const SearchBar: React.FC<Props> = ({ onPress, onApply }) => {
         }}
       >
         <Feather name="search" size={20} color={c.text} />
-        <Animated.Text style={[styles.label, { color: c.textMuted, opacity: labelOpacity }]}>Where to?</Animated.Text>
+        <Animated.Text style={[styles.label, { color: c.textMuted, opacity: labelOpacity }]}>{i18n.t('search_placeholder')}</Animated.Text>
       </TouchableOpacity>
 
       <ExpandingModal
