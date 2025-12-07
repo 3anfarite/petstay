@@ -2,6 +2,7 @@ import { GalleryList } from '@/components/host/gallery-list';
 import { ServiceList } from '@/components/host/service-list';
 import { dummyHosts } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
+import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
@@ -76,7 +77,7 @@ export default function HostDetailScreen() {
     });
 
     return (
-        <View style={[styles.container, { backgroundColor: c.bg }]}>
+        <View style={[styles.container, { backgroundColor: c.bg2 }]}>
             <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle="light-content" />
 
@@ -112,7 +113,7 @@ export default function HostDetailScreen() {
                 contentContainerStyle={{ paddingTop: IMG_HEIGHT - 32, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={[styles.content, { backgroundColor: c.bg }]}>
+                <View style={[styles.content, { backgroundColor: c.bg2 }]}>
                     {/* Handle Bar */}
                     <View style={styles.handleBarContainer}>
                         <View style={[styles.handleBar, { backgroundColor: c.border }]} />
@@ -140,17 +141,17 @@ export default function HostDetailScreen() {
                                     {host.rating}
                                 </Text>
                                 <Text style={[styles.statLabel, { color: c.textMuted }]}>
-                                    ({host.reviewCount} reviews)
+                                    {i18n.t('host_reviews', { count: host.reviewCount })}
                                 </Text>
                             </View>
                             <View style={[styles.divider, { backgroundColor: c.border }]} />
                             <View style={styles.stat}>
                                 <Ionicons name="shield-checkmark" size={20} color={c.primary} />
                                 <Text style={[styles.statValue, { color: c.text }]}>
-                                    Identity
+                                    {i18n.t('host_identity')}
                                 </Text>
                                 <Text style={[styles.statLabel, { color: c.textMuted }]}>
-                                    Verified
+                                    {i18n.t('host_verified')}
                                 </Text>
                             </View>
                         </View>
@@ -160,7 +161,7 @@ export default function HostDetailScreen() {
 
                     {/* About Section */}
                     <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: c.text }]}>About</Text>
+                        <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_about')}</Text>
                         <Text style={[styles.description, { color: c.textMuted }]}>
                             {host.about}
                         </Text>
@@ -187,7 +188,7 @@ export default function HostDetailScreen() {
             <View
                 style={[
                     styles.footer,
-                    { backgroundColor: c.bg, borderTopColor: c.border, paddingBottom: insets.bottom + 16 },
+                    { backgroundColor: c.bg2, borderTopColor: c.border, paddingBottom: insets.bottom + 16 },
                 ]}
             >
                 <View>
@@ -195,7 +196,7 @@ export default function HostDetailScreen() {
                         ${host.price}
                         <Text style={[styles.footerUnit, { color: c.textMuted }]}>
                             {' '}
-                            / night
+                            {i18n.t('host_per_night')}
                         </Text>
                     </Text>
                     <Text style={[styles.footerDate, { color: c.textMuted }]}>
@@ -206,7 +207,7 @@ export default function HostDetailScreen() {
                     style={[styles.bookButton, { backgroundColor: c.primary }]}
                     activeOpacity={0.8}
                 >
-                    <Text style={styles.bookButtonText}>Book Now</Text>
+                    <Text style={styles.bookButtonText}>{i18n.t('host_book_now')}</Text>
                 </TouchableOpacity>
             </View>
         </View>

@@ -10,6 +10,15 @@ export default {
     // Home
     search_placeholder: "Where to?",
 
+    // Host Details
+    host_reviews: "({{count}} reviews)",
+    host_identity: "Identity",
+    host_verified: "Verified",
+    host_about: "About",
+    host_gallery: "Gallery",
+    host_per_night: "/ night",
+    host_book_now: "Book Now",
+
     // Empty State
     empty_no_homes: "No {{category}} available at the moment",
 
