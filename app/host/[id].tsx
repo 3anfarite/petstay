@@ -1,3 +1,4 @@
+import { BookingModal } from '@/components/booking/booking-modal';
 import { GalleryList } from '@/components/host/gallery-list';
 import { ServiceList } from '@/components/host/service-list';
 import { dummyHosts } from '@/constants/dummyData';
@@ -39,6 +40,7 @@ export default function HostDetailScreen() {
     const host = dummyHosts.find((h) => h.id === id) || dummyHosts[0];
 
     const [selectedService, setSelectedService] = useState(host.services[0]);
+    const [isBookingModalVisible, setBookingModalVisible] = useState(false);
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -206,10 +208,18 @@ export default function HostDetailScreen() {
                 <TouchableOpacity
                     style={[styles.bookButton, { backgroundColor: c.primary }]}
                     activeOpacity={0.8}
+                    onPress={() => setBookingModalVisible(true)}
                 >
                     <Text style={styles.bookButtonText}>{i18n.t('host_book_now')}</Text>
                 </TouchableOpacity>
             </View>
+
+            <BookingModal
+                visible={isBookingModalVisible}
+                onClose={() => setBookingModalVisible(false)}
+                pricePerNight={host.price}
+                hostName={host.name}
+            />
         </View>
     );
 }

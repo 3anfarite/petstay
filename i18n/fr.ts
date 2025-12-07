@@ -19,6 +19,19 @@ export default {
     host_per_night: "/ nuit",
     host_book_now: "Réserver",
 
+    // Booking
+    booking_title: "Réserver votre séjour",
+    booking_dates: "Dates",
+    booking_guests: "Voyageurs",
+    booking_pets: "Animaux",
+    booking_price_breakdown: "Détails du prix",
+    booking_nightly_rate: "${{price}} x {{count}} nuits",
+    booking_service_fee: "Frais de service",
+    booking_total: "Total",
+    booking_confirm: "Confirmer la réservation",
+    booking_select_dates: "Sélectionner des dates",
+    booking_clear_dates: "Effacer",
+
     // Empty State
     empty_no_homes: "Aucun {{category}} disponible pour le moment",
 
