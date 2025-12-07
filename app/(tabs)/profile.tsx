@@ -1,3 +1,4 @@
+import { useLanguage } from '@/components/LanguageProvider';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,7 +49,7 @@ const MenuItem = ({ icon, label, onPress, isDestructive, value }: MenuItemProps)
 
 export default function Profile() {
   const c = useColors();
-  const [locale, setLocale] = useState(i18n.locale);
+  const { locale, setLocale } = useLanguage();
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
 
   // Animation values
@@ -87,7 +88,6 @@ export default function Profile() {
   };
 
   const changeLanguage = (lang: string) => {
-    i18n.locale = lang;
     setLocale(lang);
     closeLanguageModal();
   };
