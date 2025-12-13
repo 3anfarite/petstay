@@ -60,6 +60,25 @@ export default {
     onboarding_next: "Suivant",
     onboarding_start: "C'est parti",
 
+    // Auth
+    auth_welcome_title: "Bienvenue sur PetStay",
+    auth_welcome_subtitle: "Le meilleur endroit pour vos amis à fourrure.",
+    auth_login: "Se connecter",
+    auth_signup: "S'inscrire",
+    auth_email: "Email",
+    auth_password: "Mot de passe",
+    auth_name: "Nom complet",
+    auth_forgot_password: "Mot de passe oublié ?",
+    auth_continue_email: "Continuer avec Email",
+    auth_continue_apple: "Continuer avec Apple",
+    auth_continue_google: "Continuer avec Google",
+    auth_already_account: "Vous avez déjà un compte ?",
+    auth_no_account: "Vous n'avez pas de compte ?",
+    auth_signin_btn: "Connexion",
+    auth_create_account: "Créer un compte",
+    auth_welcome_back: "Bon retour !",
+    auth_create_profile: "Créez votre profil",
+
     // Empty State
     empty_no_homes: "Aucun {{category}} disponible pour le moment",
 

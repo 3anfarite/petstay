@@ -35,6 +35,9 @@ export default function RootLayout() {
       const hasSeen = await AsyncStorage.getItem('hasSeenOnboarding');
       if (!hasSeen) {
         router.replace('/onboarding');
+      } else {
+        // For now, force auth flow even if seen onboarding, because we have no persistent login
+        router.replace('/auth/welcome');
       }
     } catch (e) {
       console.error(e);
@@ -51,6 +54,7 @@ export default function RootLayout() {
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+          <Stack.Screen name="auth" options={{ headerShown: false }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style="auto" />
