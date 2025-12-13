@@ -3,7 +3,7 @@ import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const CHATS = [
   {
@@ -57,6 +57,7 @@ const CHATS = [
 export default function ChatScreen() {
   const c = useColors();
   const [selectedTag, setSelectedTag] = useState('All');
+  const insets = useSafeAreaInsets();
 
   // Translate tags dynamically
   const tags = [
@@ -71,7 +72,7 @@ export default function ChatScreen() {
   });
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: c.bg2 }]}>
+    <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={[styles.title, { color: c.text }]}>{i18n.t('chat_title')}</Text>
       </View>
@@ -144,7 +145,7 @@ export default function ChatScreen() {
           </TouchableOpacity>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

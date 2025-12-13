@@ -9,7 +9,6 @@ import {
   Image,
   LayoutAnimation,
   Platform,
-  SafeAreaView,
   StatusBar,
   StyleSheet,
   Text,
@@ -17,6 +16,7 @@ import {
   UIManager,
   View,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 if (Platform.OS === 'android') {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -31,6 +31,7 @@ export default function BookingScreen() {
   const router = useRouter();
   const styles = makeStyles(c);
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
+  const insets = useSafeAreaInsets();
 
   // Filter bookings based on active tab
   const filteredBookings = dummyBookings.filter((b) => b.status === activeTab);
@@ -41,7 +42,7 @@ export default function BookingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>{i18n.t('bookings_page_title')}</Text>
         <Text style={styles.headerSubtitle}>
@@ -157,7 +158,7 @@ export default function BookingScreen() {
           );
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
