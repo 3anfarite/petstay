@@ -49,6 +49,17 @@ export default {
     bookings_count_subtitle_one: "{{count}} voyage {{status}}",
     bookings_count_subtitle_other: "{{count}} voyages {{status}}",
 
+    // Onboarding
+    onboarding_slide1_title: "La deuxième maison de votre animal",
+    onboarding_slide1_desc: "Trouvez des gardiens de confiance dans votre quartier pour les promenades et la garde.",
+    onboarding_slide2_title: "Hôtes vérifiés et de confiance",
+    onboarding_slide2_desc: "Tous nos hôtes sont vérifiés pour garantir que votre ami à quatre pattes est entre de bonnes mains.",
+    onboarding_slide3_title: "Réservez en toute simplicité",
+    onboarding_slide3_desc: "Réservation instantanée, paiements sécurisés et photos quotidiennes de votre animal.",
+    onboarding_skip: "Passer",
+    onboarding_next: "Suivant",
+    onboarding_start: "C'est parti",
+
     // Empty State
     empty_no_homes: "Aucun {{category}} disponible pour le moment",
 

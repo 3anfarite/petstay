@@ -49,6 +49,17 @@ export default {
     bookings_count_subtitle_one: "{{count}} {{status}} trip",
     bookings_count_subtitle_other: "{{count}} {{status}} trips",
 
+    // Onboarding
+    onboarding_slide1_title: "Your Pet's Second Home",
+    onboarding_slide1_desc: "Find trusted pet sitters in your neighborhood for walking, boarding, and daycare.",
+    onboarding_slide2_title: "Verified & Trusted Hosts",
+    onboarding_slide2_desc: "All our hosts are vetted and verified to ensure your furry friend is in safe hands.",
+    onboarding_slide3_title: "Book with Ease",
+    onboarding_slide3_desc: "Instant booking, secure payments, and daily photo updates of your pet.",
+    onboarding_skip: "Skip",
+    onboarding_next: "Next",
+    onboarding_start: "Get Started",
+
     // Empty State
     empty_no_homes: "No {{category}} available at the moment",
 
