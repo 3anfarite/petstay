@@ -45,7 +45,7 @@ export default function WelcomeScreen() {
                 <View style={styles.actions}>
                     <TouchableOpacity
                         style={[styles.button, styles.emailButton, { backgroundColor: c.primary }]}
-                        onPress={() => router.push('/auth/login')}
+                        onPress={() => router.push({ pathname: '/auth/authenticate', params: { mode: 'login' } })}
                     >
                         <Ionicons name="mail-outline" size={20} color="white" />
                         <Text style={[styles.buttonText, { color: 'white' }]}>
@@ -72,7 +72,7 @@ export default function WelcomeScreen() {
                     <Text style={[styles.footerText, { color: c.textMuted }]}>
                         {i18n.t('auth_no_account')}
                     </Text>
-                    <TouchableOpacity onPress={() => router.push('/auth/signup')}>
+                    <TouchableOpacity onPress={() => router.push({ pathname: '/auth/authenticate', params: { mode: 'signup' } })}>
                         <Text style={[styles.linkText, { color: c.text }]}>
                             {i18n.t('auth_signup')}
                         </Text>
