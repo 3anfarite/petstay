@@ -32,6 +32,23 @@ export default {
     booking_select_dates: "Select dates",
     booking_clear_dates: "Clear",
 
+    // Bookings Screen
+    bookings_page_title: "Trips",
+    bookings_tab_upcoming: "Upcoming",
+    bookings_tab_completed: "Completed",
+    bookings_tab_cancelled: "Cancelled",
+    booking_status_confirmed: "Confirmed",
+    booking_status_pending: "Pending",
+    booking_status_cancelled: "Cancelled",
+    booking_action_message: "Message",
+    booking_action_cancel: "Cancel",
+    bookings_empty_title: "No trips booked... yet!",
+    bookings_empty_subtitle: "Time to dust off your bags and start planning your next adventure",
+    bookings_empty_btn: "Start exploring",
+    booking_total_lower: "total",
+    bookings_count_subtitle_one: "{{count}} {{status}} trip",
+    bookings_count_subtitle_other: "{{count}} {{status}} trips",
+
     // Empty State
     empty_no_homes: "No {{category}} available at the moment",
 

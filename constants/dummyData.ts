@@ -121,3 +121,27 @@ export const dummyHosts = [
     verified: true,
   },
 ];
+
+export const dummyBookings = [
+  {
+    id: 'b1',
+    hostId: '1',
+    status: 'upcoming',
+    dates: 'Oct 20 - 25',
+    price: 175,
+  },
+  {
+    id: 'b2',
+    hostId: '2',
+    status: 'completed',
+    dates: 'Sep 10 - 12',
+    price: 56,
+  },
+  {
+    id: 'b3',
+    hostId: '3',
+    status: 'cancelled',
+    dates: 'Aug 5 - 6',
+    price: 40,
+  },
+];

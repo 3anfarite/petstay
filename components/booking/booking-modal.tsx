@@ -8,13 +8,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type BookingModalProps = {
     visible: boolean;
     onClose: () => void;
+    onConfirm: () => void;
     pricePerNight: number;
     hostName: string;
 };
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export function BookingModal({ visible, onClose, pricePerNight, hostName }: BookingModalProps) {
+export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostName }: BookingModalProps) {
     const c = useColors();
     const styles = makeStyles(c);
     const insets = useSafeAreaInsets();
@@ -301,6 +302,7 @@ export function BookingModal({ visible, onClose, pricePerNight, hostName }: Book
                         <TouchableOpacity
                             style={[styles.confirmButton, (!startDate || !endDate) && styles.confirmButtonDisabled]}
                             disabled={!startDate || !endDate}
+                            onPress={onConfirm}
                         >
                             <Text style={styles.confirmButtonText}>
                                 {startDate && endDate ? i18n.t('booking_confirm') : i18n.t('booking_select_dates')}

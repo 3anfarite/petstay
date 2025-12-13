@@ -217,6 +217,10 @@ export default function HostDetailScreen() {
             <BookingModal
                 visible={isBookingModalVisible}
                 onClose={() => setBookingModalVisible(false)}
+                onConfirm={() => {
+                    setBookingModalVisible(false);
+                    router.push('/(tabs)/bookings');
+                }}
                 pricePerNight={host.price}
                 hostName={host.name}
             />

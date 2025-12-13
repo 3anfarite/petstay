@@ -32,6 +32,23 @@ export default {
     booking_select_dates: "Sélectionner des dates",
     booking_clear_dates: "Effacer",
 
+    // Bookings Screen
+    bookings_page_title: "Voyages",
+    bookings_tab_upcoming: "À venir",
+    bookings_tab_completed: "Terminés",
+    bookings_tab_cancelled: "Annulés",
+    booking_status_confirmed: "Confirmée",
+    booking_status_pending: "En attente",
+    booking_status_cancelled: "Annulée",
+    booking_action_message: "Message",
+    booking_action_cancel: "Annuler",
+    bookings_empty_title: "Aucun voyage réservé... pour l'instant !",
+    bookings_empty_subtitle: "Il est temps de dépoussiérer vos valises et de commencer à planifier votre prochaine aventure",
+    bookings_empty_btn: "Commencer l'exploration",
+    booking_total_lower: "total",
+    bookings_count_subtitle_one: "{{count}} voyage {{status}}",
+    bookings_count_subtitle_other: "{{count}} voyages {{status}}",
+
     // Empty State
     empty_no_homes: "Aucun {{category}} disponible pour le moment",
 
