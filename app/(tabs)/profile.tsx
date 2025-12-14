@@ -2,6 +2,7 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -51,6 +52,7 @@ export default function Profile() {
   const c = useColors();
   const { locale, setLocale } = useLanguage();
   const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
+  const router = useRouter(); // Added router for navigation
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -155,7 +157,7 @@ export default function Profile() {
             icon="log-out-outline"
             label={i18n.t('profile_logout')}
             isDestructive
-            onPress={() => console.log('Log out')}
+            onPress={() => router.replace('/auth/welcome')}
           />
         </View>
 

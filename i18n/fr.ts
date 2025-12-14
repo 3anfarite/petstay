@@ -12,6 +12,38 @@ export default {
     wishlist_empty_subtitle: "Enregistrez vos gardiens et maisons préférés ici pour un accès facile.",
     wishlist_empty_btn: "Explorer les maisons",
 
+    // Host
+    host_tab_dashboard: "Tableau de bord",
+    host_tab_listings: "Annonces",
+    host_tab_reservations: "Réservations",
+    host_tab_profile: "Profil",
+
+    host_dashboard_title: "Tableau de bord",
+    host_dashboard_welcome: "Bon retour, Hôte !",
+    host_dashboard_earnings: "Revenus (Déc)",
+    host_dashboard_rating: "Note globale",
+    host_dashboard_activity: "Activité récente",
+    host_dashboard_no_activity: "Pas de notifications récentes.",
+    host_dashboard_actions: "Action requise",
+    host_dashboard_tips: "Conseils pour les hôtes",
+
+    host_listings_title: "Mes annonces",
+    host_listings_empty: "Aucune annonce pour le moment.",
+
+    host_reservations_title: "Réservations",
+    host_reservations_empty: "Aucune réservation à venir.",
+
+    host_profile_title: "Profil",
+    host_profile_logout: "Se déconnecter",
+
+    host_activity_new_reservation: "Nouvelle réservation !",
+    host_activity_reservation_desc: "Alex souhaite réserver pour Max.",
+    host_activity_view_details: "Voir les détails",
+
+    host_card_night: "nuit",
+    host_card_edit: "Modifier",
+    host_card_status_active: "Actif",
+
     // Home
     search_placeholder: "Rechercher",
 
@@ -123,7 +155,20 @@ export default {
     chat_title: "Messages",
     chat_filter_all: "Tous",
     chat_filter_hosts: "Hôtes",
+    chat_filter_clients: "Clients",
     chat_filter_support: "Support",
+
+    // Host Dashboard Items
+    host_action_confirm_availability: "Confirmer la dispo",
+    host_action_review_guest: "Noter le voyageur",
+    host_activity_new_review: "Nouvel avis",
+    host_tip_update_calendar: "Mettre à jour le calendrier",
+    host_tip_update_calendar_desc: "Gérez vos disponibilités",
+    host_tip_boost_listing: "Booster l'annonce",
+    host_tip_boost_listing_desc: "Gagnez en visibilité",
+
+    // Host Menu
+    host_menu_insights: "Statistiques",
 
     // Common
     cancel: "Annuler",

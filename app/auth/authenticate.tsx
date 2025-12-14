@@ -34,8 +34,12 @@ export default function AuthScreen() {
     };
 
     const handleSubmit = () => {
-        // Navigate straight to tabs as requested
-        router.replace('/(tabs)');
+        // Mock Logic for Hardcoded Users
+        if (email.toLowerCase().includes('host')) {
+            router.replace('/(host)/dashboard' as any);
+        } else {
+            router.replace('/(tabs)');
+        }
     };
 
     return (

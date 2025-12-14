@@ -12,6 +12,38 @@ export default {
     wishlist_empty_subtitle: "Save your favorite pet sitters and homes here for easy access.",
     wishlist_empty_btn: "Explore Homes",
 
+    // Host
+    host_tab_dashboard: "Dashboard",
+    host_tab_listings: "Listings",
+    host_tab_reservations: "Reservations",
+    host_tab_profile: "Profile",
+
+    host_dashboard_title: "Dashboard",
+    host_dashboard_welcome: "Welcome back, Host!",
+    host_dashboard_earnings: "Earnings (Dec)",
+    host_dashboard_rating: "Overall Rating",
+    host_dashboard_activity: "Recent Activity",
+    host_dashboard_no_activity: "No recent notifications.",
+    host_dashboard_actions: "Action Required",
+    host_dashboard_tips: "Host Tips",
+
+    host_listings_title: "My Listings",
+    host_listings_empty: "No listings yet.",
+
+    host_reservations_title: "Reservations",
+    host_reservations_empty: "No upcoming reservations.",
+
+    host_profile_title: "Profile",
+    host_profile_logout: "Log Out",
+
+    host_activity_new_reservation: "New Reservation!",
+    host_activity_reservation_desc: "Alex wants to book for Max.",
+    host_activity_view_details: "View Details",
+
+    host_card_night: "night",
+    host_card_edit: "Edit",
+    host_card_status_active: "Active",
+
     // Home
     search_placeholder: "Search",
 
@@ -123,7 +155,20 @@ export default {
     chat_title: "Inbox",
     chat_filter_all: "All",
     chat_filter_hosts: "Hosts",
+    chat_filter_clients: "Clients",
     chat_filter_support: "Support",
+
+    // Host Dashboard Items
+    host_action_confirm_availability: "Confirm Availability",
+    host_action_review_guest: "Review Guest",
+    host_activity_new_review: "New Review",
+    host_tip_update_calendar: "Update Calendar",
+    host_tip_update_calendar_desc: "Update your availability",
+    host_tip_boost_listing: "Boost Listing",
+    host_tip_boost_listing_desc: "Get more visibility",
+
+    // Host Menu
+    host_menu_insights: "Insights",
 
     // Common
     cancel: "Cancel",
