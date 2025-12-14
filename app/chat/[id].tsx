@@ -5,6 +5,7 @@ import React, { useRef, useState } from 'react';
 import {
     FlatList,
     Image,
+    Keyboard,
     KeyboardAvoidingView,
     Platform,
     StyleSheet,
@@ -57,7 +58,26 @@ export default function ChatDetailScreen() {
     const [inputText, setInputText] = useState('');
     const flatListRef = useRef<FlatList>(null);
 
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    React.useEffect(() => {
+        const keyboardWillShow = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+            () => setKeyboardVisible(true)
+        );
+        const keyboardWillHide = Keyboard.addListener(
+            Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+            () => setKeyboardVisible(false)
+        );
+
+        return () => {
+            keyboardWillShow.remove();
+            keyboardWillHide.remove();
+        };
+    }, []);
+
     const sendMessage = () => {
+        // ... existing sendMessage logic ...
         if (!inputText.trim()) return;
 
         const newMessage = {
@@ -70,7 +90,6 @@ export default function ChatDetailScreen() {
         setMessages([...messages, newMessage]);
         setInputText('');
 
-        // Simulate slight delay for scroll to bottom
         setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
         }, 100);
@@ -78,8 +97,9 @@ export default function ChatDetailScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
-            {/* Header */}
+            {/* ... Header & List ... */}
             <View style={[styles.header, { borderBottomColor: c.border }]}>
+                {/* ... header content ... */}
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={c.text} />
                 </TouchableOpacity>
@@ -135,7 +155,14 @@ export default function ChatDetailScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
-                <View style={[styles.inputContainer, { backgroundColor: c.bg, borderTopColor: c.border }]}>
+                <View style={[
+                    styles.inputContainer,
+                    {
+                        backgroundColor: c.bg,
+                        borderTopColor: c.border,
+                        paddingBottom: keyboardVisible ? 12 : 34 // Dynamic padding
+                    }
+                ]}>
                     <TouchableOpacity style={styles.attachButton}>
                         <Ionicons name="add" size={24} color={c.primary} />
                     </TouchableOpacity>
@@ -227,9 +254,7 @@ const styles = StyleSheet.create({
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingTop: 12,
-        paddingBottom: 34, // Added extra padding for home indicator
+        padding: 12,
         gap: 12,
         borderTopWidth: StyleSheet.hairlineWidth,
     },
