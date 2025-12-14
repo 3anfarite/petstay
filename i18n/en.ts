@@ -1,14 +1,19 @@
 export default {
     // Tabs
     tab_home: "Explore",
-    tab_wishlists: "Wishlists",
-    tab_trips: "Trips",
-    tab_bookings: "Bookings",
+    tab_bookings: "Trips",
+    tab_wishlist: "Wishlist",
     tab_chat: "Inbox",
     tab_profile: "Profile",
 
+    // Wishlist
+    wishlist_title: "Wishlist",
+    wishlist_empty_title: "Make a wish!",
+    wishlist_empty_subtitle: "Save your favorite pet sitters and homes here for easy access.",
+    wishlist_empty_btn: "Explore Homes",
+
     // Home
-    search_placeholder: "Where to?",
+    search_placeholder: "Search",
 
     // Host Details
     host_reviews: "({{count}} reviews)",

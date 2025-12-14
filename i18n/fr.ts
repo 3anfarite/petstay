@@ -1,14 +1,19 @@
 export default {
     // Tabs
     tab_home: "Explorer",
-    tab_wishlists: "Favoris",
-    tab_trips: "Voyages",
-    tab_bookings: "Réservations",
+    tab_bookings: "Voyages",
+    tab_wishlist: "Favoris",
     tab_chat: "Messages",
     tab_profile: "Profil",
 
+    // Wishlist
+    wishlist_title: "Favoris",
+    wishlist_empty_title: "Faites un vœu !",
+    wishlist_empty_subtitle: "Enregistrez vos gardiens et maisons préférés ici pour un accès facile.",
+    wishlist_empty_btn: "Explorer les maisons",
+
     // Home
-    search_placeholder: "Où allez-vous ?",
+    search_placeholder: "Rechercher",
 
     // Host Details
     host_reviews: "({{count}} avis)",

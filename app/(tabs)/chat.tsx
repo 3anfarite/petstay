@@ -1,6 +1,7 @@
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -55,6 +56,7 @@ const CHATS = [
 ];
 
 export default function ChatScreen() {
+  const router = useRouter();
   const c = useColors();
   const [selectedTag, setSelectedTag] = useState('All');
   const insets = useSafeAreaInsets();
@@ -108,7 +110,13 @@ export default function ChatScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <TouchableOpacity style={[styles.chatRow, { borderBottomColor: c.border }]}>
+          <TouchableOpacity
+            style={[styles.chatRow, { borderBottomColor: c.border }]}
+            onPress={() => router.push({
+              pathname: `/chat/[id]`,
+              params: { id: item.id, name: item.name, avatar: item.avatar }
+            })}
+          >
             <View style={styles.avatarContainer}>
               <Image source={{ uri: item.avatar }} style={styles.avatar} />
               {item.isSupport && (

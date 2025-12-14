@@ -34,6 +34,13 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="wishlist"
+        options={{
+          title: i18n.t('tab_wishlist'),
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="heart.fill" color={color} />,
+        }}
+      />
+      <Tabs.Screen
         name="chat"
         options={{
           title: i18n.t('tab_chat'),
