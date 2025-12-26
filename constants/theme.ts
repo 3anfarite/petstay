@@ -51,3 +51,9 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const AppFonts = {
+  title: 'Montserrat_700Bold',
+  body: 'Lato_400Regular',
+  bodyBold: 'Lato_700Bold',
+};

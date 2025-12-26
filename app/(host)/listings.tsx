@@ -1,3 +1,4 @@
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import React from 'react';
@@ -53,7 +54,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.title,
     },
     content: {
         flex: 1,
@@ -73,10 +74,11 @@ const styles = StyleSheet.create({
     },
     cardTitle: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.bodyBold,
     },
     cardLocation: {
         fontSize: 14,
+        fontFamily: AppFonts.body,
     },
     statusBadge: {
         paddingVertical: 4,
@@ -86,7 +88,7 @@ const styles = StyleSheet.create({
     },
     statusText: {
         fontSize: 10,
-        fontWeight: '700',
+        fontFamily: AppFonts.bodyBold,
     },
     editButton: {
         width: 40,

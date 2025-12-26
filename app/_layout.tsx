@@ -1,3 +1,5 @@
+import { Lato_400Regular, Lato_700Bold } from '@expo-google-fonts/lato';
+import { Montserrat_700Bold, useFonts } from '@expo-google-fonts/montserrat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack, useRootNavigationState, useRouter } from 'expo-router';
@@ -23,17 +25,23 @@ export default function RootLayout() {
   const navigationState = useRootNavigationState();
   const loaded = navigationState?.key; // Check if navigation state is loaded using key
 
+  const [fontsLoaded] = useFonts({
+    Montserrat_700Bold,
+    Lato_400Regular,
+    Lato_700Bold,
+  });
+
   useEffect(() => {
-    if (loaded) {
+    if (loaded && fontsLoaded) {
       checkOnboarding();
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, fontsLoaded]);
 
   const checkOnboarding = async () => {
     try {
       const hasSeen = await AsyncStorage.getItem('hasSeenOnboarding');
-      if (!hasSeen) {
+      if (hasSeen) {
         router.replace('/onboarding');
       } else {
         // For now, force auth flow even if seen onboarding, because we have no persistent login
@@ -44,7 +52,7 @@ export default function RootLayout() {
     }
   };
 
-  if (!loaded) {
+  if (!loaded || !fontsLoaded) {
     return null;
   }
 

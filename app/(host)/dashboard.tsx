@@ -1,3 +1,4 @@
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -118,11 +119,12 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
         marginBottom: 8,
+        fontFamily: AppFonts.title,
     },
     subtitle: {
         fontSize: 16,
+        fontFamily: AppFonts.body,
     },
     statsContainer: {
         flexDirection: 'row',
@@ -137,15 +139,16 @@ const styles = StyleSheet.create({
     },
     statValue: {
         fontSize: 24,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.bodyBold,
     },
     statLabel: {
         fontSize: 14,
+        fontFamily: AppFonts.body,
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: '700',
         marginBottom: 16,
+        fontFamily: AppFonts.bodyBold,
     },
     activityCard: {
         padding: 12,
@@ -158,14 +161,15 @@ const styles = StyleSheet.create({
     },
     activityTitle: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: AppFonts.bodyBold,
     },
     activityDesc: {
         fontSize: 13,
+        fontFamily: AppFonts.body,
     },
     activityPrice: {
         fontSize: 12,
-        fontWeight: '700',
+        fontFamily: AppFonts.bodyBold,
     },
     badge: {
         paddingVertical: 4,
@@ -174,7 +178,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: 10,
-        fontWeight: '700',
+        fontFamily: AppFonts.bodyBold,
     },
     // Action Card Styles
     actionCard: {
@@ -216,10 +220,11 @@ const styles = StyleSheet.create({
     },
     tipTitle: {
         fontSize: 16,
-        fontWeight: '600',
+        fontFamily: AppFonts.bodyBold,
     },
     tipDesc: {
         fontSize: 13,
         maxWidth: 160,
+        fontFamily: AppFonts.body,
     },
 });

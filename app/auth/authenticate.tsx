@@ -1,3 +1,4 @@
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -70,7 +71,7 @@ export default function AuthScreen() {
                         >
                             <Text style={[
                                 styles.tabText,
-                                { color: mode === 'login' ? c.text : c.textMuted, fontWeight: mode === 'login' ? '600' : '500' }
+                                { color: mode === 'login' ? c.text : c.textMuted, fontFamily: mode === 'login' ? AppFonts.bodyBold : AppFonts.body }
                             ]}>
                                 {i18n.t('auth_login')}
                             </Text>
@@ -81,7 +82,7 @@ export default function AuthScreen() {
                         >
                             <Text style={[
                                 styles.tabText,
-                                { color: mode === 'signup' ? c.text : c.textMuted, fontWeight: mode === 'signup' ? '600' : '500' }
+                                { color: mode === 'signup' ? c.text : c.textMuted, fontFamily: mode === 'signup' ? AppFonts.bodyBold : AppFonts.body }
                             ]}>
                                 {i18n.t('auth_signup')}
                             </Text>
@@ -173,12 +174,13 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
         marginBottom: 8,
+        fontFamily: AppFonts.title,
     },
     subtitle: {
         fontSize: 16,
         marginBottom: 32,
+        fontFamily: AppFonts.body,
     },
     tabContainer: {
         flexDirection: 'row',
@@ -201,6 +203,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontSize: 14,
+        fontFamily: AppFonts.body,
     },
     form: {
         gap: 24,
@@ -210,13 +213,14 @@ const styles = StyleSheet.create({
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontFamily: AppFonts.bodyBold,
     },
     input: {
         height: 52,
         borderRadius: 12,
         paddingHorizontal: 16,
         fontSize: 16,
+        fontFamily: AppFonts.body,
     },
     forgotPassword: {
         alignSelf: 'flex-end',
@@ -224,7 +228,7 @@ const styles = StyleSheet.create({
     },
     forgotPasswordText: {
         fontSize: 14,
-        fontWeight: '500',
+        fontFamily: AppFonts.body,
     },
     footer: {
         marginTop: 'auto',
@@ -240,6 +244,6 @@ const styles = StyleSheet.create({
     buttonText: {
         color: 'white',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.bodyBold,
     },
 });
