@@ -5,11 +5,13 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import { Stack, useRootNavigationState, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import 'react-native-reanimated';
 
 import { LanguageProvider } from '@/components/LanguageProvider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+
+import { useAuthStore } from '@/store/useAuthStore';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -25,30 +27,54 @@ export default function RootLayout() {
   const navigationState = useRootNavigationState();
   const loaded = navigationState?.key; // Check if navigation state is loaded using key
 
+  const { user, isLoading, activeRole, initializeAuthListener } = useAuthStore();
+  const splashHidden = useRef(false);
+
   const [fontsLoaded] = useFonts({
     Montserrat_700Bold,
     Lato_400Regular,
     Lato_700Bold,
   });
 
+  // Start listening to Firebase Auth state as soon as the app boots
   useEffect(() => {
-    if (loaded && fontsLoaded) {
-      checkOnboarding();
-      SplashScreen.hideAsync();
-    }
-  }, [loaded, fontsLoaded]);
+    const unsubscribe = initializeAuthListener();
+    return () => unsubscribe();
+  }, []);
 
-  const checkOnboarding = async () => {
+  useEffect(() => {
+    if (loaded && fontsLoaded && !isLoading) {
+      handleInitialRoute();
+
+      // Hide Splash screen strictly once
+      if (!splashHidden.current) {
+        SplashScreen.hideAsync().catch(() => { });
+        splashHidden.current = true;
+      }
+    }
+  }, [loaded, fontsLoaded, isLoading, user, activeRole]);
+
+  const handleInitialRoute = async () => {
     try {
-      const hasSeen = await AsyncStorage.getItem('hasSeenOnboarding');
-      if (hasSeen) {
-        router.replace('/onboarding');
+      const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+
+      if (!user) {
+        // No session: Go to onboarding or welcome
+        if (hasSeenOnboarding) {
+          router.replace('/auth/welcome');
+        } else {
+          router.replace('/onboarding');
+        }
       } else {
-        // For now, force auth flow even if seen onboarding, because we have no persistent login
-        router.replace('/auth/welcome');
+        // Session exists: Route based on their active role toggle
+        if (activeRole === 'host') {
+          router.replace('/(host)/dashboard'); // Assuming dashboard is the default host screen
+        } else {
+          router.replace('/(tabs)');
+        }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Routing error:', e);
     }
   };
 

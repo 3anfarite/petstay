@@ -1,10 +1,15 @@
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { AuthService } from '@/lib/authService';
 import { Ionicons } from '@expo/vector-icons';
+import * as AuthSession from 'expo-auth-session';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import * as WebBrowser from 'expo-web-browser';
+import React, { useEffect, useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
@@ -12,9 +17,11 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    View,
+    View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+WebBrowser.maybeCompleteAuthSession();
 
 type AuthMode = 'login' | 'signup';
 
@@ -29,17 +36,87 @@ export default function AuthScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
+    const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+
+    // Google Auth Configuration
+    const [request, response, promptAsync] = AuthSession.useAuthRequest(
+        {
+            clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_WEB_CLEINT_ID || process.env.EXPO_WEB_CLEINT_ID || '',
+            scopes: ['openid', 'profile', 'email'],
+            responseType: AuthSession.ResponseType.IdToken,
+            redirectUri: AuthSession.makeRedirectUri(),
+        },
+        {
+            authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
+            tokenEndpoint: 'https://oauth2.googleapis.com/token',
+            revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
+        }
+    );
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            if (id_token) {
+                setIsLoadingAuth(true);
+                AuthService.signInWithGoogle(id_token)
+                    .then((credential) => {
+                        setIsLoadingAuth(false);
+                        const userEmail = credential.user.email || '';
+                        if (userEmail.toLowerCase().includes('host')) {
+                            router.replace('/(host)/dashboard' as any);
+                        } else {
+                            router.replace('/(tabs)');
+                        }
+                    })
+                    .catch((err) => {
+                        setIsLoadingAuth(false);
+                        Alert.alert('Google Sign-In Failed', err.message);
+                    });
+            }
+        }
+    }, [response]);
+
     const switchMode = (newMode: AuthMode) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setMode(newMode);
     };
 
-    const handleSubmit = () => {
-        // Mock Logic for Hardcoded Users
-        if (email.toLowerCase().includes('host')) {
-            router.replace('/(host)/dashboard' as any);
-        } else {
-            router.replace('/(tabs)');
+    const handleSubmit = async () => {
+        if (!email || !password) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        setIsLoadingAuth(true);
+        const trimmedEmail = email.trim();
+        try {
+            if (mode === 'signup') {
+                await AuthService.signUp(trimmedEmail, password, name);
+            } else {
+                await AuthService.signIn(trimmedEmail, password);
+            }
+
+            // Explicitly force navigation here so the UI doesn't hang!
+            if (trimmedEmail.toLowerCase().includes('host')) {
+                router.replace('/(host)/dashboard' as any);
+            } else {
+                router.replace('/(tabs)');
+            }
+
+        } catch (error: any) {
+            if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
+                Alert.alert(i18n.t('auth_err_login_failed'), i18n.t('auth_err_not_found'));
+            } else if (error.code === 'auth/email-already-in-use') {
+                Alert.alert(i18n.t('auth_err_reg_failed'), i18n.t('auth_err_email_in_use'));
+            } else if (error.code === 'auth/invalid-email') {
+                Alert.alert(i18n.t('auth_err_invalid_email_title'), i18n.t('auth_err_invalid_email_desc'));
+            } else if (error.code === 'auth/missing-password') {
+                Alert.alert(i18n.t('auth_err_missing_pass_title'), i18n.t('auth_err_missing_pass_desc'));
+            } else {
+                Alert.alert(i18n.t('auth_err_error'), error.message);
+            }
+        } finally {
+            setIsLoadingAuth(false);
         }
     };
 
@@ -141,10 +218,31 @@ export default function AuthScreen() {
                         <TouchableOpacity
                             style={[styles.button, { backgroundColor: c.primary }]}
                             onPress={handleSubmit}
+                            disabled={isLoadingAuth}
                         >
-                            <Text style={styles.buttonText}>
-                                {mode === 'login' ? i18n.t('auth_signin_btn') : i18n.t('auth_create_account')}
-                            </Text>
+                            {isLoadingAuth ? (
+                                <ActivityIndicator color="white" />
+                            ) : (
+                                <Text style={styles.buttonText}>
+                                    {mode === 'login' ? i18n.t('auth_signin_btn') : i18n.t('auth_create_account')}
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                        {/* Social Logic */}
+                        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 24 }}>
+                            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+                            <Text style={{ marginHorizontal: 16, color: c.textMuted, fontFamily: AppFonts.body }}>{i18n.locale === 'fr' ? 'OU' : 'OR'}</Text>
+                            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.socialButton, { borderColor: c.border, backgroundColor: c.bg }]}
+                            onPress={() => promptAsync()}
+                            disabled={!request || isLoadingAuth}
+                        >
+                            <Ionicons name="logo-google" size={24} color={c.text} style={{ position: 'absolute', left: 24 }} />
+                            <Text style={[styles.socialButtonText, { color: c.text }]}>{i18n.t('auth_continue_google')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -243,6 +341,18 @@ const styles = StyleSheet.create({
     },
     buttonText: {
         color: 'white',
+        fontSize: 16,
+        fontFamily: AppFonts.bodyBold,
+    },
+    socialButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: 56,
+        borderRadius: 16,
+        borderWidth: 1,
+    },
+    socialButtonText: {
         fontSize: 16,
         fontFamily: AppFonts.bodyBold,
     },

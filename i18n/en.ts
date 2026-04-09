@@ -116,6 +116,17 @@ export default {
     auth_welcome_back: "Welcome back!",
     auth_create_profile: "Create your profile",
 
+    // Auth Errors
+    auth_err_login_failed: "Login Failed",
+    auth_err_not_found: "Incorrect email or password. Please try again.",
+    auth_err_reg_failed: "Registration Failed",
+    auth_err_email_in_use: "This email is already in use. Please log in instead.",
+    auth_err_invalid_email_title: "Invalid Email",
+    auth_err_invalid_email_desc: "Please enter a valid, correctly formatted email address.",
+    auth_err_missing_pass_title: "Missing Password",
+    auth_err_missing_pass_desc: "Please enter your password.",
+    auth_err_error: "Error",
+
     // Empty State
     empty_no_homes: "No {{category}} available at the moment",
 
