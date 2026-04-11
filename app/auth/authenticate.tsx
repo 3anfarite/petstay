@@ -13,6 +13,7 @@ import {
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -59,14 +60,9 @@ export default function AuthScreen() {
             if (id_token) {
                 setIsLoadingAuth(true);
                 AuthService.signInWithGoogle(id_token)
-                    .then((credential) => {
+                    .then(() => {
                         setIsLoadingAuth(false);
-                        const userEmail = credential.user.email || '';
-                        if (userEmail.toLowerCase().includes('host')) {
-                            router.replace('/(host)/dashboard' as any);
-                        } else {
-                            router.replace('/(tabs)');
-                        }
+                        // No router.replace needed here! _layout.tsx will dynamically handle it because user & role changed globally!
                     })
                     .catch((err) => {
                         setIsLoadingAuth(false);
@@ -96,12 +92,7 @@ export default function AuthScreen() {
                 await AuthService.signIn(trimmedEmail, password);
             }
 
-            // Explicitly force navigation here so the UI doesn't hang!
-            if (trimmedEmail.toLowerCase().includes('host')) {
-                router.replace('/(host)/dashboard' as any);
-            } else {
-                router.replace('/(tabs)');
-            }
+            // _layout.tsx listener will catch this and naturally route!
 
         } catch (error: any) {
             if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
@@ -121,58 +112,41 @@ export default function AuthScreen() {
     };
 
     return (
-        <SafeAreaView style={[styles.container, { backgroundColor: c.bg2 }]}>
+        <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="close" size={24} color={c.text} />
-                    </TouchableOpacity>
-                </View>
+                {/* Floating Back Button */}
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="close" size={28} color={c.text} />
+                </TouchableOpacity>
 
-                <View style={styles.content}>
-                    <Text style={[styles.title, { color: c.text }]}>
-                        {mode === 'login' ? i18n.t('auth_welcome_back') : i18n.t('auth_create_account')}
-                    </Text>
-                    <Text style={[styles.subtitle, { color: c.textMuted }]}>
-                        {mode === 'login' ? i18n.t('auth_welcome_subtitle') : i18n.t('auth_create_profile')}
-                    </Text>
-
-                    {/* Toggle Tabs */}
-                    <View style={[styles.tabContainer, { backgroundColor: c.bg }]}>
-                        <TouchableOpacity
-                            style={[styles.tab, mode === 'login' && [styles.activeTab, { backgroundColor: c.bg2 }]]}
-                            onPress={() => switchMode('login')}
-                        >
-                            <Text style={[
-                                styles.tabText,
-                                { color: mode === 'login' ? c.text : c.textMuted, fontFamily: mode === 'login' ? AppFonts.bodyBold : AppFonts.body }
-                            ]}>
-                                {i18n.t('auth_login')}
-                            </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={[styles.tab, mode === 'signup' && [styles.activeTab, { backgroundColor: c.bg2 }]]}
-                            onPress={() => switchMode('signup')}
-                        >
-                            <Text style={[
-                                styles.tabText,
-                                { color: mode === 'signup' ? c.text : c.textMuted, fontFamily: mode === 'signup' ? AppFonts.bodyBold : AppFonts.body }
-                            ]}>
-                                {i18n.t('auth_signup')}
-                            </Text>
-                        </TouchableOpacity>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={[styles.contentScroll, { paddingBottom: 40 }]}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    <View style={styles.headerArea}>
+                        <View style={[styles.iconWrapper, { backgroundColor: c.primary + '20' }]}>
+                            <Ionicons name={mode === 'login' ? "paw" : "person-add"} size={32} color={c.primary} />
+                        </View>
+                        <Text style={[styles.title, { color: c.text }]}>
+                            {mode === 'login' ? i18n.t('auth_welcome_back') : i18n.t('auth_create_account')}
+                        </Text>
+                        <Text style={[styles.subtitle, { color: c.textMuted }]}>
+                            {mode === 'login' ? i18n.t('auth_welcome_subtitle') : i18n.t('auth_create_profile')}
+                        </Text>
                     </View>
 
                     <View style={styles.form}>
                         {mode === 'signup' && (
-                            <View style={styles.inputContainer}>
-                                <Text style={[styles.label, { color: c.text }]}>{i18n.t('auth_name')}</Text>
+                            <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
+                                <Ionicons name="person-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
                                 <TextInput
-                                    style={[styles.input, { backgroundColor: c.bg, color: c.text }]}
-                                    placeholder="John Doe"
+                                    style={[styles.input, { color: c.text }]}
+                                    placeholder={i18n.t('auth_name') || "Name"}
                                     placeholderTextColor={c.textMuted}
                                     value={name}
                                     onChangeText={setName}
@@ -181,11 +155,11 @@ export default function AuthScreen() {
                             </View>
                         )}
 
-                        <View style={styles.inputContainer}>
-                            <Text style={[styles.label, { color: c.text }]}>{i18n.t('auth_email')}</Text>
+                        <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
+                            <Ionicons name="mail-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
                             <TextInput
-                                style={[styles.input, { backgroundColor: c.bg, color: c.text }]}
-                                placeholder="name@example.com"
+                                style={[styles.input, { color: c.text }]}
+                                placeholder={i18n.t('auth_email') || "Email Address"}
                                 placeholderTextColor={c.textMuted}
                                 value={email}
                                 onChangeText={setEmail}
@@ -194,24 +168,25 @@ export default function AuthScreen() {
                             />
                         </View>
 
-                        <View style={styles.inputContainer}>
-                            <Text style={[styles.label, { color: c.text }]}>{i18n.t('auth_password')}</Text>
+                        <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
+                            <Ionicons name="lock-closed-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
                             <TextInput
-                                style={[styles.input, { backgroundColor: c.bg, color: c.text }]}
-                                placeholder="********"
+                                style={[styles.input, { color: c.text }]}
+                                placeholder={i18n.t('auth_password') || "Password"}
                                 placeholderTextColor={c.textMuted}
                                 value={password}
                                 onChangeText={setPassword}
                                 secureTextEntry
                             />
-                            {mode === 'login' && (
-                                <TouchableOpacity style={styles.forgotPassword}>
-                                    <Text style={[styles.forgotPasswordText, { color: c.textMuted }]}>
-                                        {i18n.t('auth_forgot_password')}
-                                    </Text>
-                                </TouchableOpacity>
-                            )}
                         </View>
+
+                        {mode === 'login' && (
+                            <TouchableOpacity style={styles.forgotPassword}>
+                                <Text style={[styles.forgotPasswordText, { color: c.primary }]}>
+                                    {i18n.t('auth_forgot_password')}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={styles.footer}>
@@ -229,23 +204,28 @@ export default function AuthScreen() {
                             )}
                         </TouchableOpacity>
 
-                        {/* Social Logic */}
-                        <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 24 }}>
-                            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-                            <Text style={{ marginHorizontal: 16, color: c.textMuted, fontFamily: AppFonts.body }}>{i18n.locale === 'fr' ? 'OU' : 'OR'}</Text>
-                            <View style={{ flex: 1, height: 1, backgroundColor: c.border }} />
-                        </View>
-
                         <TouchableOpacity
-                            style={[styles.socialButton, { borderColor: c.border, backgroundColor: c.bg }]}
+                            style={[styles.socialButton, { backgroundColor: c.bg2 }]}
                             onPress={() => promptAsync()}
                             disabled={!request || isLoadingAuth}
                         >
-                            <Ionicons name="logo-google" size={24} color={c.text} style={{ position: 'absolute', left: 24 }} />
+                            <Ionicons name="logo-google" size={22} color={c.text} style={{ position: 'absolute', left: 20 }} />
                             <Text style={[styles.socialButtonText, { color: c.text }]}>{i18n.t('auth_continue_google')}</Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.toggleModeButton}
+                            onPress={() => switchMode(mode === 'login' ? 'signup' : 'login')}
+                        >
+                            <Text style={[styles.toggleModeText, { color: c.textMuted }]}>
+                                {mode === 'login' ? (i18n.locale === 'fr' ? "Pas encore de compte ? " : "Don't have an account? ") : (i18n.locale === 'fr' ? "Déjà un compte ? " : "Already have an account? ")}
+                                <Text style={{ color: c.text, fontFamily: AppFonts.bodyBold }}>
+                                    {mode === 'login' ? (i18n.locale === 'fr' ? "S'inscrire" : "Sign up") : (i18n.locale === 'fr' ? "Se connecter" : "Log in")}
+                                </Text>
+                            </Text>
+                        </TouchableOpacity>
                     </View>
-                </View>
+                </ScrollView>
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -255,89 +235,87 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
-    header: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-    },
     backButton: {
+        position: 'absolute',
+        top: 20,
+        right: 24,
+        zIndex: 10,
         width: 40,
         height: 40,
         justifyContent: 'center',
-        alignItems: 'flex-start',
+        alignItems: 'flex-end',
     },
-    content: {
-        flex: 1,
-        paddingHorizontal: 24,
-        paddingTop: 10,
+    contentScroll: {
+        flexGrow: 1,
+        paddingHorizontal: 32,
+        paddingTop: 60,
+    },
+    headerArea: {
+        alignItems: 'center',
+        marginBottom: 40,
+        marginTop: 20,
+    },
+    iconWrapper: {
+        width: 72,
+        height: 72,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 24,
     },
     title: {
-        fontSize: 32,
+        fontSize: 30,
         marginBottom: 8,
         fontFamily: AppFonts.title,
+        textAlign: 'center',
     },
     subtitle: {
         fontSize: 16,
-        marginBottom: 32,
         fontFamily: AppFonts.body,
-    },
-    tabContainer: {
-        flexDirection: 'row',
-        padding: 4,
-        borderRadius: 12,
-        marginBottom: 32,
-    },
-    tab: {
-        flex: 1,
-        paddingVertical: 10,
-        alignItems: 'center',
-        borderRadius: 8,
-    },
-    activeTab: {
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
-    },
-    tabText: {
-        fontSize: 14,
-        fontFamily: AppFonts.body,
+        textAlign: 'center',
     },
     form: {
-        gap: 24,
+        gap: 16,
     },
     inputContainer: {
-        gap: 8,
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 58,
+        borderRadius: 16,
+        paddingHorizontal: 16,
+        borderWidth: 1,
     },
-    label: {
-        fontSize: 14,
-        fontFamily: AppFonts.bodyBold,
+    inputIcon: {
+        marginRight: 14,
     },
     input: {
-        height: 52,
-        borderRadius: 12,
-        paddingHorizontal: 16,
+        flex: 1,
         fontSize: 16,
-        fontFamily: AppFonts.body,
+        fontFamily: AppFonts.bodyBold,
     },
     forgotPassword: {
         alignSelf: 'flex-end',
-        marginTop: 8,
+        marginTop: 4,
     },
     forgotPasswordText: {
         fontSize: 14,
-        fontFamily: AppFonts.body,
+        fontFamily: AppFonts.bodyBold,
     },
     footer: {
         marginTop: 'auto',
-        marginBottom: 20,
-        gap: 24,
+        gap: 16,
+        paddingTop: 40,
     },
     button: {
-        height: 56,
+        height: 58,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+        elevation: 4,
     },
     buttonText: {
         color: 'white',
@@ -348,12 +326,20 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        height: 56,
+        height: 58,
         borderRadius: 16,
-        borderWidth: 1,
     },
     socialButtonText: {
         fontSize: 16,
         fontFamily: AppFonts.bodyBold,
+    },
+    toggleModeButton: {
+        marginTop: 16,
+        alignItems: 'center',
+        padding: 8,
+    },
+    toggleModeText: {
+        fontSize: 15,
+        fontFamily: AppFonts.body,
     },
 });

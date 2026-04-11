@@ -14,15 +14,19 @@ export default function HostLayout() {
 
     return (
         <Tabs
-            screenOptions={{
+            screenOptions={({ route }) => ({
                 tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
                 headerShown: false,
                 tabBarButton: HapticTab,
-            }}>
+                title: route.name === 'dashboard' ? i18n.t('host_tab_dashboard')
+                    : route.name === 'reservations' ? i18n.t('host_tab_reservations')
+                        : route.name === 'chat' ? i18n.t('chat_title')
+                            : route.name === 'profile' ? i18n.t('host_tab_profile')
+                                : undefined,
+            })}>
             <Tabs.Screen
                 name="dashboard"
                 options={{
-                    title: i18n.t('host_tab_dashboard'),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="chart.bar.fill" color={color} />,
                 }}
             />
@@ -30,14 +34,12 @@ export default function HostLayout() {
             <Tabs.Screen
                 name="reservations"
                 options={{
-                    title: i18n.t('host_tab_reservations'),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="calendar" color={color} />,
                 }}
             />
             <Tabs.Screen
                 name="chat"
                 options={{
-                    title: i18n.t('chat_title'),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
                 }}
             />
@@ -51,7 +53,6 @@ export default function HostLayout() {
             <Tabs.Screen
                 name="profile"
                 options={{
-                    title: i18n.t('host_tab_profile'),
                     tabBarIcon: ({ color }) => <IconSymbol size={28} name="person.fill" color={color} />,
                 }}
             />

@@ -67,7 +67,9 @@ export default function RootLayout() {
         }
       } else {
         // Session exists: Route based on their active role toggle
-        if (activeRole === 'host') {
+        if (activeRole === 'unassigned') {
+          router.replace('/auth/role-selection' as any);
+        } else if (activeRole === 'host') {
           router.replace('/(host)/dashboard'); // Assuming dashboard is the default host screen
         } else {
           router.replace('/(tabs)');

@@ -15,25 +15,24 @@ import { auth, db } from "./firebaseConfig";
 
 export const AuthService = {
     /**
-     * Register a new user with Email and Password
+     * Firebase Sign Up with Email/Password
      */
-    signUp: async (email: string, password: string, name?: string): Promise<UserCredential> => {
+    signUp: async (email: string, password: string, name: string): Promise<UserCredential> => {
         try {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-            // Create the Firestore user Document automatically!
+            // Build the user profile in Firestore
             await setDoc(doc(db, "users", userCredential.user.uid), {
                 email: userCredential.user.email,
-                name: name || '',
-                role: 'guest', // Defaults to looking for sitters
-                createdAt: new Date().toISOString(),
-                // Extra fields you can expand later:
-                // profilePic: "",
-                // pets: [],
+                name: name,
+                role: 'unassigned', // New users always go to the Interstitial first
+                profilePic: '',
+                createdAt: new Date().toISOString()
             });
 
             return userCredential;
         } catch (error: any) {
+            console.error("Sign Up Error inside Service:", error);
             throw error;
         }
     },
@@ -62,6 +61,18 @@ export const AuthService = {
     },
 
     /**
+     * Update the user's role in Firestore
+     */
+    updateRole: async (uid: string, newRole: 'guest' | 'host'): Promise<void> => {
+        try {
+            await setDoc(doc(db, "users", uid), { role: newRole }, { merge: true });
+        } catch (error: any) {
+            console.error("Failed to update role:", error);
+            throw error;
+        }
+    },
+
+    /**
      * Firebase Google Sign In using ID Token
      */
     signInWithGoogle: async (idToken: string): Promise<UserCredential> => {
@@ -77,7 +88,7 @@ export const AuthService = {
                 await setDoc(docRef, {
                     email: userCredential.user.email,
                     name: userCredential.user.displayName || 'Google User',
-                    role: 'guest',
+                    role: 'unassigned', // Intercept into the new User Interstitial Modal
                     profilePic: userCredential.user.photoURL || '',
                     createdAt: new Date().toISOString(),
                 });

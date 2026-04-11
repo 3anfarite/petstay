@@ -4,10 +4,11 @@ import i18n from '@/i18n';
 import { db } from '@/lib/firebaseConfig';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -92,22 +93,33 @@ export default function Profile() {
   const [profileData, setProfileData] = useState<any>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
-  React.useEffect(() => {
-    if (user?.uid) {
-      getDoc(doc(db, "users", user.uid)).then((docSnap) => {
-        if (docSnap.exists()) {
-          setProfileData(docSnap.data());
-        }
-        setIsLoadingProfile(false);
-      }).catch((e) => {
-        console.error(e);
-        setIsLoadingProfile(false);
-      });
-      console.log('data user ', profileData?.name);
-    } else {
+  const [refreshing, setRefreshing] = useState(false);
+  const scrollRef = useRef(null);
+  useScrollToTop(scrollRef);
+
+  const fetchProfile = async () => {
+    if (!user?.uid) return;
+    try {
+      const docSnap = await getDoc(doc(db, "users", user.uid));
+      if (docSnap.exists()) {
+        setProfileData(docSnap.data());
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
       setIsLoadingProfile(false);
+      setRefreshing(false);
     }
-  }, [user]);
+  };
+
+  React.useEffect(() => {
+    fetchProfile();
+  }, [user, locale]);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchProfile();
+  }, []);
 
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -161,7 +173,11 @@ export default function Profile() {
         <Text style={[styles.title, { color: c.text }]}>{i18n.t('profile_title')}</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
+      >
 
         {/* User Info List Item */}
         <TouchableOpacity style={[styles.userRow, { borderBottomColor: c.border }]} disabled={isLoadingProfile}>

@@ -1,21 +1,39 @@
+import { useLanguage } from '@/components/LanguageProvider';
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useScrollToTop } from '@react-navigation/native';
+import React, { useCallback, useRef, useState } from 'react';
+import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HostDashboard() {
     const c = useColors();
     const insets = useSafeAreaInsets();
+    const { locale } = useLanguage(); // Force re-render on language change
+
+    // Refresh controls
+    const [refreshing, setRefreshing] = useState(false);
+    const scrollRef = useRef(null);
+    useScrollToTop(scrollRef);
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        // Simulate network fetch
+        setTimeout(() => setRefreshing(false), 1000);
+    }, []);
 
     // Fallback for primaryLight until theme is updated
     const primaryLight = c.primary + '20'; // 20% opacity
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                ref={scrollRef}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
+            >
                 <View style={styles.header}>
                     <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_dashboard_title')}</Text>
                     <Text style={[styles.subtitle, { color: c.textMuted }]}>{i18n.t('host_dashboard_welcome')}</Text>

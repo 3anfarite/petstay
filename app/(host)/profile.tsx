@@ -1,12 +1,51 @@
-
 import { useLanguage } from '@/components/LanguageProvider';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { db } from '@/lib/firebaseConfig';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
+import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
-import { Animated, Dimensions, Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+
+const SkeletonView = ({ width, height, borderRadius, style }: any) => {
+    const c = useColors();
+    const animatedValue = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(animatedValue, { toValue: 1, duration: 800, useNativeDriver: true }),
+                Animated.timing(animatedValue, { toValue: 0, duration: 800, useNativeDriver: true })
+            ])
+        ).start();
+    }, [animatedValue]);
+
+    const opacity = animatedValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0.3, 0.7]
+    });
+
+    return (
+        <Animated.View
+            style={[
+                {
+                    width,
+                    height,
+                    borderRadius: borderRadius || 8,
+                    backgroundColor: c.border,
+                    opacity
+                },
+                style
+            ]}
+        />
+    );
+};
 
 // MenuItem component definition
 interface MenuItemProps {
@@ -112,24 +151,72 @@ export default function HostProfile() {
         outputRange: [screenHeight, 0],
     });
 
+    const { user } = useAuthStore();
+    const [profileData, setProfileData] = useState<any>(null);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+
+    const [refreshing, setRefreshing] = useState(false);
+    const scrollRef = useRef(null);
+    useScrollToTop(scrollRef);
+
+    const fetchProfile = async () => {
+        if (!user?.uid) return;
+        try {
+            const docSnap = await getDoc(doc(db, "users", user.uid));
+            if (docSnap.exists()) {
+                setProfileData(docSnap.data());
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setIsLoadingProfile(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, [user, locale]); // added locale to re-fetch/re-render if needed
+
+    const onRefresh = useCallback(() => {
+        setRefreshing(true);
+        fetchProfile();
+    }, []);
+
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
             <View style={styles.header}>
                 <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_profile_title')}</Text>
             </View>
 
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView
+                ref={scrollRef}
+                contentContainerStyle={styles.scrollContent}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
+            >
 
                 {/* User Info List Item */}
-                <TouchableOpacity style={[styles.userRow, { borderBottomColor: c.border }]}>
-                    <Image
-                        source={{ uri: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80' }} // Mock Avatar
-                        style={styles.avatar}
-                    />
-                    <View style={styles.userInfoText}>
-                        <Text style={[styles.name, { color: c.text }]}>Host User</Text>
-                        <Text style={[styles.email, { color: c.textMuted }]}>host@test.com</Text>
-                    </View>
+                <TouchableOpacity style={[styles.userRow, { borderBottomColor: c.border }]} disabled={isLoadingProfile}>
+                    {isLoadingProfile ? (
+                        <>
+                            <SkeletonView width={64} height={64} borderRadius={32} style={styles.avatar} />
+                            <View style={styles.userInfoText}>
+                                <SkeletonView width={140} height={24} style={{ marginBottom: 6 }} />
+                                <SkeletonView width={200} height={16} />
+                            </View>
+                        </>
+                    ) : (
+                        <>
+                            <Image
+                                source={{ uri: profileData?.profilePic || DEFAULT_AVATAR }}
+                                style={styles.avatar}
+                            />
+                            <View style={styles.userInfoText}>
+                                <Text style={[styles.name, { color: c.text }]}>{profileData?.name || 'PetStay Host'}</Text>
+                                <Text style={[styles.email, { color: c.textMuted }]}>{user?.email}</Text>
+                            </View>
+                        </>
+                    )}
                 </TouchableOpacity>
 
                 {/* Menu Sections */}

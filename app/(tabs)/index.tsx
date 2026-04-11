@@ -2,18 +2,29 @@ import { Categories } from "@/components/categories";
 import { FilterState } from "@/components/filter-modal";
 import { EmptyHostList } from "@/components/home/empty-host-list";
 import { HostList } from "@/components/home/host-list";
+import { useLanguage } from '@/components/LanguageProvider';
 import { SearchBar } from "@/components/search-bar";
 import { dummyCategories, dummyHosts } from "@/constants/dummyData";
 import { useColors } from '@/hooks/use-theme-color';
 import { useRouter } from "expo-router";
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Platform, StatusBar, View } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Home() {
   const router = useRouter();
+  const { locale } = useLanguage(); // Force re-render on language change
   const [selectedCategory, setSelectedCategory] = useState(dummyCategories[0].name);
   const [filters, setFilters] = useState<FilterState | null>(null);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    // Simulate loading data
+    setTimeout(() => {
+      setRefreshing(false);
+    }, 1000);
+  }, []);
 
   const c = useColors();
   const insets = useSafeAreaInsets();
@@ -73,6 +84,8 @@ export default function Home() {
             <HostList
               hosts={filteredHosts}
               onHostPress={(id) => router.push(`/host/${id}`)}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
             />
           )}
         </View>

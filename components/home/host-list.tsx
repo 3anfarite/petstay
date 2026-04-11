@@ -1,5 +1,8 @@
 import HostCard from "@/components/host-card";
-import { FlatList } from "react-native";
+import { useColors } from '@/hooks/use-theme-color';
+import { useScrollToTop } from '@react-navigation/native';
+import React, { useRef } from 'react';
+import { FlatList, RefreshControl } from "react-native";
 
 interface Host {
     id: string;
@@ -15,11 +18,18 @@ interface Host {
 interface HostListProps {
     hosts: Host[];
     onHostPress: (id: string) => void;
+    refreshing?: boolean;
+    onRefresh?: () => void;
 }
 
-export function HostList({ hosts, onHostPress }: HostListProps) {
+export function HostList({ hosts, onHostPress, refreshing = false, onRefresh }: HostListProps) {
+    const c = useColors();
+    const scrollRef = useRef(null);
+    useScrollToTop(scrollRef);
+
     return (
         <FlatList
+            ref={scrollRef}
             data={hosts}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
@@ -36,6 +46,7 @@ export function HostList({ hosts, onHostPress }: HostListProps) {
             )}
             contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
             style={{ flex: 1 }}
+            refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} /> : undefined}
         />
     );
 }

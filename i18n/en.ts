@@ -115,6 +115,9 @@ export default {
     auth_create_account: "Create Account",
     auth_welcome_back: "Welcome back!",
     auth_create_profile: "Create your profile",
+    auth_role_prompt: "I am here to...",
+    auth_role_guest: "Find a sitter",
+    auth_role_host: "Become a host",
 
     // Auth Errors
     auth_err_login_failed: "Login Failed",
