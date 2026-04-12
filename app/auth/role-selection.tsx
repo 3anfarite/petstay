@@ -88,6 +88,12 @@ export default function RoleSelectionScreen() {
 
     const handleContinue = async () => {
         if (!user || !selectedRole) return;
+
+        if (selectedRole === 'host') {
+            router.push('/auth/host-setup');
+            return;
+        }
+
         setIsUpdating(true);
         try {
             await AuthService.updateRole(user.uid, selectedRole);
@@ -103,7 +109,7 @@ export default function RoleSelectionScreen() {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]}>
             <View style={styles.header}>
-                <Text style={[styles.title, { color: c.text }]}>Welcome!</Text>
+                <Text style={[styles.title, { color: c.text }]}>{i18n.t('auth_role_title')}</Text>
                 <Text style={[styles.subtitle, { color: c.textMuted }]}>
                     {i18n.t('auth_role_prompt')}
                 </Text>
@@ -113,7 +119,7 @@ export default function RoleSelectionScreen() {
                 <RoleCard
                     type="guest"
                     title={i18n.t('auth_role_guest')}
-                    desc="Discover loving homes and sitters for your pet's perfect stay."
+                    desc={i18n.t('auth_role_guest_desc')}
                     icon="search"
                     isSelected={selectedRole === 'guest'}
                     onPress={() => setSelectedRole('guest')}
@@ -122,7 +128,7 @@ export default function RoleSelectionScreen() {
                 <RoleCard
                     type="host"
                     title={i18n.t('auth_role_host')}
-                    desc="Open your doors, care for pets, and earn money on your own schedule."
+                    desc={i18n.t('auth_role_host_desc')}
                     icon="home"
                     isSelected={selectedRole === 'host'}
                     onPress={() => setSelectedRole('host')}
@@ -139,7 +145,7 @@ export default function RoleSelectionScreen() {
                         <ActivityIndicator color="#fff" />
                     ) : (
                         <Text style={[styles.continueText, { color: selectedRole ? '#fff' : c.textMuted }]}>
-                            Continue
+                            {i18n.t('continue')}
                         </Text>
                     )}
                 </TouchableOpacity>

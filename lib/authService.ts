@@ -73,6 +73,21 @@ export const AuthService = {
     },
 
     /**
+     * Completes host onboarding by saving host specific details and transitioning the role
+     */
+    completeHostOnboarding: async (uid: string, hostData: any): Promise<void> => {
+        try {
+            await setDoc(doc(db, "users", uid), {
+                ...hostData,
+                role: 'host'
+            }, { merge: true });
+        } catch (error: any) {
+            console.error("Failed to complete host onboarding:", error);
+            throw error;
+        }
+    },
+
+    /**
      * Firebase Google Sign In using ID Token
      */
     signInWithGoogle: async (idToken: string): Promise<UserCredential> => {

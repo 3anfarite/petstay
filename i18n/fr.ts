@@ -115,9 +115,12 @@ export default {
     auth_create_account: "Créer un compte",
     auth_welcome_back: "Bon retour !",
     auth_create_profile: "Créez votre profil",
-    auth_role_prompt: "Je suis ici pour...",
-    auth_role_guest: "Trouver un gardien",
+    auth_role_title: "Bienvenue !",
+    auth_role_prompt: "Comment souhaitez-vous utiliser PetStay ?",
+    auth_role_guest: "Trouver un Pet Sitter",
+    auth_role_guest_desc: "Découvrez des foyers aimants et des pet sitters pour le séjour parfait de votre animal.",
     auth_role_host: "Devenir hôte",
+    auth_role_host_desc: "Ouvrez vos portes, prenez soin des animaux et gagnez de l'argent selon vos propres horaires.",
 
     // Auth Errors
     auth_err_login_failed: "Échec de la connexion",
@@ -185,7 +188,44 @@ export default {
     host_menu_insights: "Statistiques",
 
     // Common
+    continue: "Continuer",
     cancel: "Annuler",
     save: "Enregistrer",
     show_homes: "Afficher {{count}} logements",
+
+    // Host Setup Wizard
+    host_setup_title: "Profil Hôte",
+    host_setup_subtitle: "Configurons vos services pour que les propriétaires d'animaux puissent vous trouver !",
+    host_setup_location: "Où êtes-vous situé ?",
+    host_setup_location_ph: "Ville, Quartier, ou Code Postal",
+    host_setup_services: "Quels services proposez-vous ?",
+    host_setup_pets: "Quels animaux acceptez-vous ?",
+    host_setup_price: "Tarif de base par nuit ($)",
+    host_setup_bio: "Une petite bio pour les voyageurs",
+    host_setup_bio_ph: "J'ai un grand jardin clôturé et je travaille de chez moi...",
+    host_setup_submit: "Terminer la configuration",
+    host_setup_err_title: "Détails manquants",
+    host_setup_err_desc: "Veuillez indiquer votre emplacement, choisir au moins un service, un type d'animal et un prix de base pour continuer.",
+    host_setup_err_fail: "Échec de la création de votre profil hôte. Veuillez réessayer.",
+
+    // Profile Labels
+    host_profile_location: "Emplacement",
+    host_profile_services: "Services",
+    host_profile_pets: "Animaux acceptés",
+    host_profile_bio: "Bio",
+    host_profile_configured: "Configuré",
+    host_profile_none: "Aucun",
+
+    service_boarding: "Garde d'animaux",
+    service_walking: "Promenade de chiens",
+    service_sitting: "Garde à domicile",
+    service_daycare: "Garderie",
+    service_grooming: "Toilettage",
+    service_training: "Dressage",
+    service_vets: "Services Vétérinaires",
+
+    pet_all: "Tous",
+    pet_dogs: "Chiens",
+    pet_cats: "Chats",
+    pet_exotics: "Exotiques",
 };

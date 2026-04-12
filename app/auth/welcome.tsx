@@ -1,10 +1,12 @@
+import { useLanguage } from '@/components/LanguageProvider';
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Dimensions, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
@@ -13,6 +15,19 @@ export default function WelcomeScreen() {
     const router = useRouter();
     const c = useColors();
     const insets = useSafeAreaInsets();
+    const { locale, setLocale } = useLanguage();
+
+    const showLanguagePicker = () => {
+        Alert.alert(
+            i18n.t('menu_language', { locale }),
+            '',
+            [
+                { text: 'English (US)', onPress: () => setLocale('en') },
+                { text: 'Français (FR)', onPress: () => setLocale('fr') },
+                { text: i18n.t('cancel', { locale }), style: 'cancel' }
+            ]
+        );
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2 }]}>
@@ -36,9 +51,9 @@ export default function WelcomeScreen() {
             {/* Content */}
             <View style={[styles.content, { paddingBottom: insets.bottom + 20 }]}>
                 <View style={styles.header}>
-                    <Text style={[styles.title, { color: c.text }]}>{i18n.t('auth_welcome_title')}</Text>
+                    <Text style={[styles.title, { color: c.text }]}>{i18n.t('auth_welcome_title', { locale })}</Text>
                     <Text style={[styles.subtitle, { color: c.textMuted }]}>
-                        {i18n.t('auth_welcome_subtitle')}
+                        {i18n.t('auth_welcome_subtitle', { locale })}
                     </Text>
                 </View>
 
@@ -49,32 +64,46 @@ export default function WelcomeScreen() {
                     >
                         <Ionicons name="mail-outline" size={20} color="white" />
                         <Text style={[styles.buttonText, { color: 'white' }]}>
-                            {i18n.t('auth_continue_email')}
+                            {i18n.t('auth_continue_email', { locale })}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.button, styles.socialButton, { borderColor: c.border }]}>
                         <Ionicons name="logo-apple" size={20} color={c.text} />
                         <Text style={[styles.buttonText, { color: c.text }]}>
-                            {i18n.t('auth_continue_apple')}
+                            {i18n.t('auth_continue_apple', { locale })}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={[styles.button, styles.socialButton, { borderColor: c.border }]}>
                         <Ionicons name="logo-google" size={20} color={c.text} />
                         <Text style={[styles.buttonText, { color: c.text }]}>
-                            {i18n.t('auth_continue_google')}
+                            {i18n.t('auth_continue_google', { locale })}
                         </Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.footer}>
                     <Text style={[styles.footerText, { color: c.textMuted }]}>
-                        {i18n.t('auth_no_account')}
+                        {i18n.t('auth_no_account', { locale })}
                     </Text>
                     <TouchableOpacity onPress={() => router.push({ pathname: '/auth/authenticate', params: { mode: 'signup' } })}>
                         <Text style={[styles.linkText, { color: c.text }]}>
-                            {i18n.t('auth_signup')}
+                            {i18n.t('auth_signup', { locale })}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Sub-Footer Language Toggle */}
+                <View style={styles.subFooter}>
+                    <TouchableOpacity
+                        onPress={showLanguagePicker}
+                        style={styles.subFooterBtn}
+                        activeOpacity={0.7}
+                    >
+                        <Ionicons name="globe-outline" size={14} color={c.textMuted} style={{ marginRight: 6 }} />
+                        <Text style={[styles.subFooterText, { color: c.textMuted }]}>
+                            {locale === 'en' ? 'English (US)' : 'Français (FR)'}
                         </Text>
                     </TouchableOpacity>
                 </View>
@@ -165,4 +194,21 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textDecorationLine: 'underline',
     },
+    subFooter: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        marginTop: 20,
+    },
+    subFooterBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 4,
+        paddingHorizontal: 12,
+        borderRadius: 12,
+    },
+    subFooterText: {
+        fontSize: 12,
+        fontFamily: AppFonts.bodyBold,
+        textDecorationLine: 'underline',
+    }
 });

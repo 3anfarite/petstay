@@ -58,17 +58,23 @@ interface MenuItemProps {
 
 const MenuItem: React.FC<MenuItemProps> = ({ icon, label, value, onPress, isDestructive }) => {
     const c = useColors();
+    const ContainerStr = onPress ? TouchableOpacity : View;
+
     return (
-        <TouchableOpacity style={[menuItemStyles.menuItem, { borderBottomColor: c.border }]} onPress={onPress}>
+        <ContainerStr
+            style={[menuItemStyles.menuItem, { borderBottomColor: c.border }]}
+            onPress={onPress}
+            disabled={!onPress}
+        >
             <View style={menuItemStyles.leftContent}>
                 <Ionicons name={icon} size={24} color={isDestructive ? c.error : c.text} />
                 <Text style={[menuItemStyles.menuItemLabel, { color: isDestructive ? c.error : c.text }]}>{label}</Text>
             </View>
             <View style={menuItemStyles.rightContent}>
                 {value && <Text style={[menuItemStyles.menuItemValue, { color: c.textMuted }]}>{value}</Text>}
-                <Ionicons name="chevron-forward-outline" size={20} color={c.textMuted} />
+                {onPress && <Ionicons name="chevron-forward-outline" size={20} color={c.textMuted} />}
             </View>
-        </TouchableOpacity>
+        </ContainerStr>
     );
 };
 
@@ -234,8 +240,30 @@ export default function HostProfile() {
                     />
                 </View>
 
-                <View style={styles.section}>
+                <View style={[styles.section, { marginTop: 8 }]}>
                     <Text style={[styles.sectionTitle, { color: c.textMuted }]}>{i18n.t('section_hosting')}</Text>
+
+                    <MenuItem
+                        icon="location-outline"
+                        label={i18n.t('host_profile_location')}
+                        value={profileData?.location || i18n.t('host_profile_none')}
+                    />
+                    <MenuItem
+                        icon="paw-outline"
+                        label={i18n.t('host_profile_services')}
+                        value={profileData?.services?.length ? profileData.services.map((s: string) => i18n.t(`service_${s}`)).join(', ') : i18n.t('host_profile_none')}
+                    />
+                    <MenuItem
+                        icon="heart-outline"
+                        label={i18n.t('host_profile_pets')}
+                        value={profileData?.petsAllowed?.length ? profileData.petsAllowed.map((p: string) => i18n.t(`pet_${p}`)).join(', ') : i18n.t('host_profile_none')}
+                    />
+                    <MenuItem
+                        icon="document-text-outline"
+                        label={i18n.t('host_profile_bio')}
+                        value={profileData?.bio ? i18n.t('host_profile_configured') : i18n.t('host_profile_none')}
+                    />
+
                     {/* Navigate to Listings Screen from here */}
                     <MenuItem
                         icon="list-outline"
@@ -327,6 +355,52 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 32,
         fontWeight: 'bold',
+    },
+    hostIdentityCard: {
+        marginHorizontal: 20,
+        marginTop: 16,
+        padding: 20,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    locationRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 12,
+    },
+    hostLocation: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginLeft: 4,
+    },
+    hostBio: {
+        fontSize: 15,
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    tagsArea: {
+        marginTop: 4,
+    },
+    tagsHeader: {
+        fontSize: 14,
+        fontWeight: '700',
+        marginBottom: 10,
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    chipsContainer: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 8,
+    },
+    chip: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+    },
+    chipText: {
+        fontSize: 13,
+        fontWeight: '600',
     },
     scrollContent: {
         paddingBottom: 40,

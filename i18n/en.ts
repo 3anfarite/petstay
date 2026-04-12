@@ -115,9 +115,12 @@ export default {
     auth_create_account: "Create Account",
     auth_welcome_back: "Welcome back!",
     auth_create_profile: "Create your profile",
-    auth_role_prompt: "I am here to...",
-    auth_role_guest: "Find a sitter",
-    auth_role_host: "Become a host",
+    auth_role_title: "Welcome!",
+    auth_role_prompt: "How would you like to use PetStay?",
+    auth_role_guest: "Find a Sitter",
+    auth_role_guest_desc: "Discover loving homes and sitters for your pet's perfect stay.",
+    auth_role_host: "Become a Host",
+    auth_role_host_desc: "Open your doors, care for pets, and earn money on your own schedule.",
 
     // Auth Errors
     auth_err_login_failed: "Login Failed",
@@ -185,7 +188,44 @@ export default {
     host_menu_insights: "Insights",
 
     // Common
+    continue: "Continue",
     cancel: "Cancel",
     save: "Save",
     show_homes: "Show {{count}} homes",
+
+    // Host Setup Wizard
+    host_setup_title: "Host Profile",
+    host_setup_subtitle: "Let's set up your services so pet owners can find you!",
+    host_setup_location: "Where are you located?",
+    host_setup_location_ph: "City, Neighborhood, or Zip",
+    host_setup_services: "What services do you offer?",
+    host_setup_pets: "What pets do you accept?",
+    host_setup_price: "Base Nightly Rate ($)",
+    host_setup_bio: "A quick bio for guests",
+    host_setup_bio_ph: "I have a large fenced yard and work from home...",
+    host_setup_submit: "Complete Setup",
+    host_setup_err_title: "Missing Details",
+    host_setup_err_desc: "Please fill in your location, choose at least one service, one pet type, and a base price to continue.",
+    host_setup_err_fail: "Failed to create your host profile. Please try again.",
+
+    // Profile Labels
+    host_profile_location: "Location",
+    host_profile_services: "Services",
+    host_profile_pets: "Accepted Pets",
+    host_profile_bio: "Bio",
+    host_profile_configured: "Configured",
+    host_profile_none: "None",
+
+    service_boarding: "Pet Boarding",
+    service_walking: "Dog Walking",
+    service_sitting: "House Sitting",
+    service_daycare: "Daycare",
+    service_grooming: "Grooming",
+    service_training: "Training",
+    service_vets: "Vet Services",
+
+    pet_all: "All",
+    pet_dogs: "Dogs",
+    pet_cats: "Cats",
+    pet_exotics: "Exotics",
 };
