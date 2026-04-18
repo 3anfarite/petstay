@@ -44,13 +44,18 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (loaded && fontsLoaded && !isLoading) {
-      handleInitialRoute();
+      const initializeRouting = async () => {
+        await handleInitialRoute();
 
-      // Hide Splash screen strictly once
-      if (!splashHidden.current) {
-        SplashScreen.hideAsync().catch(() => { });
-        splashHidden.current = true;
-      }
+        // Hide Splash screen strictly once, securely after routing computes
+        if (!splashHidden.current) {
+          setTimeout(() => {
+            SplashScreen.hideAsync().catch(() => { });
+          }, 400);
+          splashHidden.current = true;
+        }
+      };
+      initializeRouting();
     }
   }, [loaded, fontsLoaded, isLoading, user, activeRole]);
 
@@ -80,7 +85,7 @@ export default function RootLayout() {
     }
   };
 
-  if (!loaded || !fontsLoaded) {
+  if (!loaded || !fontsLoaded || isLoading) {
     return null;
   }
 

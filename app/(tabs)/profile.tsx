@@ -12,6 +12,8 @@ import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSh
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 
+import { AuthService } from '@/lib/authService';
+
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
 
 type MenuItemProps = {
@@ -161,6 +163,14 @@ export default function Profile() {
     closeLanguageModal();
   };
 
+  const handleLogout = async () => {
+    try {
+      await AuthService.signOutUser();
+    } catch (error) {
+      console.error("Failed to sign out:", error);
+    }
+  };
+
   const screenHeight = Dimensions.get('window').height;
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
@@ -240,7 +250,7 @@ export default function Profile() {
             icon="log-out-outline"
             label={i18n.t('profile_logout')}
             isDestructive
-            onPress={() => router.replace('/auth/welcome')}
+            onPress={handleLogout}
           />
         </View>
 

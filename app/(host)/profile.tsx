@@ -11,6 +11,8 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { AuthService } from '@/lib/authService';
+
 const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
 
 const SkeletonView = ({ width, height, borderRadius, style }: any) => {
@@ -151,6 +153,15 @@ export default function HostProfile() {
         closeLanguageModal();
     };
 
+    const handleLogout = async () => {
+        try {
+            await AuthService.signOutUser();
+            // Note: The global Auth listener will automatically handle routing us back to the Welcome screen!
+        } catch (error) {
+            console.error("Failed to sign out:", error);
+        }
+    };
+
     const screenHeight = Dimensions.get('window').height;
     const translateY = slideAnim.interpolate({
         inputRange: [0, 1],
@@ -284,7 +295,7 @@ export default function HostProfile() {
                         icon="log-out-outline"
                         label={i18n.t('host_profile_logout')}
                         isDestructive
-                        onPress={() => router.replace('/auth/welcome')}
+                        onPress={handleLogout}
                     />
                 </View>
 

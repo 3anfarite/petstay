@@ -1,5 +1,5 @@
 import i18n from '@/i18n';
-import { Tabs } from 'expo-router';
+import { Tabs, Redirect } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
@@ -7,10 +7,16 @@ import { useLanguage } from '@/components/LanguageProvider';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function HostLayout() {
     const colorScheme = useColorScheme();
     const { locale } = useLanguage();
+    const { user, activeRole } = useAuthStore();
+
+    // Instant declarative routing guards to physically prevent FOUC screen flashing
+    if (!user) return <Redirect href="/auth/welcome" />;
+    if (activeRole !== 'host') return <Redirect href="/(tabs)" />;
 
     return (
         <Tabs

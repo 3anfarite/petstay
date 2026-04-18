@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>((set) => ({
                     set({ user: firebaseUser, isLoading: false });
                 }
             } else {
-                set({ user: null, isLoading: false });
+                set({ user: null, activeRole: 'unassigned', isLoading: false });
             }
         });
 
