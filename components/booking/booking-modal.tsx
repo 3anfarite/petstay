@@ -8,20 +8,27 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 type BookingModalProps = {
     visible: boolean;
     onClose: () => void;
-    onConfirm: () => void;
+    onConfirm: (data: { startDate: Date; endDate: Date; petCount: number; totalPrice: number; nights: number }) => void;
     pricePerNight: number;
     hostName: string;
+    isSubmitting?: boolean;
+    serviceType: string;
 };
+
+const TIME_SLOTS = ["08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM"];
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostName }: BookingModalProps) {
+export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostName, isSubmitting, serviceType }: BookingModalProps) {
     const c = useColors();
     const styles = makeStyles(c);
     const insets = useSafeAreaInsets();
 
+    const isHourlyService = ['Grooming', 'Walking', 'Training', 'Vets', 'Daycare'].includes(serviceType);
+
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
+    const [selectedTime, setSelectedTime] = useState<string>(TIME_SLOTS[0]);
     const [petCount, setPetCount] = useState(1);
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
@@ -115,6 +122,12 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
     }, [currentMonth]);
 
     const handleDatePress = (date: Date) => {
+        if (isHourlyService) {
+            setStartDate(date);
+            setEndDate(null);
+            return;
+        }
+
         if (!startDate || (startDate && endDate)) {
             setStartDate(date);
             setEndDate(null);
@@ -130,21 +143,23 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
     const isDateSelected = (date: Date) => {
         if (!startDate) return false;
         if (startDate.getTime() === date.getTime()) return true;
-        if (endDate && endDate.getTime() === date.getTime()) return true;
+        if (!isHourlyService && endDate && endDate.getTime() === date.getTime()) return true;
         return false;
     };
 
     const isDateInRange = (date: Date) => {
+        if (isHourlyService) return false;
         if (!startDate || !endDate) return false;
         return date > startDate && date < endDate;
     };
 
     // Price Calculation
     const nights = useMemo(() => {
+        if (isHourlyService) return 1; // Hourly services count as 1 Base Session mathematically
         if (!startDate || !endDate) return 0;
         const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
         return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }, [startDate, endDate]);
+    }, [startDate, endDate, isHourlyService]);
 
     const serviceFee = 25;
     const totalPrice = (nights * pricePerNight) + serviceFee;
@@ -153,6 +168,26 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
         const newDate = new Date(currentMonth);
         newDate.setMonth(newDate.getMonth() + increment);
         setCurrentMonth(newDate);
+    };
+
+    const handleConfirm = () => {
+        if (!startDate) return;
+        
+        let finalStart = new Date(startDate);
+        let finalEnd = endDate ? new Date(endDate) : new Date(startDate);
+        
+        if (isHourlyService) {
+            const [time, period] = selectedTime.split(' ');
+            let [hours, minutes] = time.split(':').map(Number);
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            
+            finalStart.setHours(hours, minutes, 0, 0);
+            finalEnd = new Date(finalStart);
+            finalEnd.setHours(finalEnd.getHours() + 1); // Exact 1 Hour block
+        }
+
+        onConfirm({ startDate: finalStart, endDate: finalEnd, petCount, totalPrice, nights });
     };
 
     if (!visible) return null;
@@ -248,6 +283,29 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
 
                         <View style={styles.divider} />
 
+                        {/* Hourly Time Slot Selection conditionally rendered */}
+                        {isHourlyService && (
+                            <>
+                                <View style={styles.section}>
+                                    <Text style={styles.sectionTitle}>{i18n.t('booking_time_slot', { defaultValue: 'Select Time' })}</Text>
+                                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timeScroll}>
+                                        {TIME_SLOTS.map(time => (
+                                            <TouchableOpacity
+                                                key={time}
+                                                style={[styles.timeSlotBtn, selectedTime === time && styles.timeSlotBtnSelected, { borderColor: c.border }]}
+                                                onPress={() => setSelectedTime(time)}
+                                            >
+                                                <Text style={[styles.timeSlotText, { color: selectedTime === time ? 'white' : c.text }]}>
+                                                    {time}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                                <View style={styles.divider} />
+                            </>
+                        )}
+
                         {/* Guests & Pets */}
                         <View style={styles.section}>
                             <View style={styles.row}>
@@ -279,7 +337,7 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                                 <Text style={styles.sectionTitle}>{i18n.t('booking_price_breakdown')}</Text>
                                 <View style={styles.priceRow}>
                                     <Text style={styles.priceLabel}>
-                                        {i18n.t('booking_nightly_rate', { price: pricePerNight, count: nights })}
+                                        {isHourlyService ? i18n.t('booking_session_rate', { defaultValue: `Session Rate ($${pricePerNight})` }) : i18n.t('booking_nightly_rate', { price: pricePerNight, count: nights })}
                                     </Text>
                                     <Text style={styles.priceValue}>${pricePerNight * nights}</Text>
                                 </View>
@@ -300,12 +358,12 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                     {/* Footer Button */}
                     <View style={styles.footer}>
                         <TouchableOpacity
-                            style={[styles.confirmButton, (!startDate || !endDate) && styles.confirmButtonDisabled]}
-                            disabled={!startDate || !endDate}
-                            onPress={onConfirm}
+                            style={[styles.confirmButton, (!startDate || (!isHourlyService && !endDate) || isSubmitting) && styles.confirmButtonDisabled]}
+                            disabled={!startDate || (!isHourlyService && !endDate) || isSubmitting}
+                            onPress={handleConfirm}
                         >
                             <Text style={styles.confirmButtonText}>
-                                {startDate && endDate ? i18n.t('booking_confirm') : i18n.t('booking_select_dates')}
+                                {isSubmitting ? i18n.t('booking_processing', { defaultValue: 'Processing...' }) : (startDate && (isHourlyService || endDate) ? i18n.t('booking_confirm') : i18n.t('booking_select_dates'))}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -502,5 +560,23 @@ const makeStyles = (c: any) => StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: 'bold',
+    },
+    timeScroll: {
+        gap: 12,
+        paddingVertical: 8,
+    },
+    timeSlotBtn: {
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+    },
+    timeSlotBtnSelected: {
+        backgroundColor: c.primary,
+        borderColor: c.primary,
+    },
+    timeSlotText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
 });

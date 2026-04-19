@@ -1,7 +1,7 @@
 export default {
     // Tabs
     tab_home: "Explore",
-    tab_bookings: "Trips",
+    tab_bookings: "Bookings",
     tab_wishlist: "Wishlist",
     tab_chat: "Inbox",
     tab_profile: "Profile",
@@ -70,7 +70,7 @@ export default {
     booking_clear_dates: "Clear",
 
     // Bookings Screen
-    bookings_page_title: "Trips",
+    bookings_page_title: "Bookings",
     bookings_tab_upcoming: "Upcoming",
     bookings_tab_completed: "Completed",
     bookings_tab_cancelled: "Cancelled",
@@ -79,12 +79,12 @@ export default {
     booking_status_cancelled: "Cancelled",
     booking_action_message: "Message",
     booking_action_cancel: "Cancel",
-    bookings_empty_title: "No trips booked... yet!",
-    bookings_empty_subtitle: "Time to dust off your bags and start planning your next adventure",
+    bookings_empty_title: "No bookings... yet!",
+    bookings_empty_subtitle: "Time to find the perfect stay for your furry friend.",
     bookings_empty_btn: "Start exploring",
     booking_total_lower: "total",
-    bookings_count_subtitle_one: "{{count}} {{status}} trip",
-    bookings_count_subtitle_other: "{{count}} {{status}} trips",
+    bookings_count_subtitle_one: "{{count}} {{status}} booking",
+    bookings_count_subtitle_other: "{{count}} {{status}} bookings",
 
     // Onboarding
     onboarding_slide1_title: "Your Pet's Second Home",

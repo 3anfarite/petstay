@@ -3,8 +3,12 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BookingService, Booking } from '@/lib/bookingService';
+import { useAuthStore } from '@/store/useAuthStore';
 import {
+  Alert,
+  Animated,
   FlatList,
   Image,
   LayoutAnimation,
@@ -24,6 +28,47 @@ if (Platform.OS === 'android') {
   }
 }
 
+const SkeletonView = ({ width, height, borderRadius, style }: any) => {
+  const c = useColors();
+  const animatedValue = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(animatedValue, { toValue: 1, duration: 800, useNativeDriver: true }),
+        Animated.timing(animatedValue, { toValue: 0, duration: 800, useNativeDriver: true })
+      ])
+    ).start();
+  }, []);
+
+  const opacity = animatedValue.interpolate({ inputRange: [0, 1], outputRange: [0.3, 0.7] });
+  return <Animated.View style={[{ width, height, borderRadius, backgroundColor: c.border, opacity }, style]} />;
+};
+
+const BookingSkeleton = () => {
+  const c = useColors();
+  const styles = makeStyles(c);
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <SkeletonView width={90} height={90} borderRadius={16} />
+        <View style={[styles.cardInfo, { justifyContent: 'space-around' }]}>
+          <View style={styles.topRow}>
+            <SkeletonView width="50%" height={20} borderRadius={4} />
+            <SkeletonView width={60} height={24} borderRadius={12} />
+          </View>
+          <SkeletonView width="40%" height={14} borderRadius={4} />
+          <SkeletonView width="60%" height={14} borderRadius={4} />
+          <SkeletonView width="30%" height={18} borderRadius={4} />
+        </View>
+      </View>
+      <View style={styles.cardFooter}>
+        <SkeletonView width="100%" height={45} borderRadius={14} />
+      </View>
+    </View>
+  );
+};
+
 type TabType = 'upcoming' | 'completed' | 'cancelled';
 
 export default function BookingScreen() {
@@ -33,8 +78,57 @@ export default function BookingScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('upcoming');
   const insets = useSafeAreaInsets();
 
-  // Filter bookings based on active tab
-  const filteredBookings = dummyBookings.filter((b) => b.status === activeTab);
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuthStore();
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchBookings = async () => {
+      try {
+        const data = await BookingService.getGuestBookings(user.uid);
+        setBookings(data);
+      } catch (error) {
+        console.error('Failed to fetch bookings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchBookings();
+  }, [user]);
+
+  const handleCancelBooking = (bookingId: string) => {
+    Alert.alert(
+      i18n.t('booking_cancel_title', { defaultValue: 'Cancel Booking' }),
+      i18n.t('booking_cancel_message', { defaultValue: 'Are you sure you want to cancel this booking? This action cannot be undone.' }),
+      [
+        { text: i18n.t('booking_action_no', { defaultValue: 'No, Keep it' }), style: 'cancel' },
+        {
+          text: i18n.t('booking_action_yes', { defaultValue: 'Yes, Cancel' }),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              // Update strictly to Firebase first
+              await BookingService.updateBookingStatus(bookingId, 'cancelled');
+              
+              // Optimistically cascade UI state so it instantly hops to the Cancelled Tab!
+              setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: 'cancelled' } : b));
+            } catch (error) {
+              console.error('Failed to cancel booking:', error);
+              Alert.alert('Error', 'Could not cancel the booking. Please try again.');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  // Filter bookings based on active tab and status mappings
+  const filteredBookings = bookings.filter((b) => {
+    if (activeTab === 'upcoming') return b.status === 'pending' || b.status === 'confirmed';
+    if (activeTab === 'cancelled') return b.status === 'cancelled' || b.status === 'declined';
+    return b.status === activeTab;
+  });
 
   const handleTabChange = (tab: TabType) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -75,10 +169,17 @@ export default function BookingScreen() {
       </View>
 
       {/* List */}
-      <FlatList
-        data={filteredBookings}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
+      {isLoading ? (
+        <View style={styles.listContent}>
+          <BookingSkeleton />
+          <BookingSkeleton />
+          <BookingSkeleton />
+        </View>
+      ) : (
+        <FlatList
+          data={filteredBookings}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -101,8 +202,16 @@ export default function BookingScreen() {
           </View>
         }
         renderItem={({ item }) => {
-          const host = dummyHosts.find((h) => h.id === item.hostId);
-          if (!host) return null;
+          // Fallback to dummy data for host visuals since we haven't stored them all strictly yet
+          const host = dummyHosts.find((h) => h.id === item.hostId) || { image: 'https://placecats.com/100/100', location: 'Remote' };
+
+          // Format ISO date safely
+          const startStr = new Date(item.startDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+          const endStr = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+          const datesString = `${startStr} - ${endStr}`;
+          
+          const isUpcoming = item.status === 'pending' || item.status === 'confirmed';
+          const isCancelled = item.status === 'cancelled' || item.status === 'declined';
 
           return (
             <View style={styles.card}>
@@ -110,20 +219,20 @@ export default function BookingScreen() {
                 <Image source={{ uri: host.image }} style={styles.cardImage} />
                 <View style={styles.cardInfo}>
                   <View style={styles.topRow}>
-                    <Text style={styles.hostName} numberOfLines={1}>{host.name}</Text>
+                    <Text style={styles.hostName} numberOfLines={1}>{item.hostName || host.name}</Text>
                     <View style={[
                       styles.statusBadge,
-                      item.status === 'upcoming' ? styles.badge_upcoming :
+                      isUpcoming ? styles.badge_upcoming :
                         item.status === 'completed' ? styles.badge_completed :
                           styles.badge_cancelled
                     ]}>
                       <Text style={[
                         styles.statusText,
-                        item.status === 'upcoming' ? styles.text_upcoming :
+                        isUpcoming ? styles.text_upcoming :
                           item.status === 'completed' ? styles.text_completed :
                             styles.text_cancelled
                       ]}>
-                        {i18n.t(`booking_status_${item.status === 'upcoming' ? 'confirmed' : item.status === 'cancelled' ? 'cancelled' : 'pending'}`)}
+                        {i18n.t(`booking_status_${item.status}`)}
                       </Text>
                     </View>
                   </View>
@@ -135,10 +244,10 @@ export default function BookingScreen() {
 
                   <View style={styles.detailRow}>
                     <Ionicons name="calendar-clear" size={14} color={c.textMuted} />
-                    <Text style={styles.dates}>{item.dates}</Text>
+                    <Text style={styles.dates}>{datesString}</Text>
                   </View>
 
-                  <Text style={styles.price}>${item.price} <Text style={styles.priceLabel}>{i18n.t('booking_total_lower')}</Text></Text>
+                  <Text style={styles.price}>${item.totalPrice} <Text style={styles.priceLabel}>{i18n.t('booking_total_lower')}</Text></Text>
                 </View>
               </View>
 
@@ -148,8 +257,11 @@ export default function BookingScreen() {
                   <Text style={styles.messageText}>{i18n.t('booking_action_message')}</Text>
                 </TouchableOpacity>
 
-                {item.status === 'upcoming' && (
-                  <TouchableOpacity style={styles.cancelButton}>
+                {isUpcoming && (
+                  <TouchableOpacity 
+                    style={styles.cancelButton}
+                    onPress={() => item.id && handleCancelBooking(item.id)}
+                  >
                     <Text style={styles.cancelText}>{i18n.t('booking_action_cancel')}</Text>
                   </TouchableOpacity>
                 )}
@@ -158,6 +270,7 @@ export default function BookingScreen() {
           );
         }}
       />
+      )}
     </View>
   );
 }

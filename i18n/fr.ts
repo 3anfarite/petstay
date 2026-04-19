@@ -1,7 +1,7 @@
 export default {
     // Tabs
     tab_home: "Explorer",
-    tab_bookings: "Voyages",
+    tab_bookings: "Réservations",
     tab_wishlist: "Favoris",
     tab_chat: "Messages",
     tab_profile: "Profil",
@@ -70,7 +70,7 @@ export default {
     booking_clear_dates: "Effacer",
 
     // Bookings Screen
-    bookings_page_title: "Voyages",
+    bookings_page_title: "Réservations",
     bookings_tab_upcoming: "À venir",
     bookings_tab_completed: "Terminés",
     bookings_tab_cancelled: "Annulés",
@@ -79,12 +79,12 @@ export default {
     booking_status_cancelled: "Annulée",
     booking_action_message: "Message",
     booking_action_cancel: "Annuler",
-    bookings_empty_title: "Aucun voyage réservé... pour l'instant !",
-    bookings_empty_subtitle: "Il est temps de dépoussiérer vos valises et de commencer à planifier votre prochaine aventure",
+    bookings_empty_title: "Aucune réservation... pour l'instant !",
+    bookings_empty_subtitle: "Il est temps de trouver le parfait foyer d'accueil pour votre compagnon à quatre pattes.",
     bookings_empty_btn: "Commencer l'exploration",
     booking_total_lower: "total",
-    bookings_count_subtitle_one: "{{count}} voyage {{status}}",
-    bookings_count_subtitle_other: "{{count}} voyages {{status}}",
+    bookings_count_subtitle_one: "{{count}} réservation {{status}}",
+    bookings_count_subtitle_other: "{{count}} réservations {{status}}",
 
     // Onboarding
     onboarding_slide1_title: "La deuxième maison de votre animal",

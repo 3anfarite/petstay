@@ -5,6 +5,10 @@ import { dummyHosts } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { BookingService } from '@/lib/bookingService';
+import { db } from '@/lib/firebaseConfig';
+import { useAuthStore } from '@/store/useAuthStore';
+import { doc, getDoc } from 'firebase/firestore';
 import { BlurView } from 'expo-blur';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -41,6 +45,9 @@ export default function HostDetailScreen() {
 
     const [selectedService, setSelectedService] = useState(host.services[0]);
     const [isBookingModalVisible, setBookingModalVisible] = useState(false);
+    const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+
+    const { user } = useAuthStore();
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -217,9 +224,43 @@ export default function HostDetailScreen() {
             <BookingModal
                 visible={isBookingModalVisible}
                 onClose={() => setBookingModalVisible(false)}
-                onConfirm={() => {
-                    setBookingModalVisible(false);
-                    router.push('/(tabs)/bookings');
+                isSubmitting={isSubmittingBooking}
+                serviceType={selectedService}
+                onConfirm={async (data) => {
+                    if (!user) {
+                        router.replace('/auth/welcome');
+                        return;
+                    }
+
+                    try {
+                        setIsSubmittingBooking(true);
+                        
+                        // Grab Guest's denormalized data
+                        const guestDoc = await getDoc(doc(db, 'users', user.uid));
+                        const guestName = guestDoc.exists() ? (guestDoc.data()?.name || 'Guest') : 'Guest';
+                        const guestAvatar = guestDoc.exists() ? (guestDoc.data()?.profilePic || '') : '';
+
+                        await BookingService.createBooking({
+                            guestId: user.uid,
+                            guestName: guestName,
+                            guestAvatar: guestAvatar,
+                            hostId: host.id,
+                            hostName: host.name,
+                            serviceType: selectedService,
+                            petType: `x${data.petCount} Pets`,
+                            startDate: data.startDate.toISOString(),
+                            endDate: data.endDate.toISOString(),
+                            totalPrice: data.totalPrice,
+                        });
+
+                        setBookingModalVisible(false);
+                        setIsSubmittingBooking(false);
+                        router.push('/(tabs)/bookings');
+                    } catch (error) {
+                        console.error('Submission failed:', error);
+                        setIsSubmittingBooking(false);
+                        // Show error toast normally here
+                    }
                 }}
                 pricePerNight={host.price}
                 hostName={host.name}
