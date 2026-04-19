@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
 export interface Listing {
@@ -63,6 +63,26 @@ export const ListingService = {
         } catch (error) {
             console.error("Failed to fetch listing", error);
             return null;
+        }
+    },
+
+    async updateListing(id: string, data: Partial<Listing>): Promise<void> {
+        try {
+            const docRef = doc(db, "listings", id);
+            await updateDoc(docRef, data);
+        } catch (error) {
+            console.error("Failed to update listing", error);
+            throw error;
+        }
+    },
+
+    async deleteListing(id: string): Promise<void> {
+        try {
+            const docRef = doc(db, "listings", id);
+            await deleteDoc(docRef);
+        } catch (error) {
+            console.error("Failed to delete listing", error);
+            throw error;
         }
     }
 };

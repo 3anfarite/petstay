@@ -61,8 +61,8 @@ export default function HostDashboard() {
                     >
                         <Ionicons name="list" size={28} color={c.primary} />
                         <View style={styles.actionTextContainer}>
-                            <Text style={[styles.actionTitle, { color: c.text }]}>Manage Listings</Text>
-                            <Text style={[styles.actionDesc, { color: c.textMuted }]}>Create or edit your active property listings</Text>
+                            <Text style={[styles.actionTitle, { color: c.text }]}>{i18n.t('host_dashboard_manage_listings')}</Text>
+                            <Text style={[styles.actionDesc, { color: c.textMuted }]}>{i18n.t('host_dashboard_manage_listings_desc')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={c.textMuted} />
                     </TouchableOpacity>
