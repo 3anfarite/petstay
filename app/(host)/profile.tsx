@@ -6,7 +6,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -111,6 +111,11 @@ export default function HostProfile() {
     const insets = useSafeAreaInsets();
     const { locale, setLocale } = useLanguage();
     const [isLanguageModalVisible, setLanguageModalVisible] = useState(false);
+    
+    // Capacity Modal State
+    const [isCapacityModalVisible, setCapacityModalVisible] = useState(false);
+    const [editingCapacity, setEditingCapacity] = useState(1);
+
     const router = useRouter(); // Added router for navigation
 
     // Animation values
@@ -159,6 +164,27 @@ export default function HostProfile() {
             // Note: The global Auth listener will automatically handle routing us back to the Welcome screen!
         } catch (error) {
             console.error("Failed to sign out:", error);
+        }
+    };
+
+    const openCapacityModal = () => {
+        setEditingCapacity(profileData?.maxPetCapacity || 1);
+        setCapacityModalVisible(true);
+    };
+
+    const saveCapacity = async () => {
+        if (!user?.uid) return;
+        try {
+            setIsLoadingProfile(true);
+            setCapacityModalVisible(false);
+            await updateDoc(doc(db, "users", user.uid), {
+                maxPetCapacity: editingCapacity
+            });
+            setProfileData((prev: any) => ({ ...prev, maxPetCapacity: editingCapacity }));
+        } catch (error) {
+            console.error("Failed to update capacity", error);
+        } finally {
+            setIsLoadingProfile(false);
         }
     };
 
@@ -260,6 +286,12 @@ export default function HostProfile() {
                         value={profileData?.location || i18n.t('host_profile_none')}
                     />
                     <MenuItem
+                        icon="people-outline"
+                        label={i18n.t('host_profile_capacity', { defaultValue: 'Max Capacity' })}
+                        value={profileData?.maxPetCapacity ? `${profileData.maxPetCapacity} Pets` : 'Not Set'}
+                        onPress={openCapacityModal}
+                    />
+                    <MenuItem
                         icon="paw-outline"
                         label={i18n.t('host_profile_services')}
                         value={profileData?.services?.length ? profileData.services.map((s: string) => i18n.t(`service_${s}`)).join(', ') : i18n.t('host_profile_none')}
@@ -275,12 +307,6 @@ export default function HostProfile() {
                         value={profileData?.bio ? i18n.t('host_profile_configured') : i18n.t('host_profile_none')}
                     />
 
-                    {/* Navigate to Listings Screen from here */}
-                    <MenuItem
-                        icon="list-outline"
-                        label={i18n.t('host_tab_listings')}
-                        onPress={() => router.push('/(host)/listings')}
-                    />
                     <MenuItem icon="stats-chart-outline" label={i18n.t('host_menu_insights')} />
                 </View>
 
@@ -352,6 +378,50 @@ export default function HostProfile() {
                 </View>
             </Modal>
 
+            {/* Capacity Modal */}
+            <Modal
+                visible={isCapacityModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setCapacityModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: c.bg2 }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: c.text }]}>
+                                {i18n.t('host_capacity_title', { defaultValue: 'Set Max Capacity' })}
+                            </Text>
+                            <TouchableOpacity onPress={() => setCapacityModalVisible(false)}>
+                                <Ionicons name="close" size={24} color={c.text} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={[styles.capacityDescription, { color: c.textMuted }]}>
+                            {i18n.t('host_capacity_desc', { defaultValue: 'How many pets can you safely host at the same time?' })}
+                        </Text>
+
+                        <View style={styles.capacityControls}>
+                            <TouchableOpacity
+                                style={[styles.capacityBtn, { borderColor: c.border }]}
+                                onPress={() => setEditingCapacity(Math.max(1, editingCapacity - 1))}
+                            >
+                                <Ionicons name="remove" size={24} color={c.text} />
+                            </TouchableOpacity>
+                            <Text style={[styles.capacityValue, { color: c.text }]}>{editingCapacity}</Text>
+                            <TouchableOpacity
+                                style={[styles.capacityBtn, { borderColor: c.border }]}
+                                onPress={() => setEditingCapacity(editingCapacity + 1)}
+                            >
+                                <Ionicons name="add" size={24} color={c.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <TouchableOpacity style={[styles.saveButton, { backgroundColor: c.primary }]} onPress={saveCapacity}>
+                            <Text style={styles.saveButtonText}>{i18n.t('menu_save', { defaultValue: 'Save Configuration' })}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -411,6 +481,48 @@ const styles = StyleSheet.create({
     },
     chipText: {
         fontSize: 13,
+        fontWeight: '600',
+    },
+    langText: {
+        fontSize: 16,
+        fontWeight: '500',
+    },
+    capacityDescription: {
+        fontSize: 14,
+        textAlign: 'center',
+        paddingHorizontal: 16,
+        marginBottom: 24,
+        lineHeight: 20,
+    },
+    capacityControls: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 32,
+        marginBottom: 32,
+    },
+    capacityBtn: {
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        borderWidth: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    capacityValue: {
+        fontSize: 32,
+        fontWeight: '700',
+    },
+    saveButton: {
+        width: '100%',
+        paddingVertical: 16,
+        borderRadius: 16,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    saveButtonText: {
+        color: 'white',
+        fontSize: 16,
         fontWeight: '600',
     },
     scrollContent: {

@@ -1,7 +1,7 @@
 import { BookingModal } from '@/components/booking/booking-modal';
 import { GalleryList } from '@/components/host/gallery-list';
 import { ServiceList } from '@/components/host/service-list';
-import { dummyHosts } from '@/constants/dummyData';
+import { dummyCategories } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,8 +11,9 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { doc, getDoc } from 'firebase/firestore';
 import { BlurView } from 'expo-blur';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+    ActivityIndicator,
     Dimensions,
     Image,
     StatusBar,
@@ -20,6 +21,7 @@ import {
     Text,
     TouchableOpacity,
     View,
+    ScrollView,
 } from 'react-native';
 import Animated, {
     Extrapolation,
@@ -29,6 +31,7 @@ import Animated, {
     useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ListingService, Listing } from '@/lib/listingService';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -40,14 +43,24 @@ export default function HostDetailScreen() {
     const insets = useSafeAreaInsets();
     const scrollY = useSharedValue(0);
 
-    // In a real app, fetch data by ID here
-    const host = dummyHosts.find((h) => h.id === id) || dummyHosts[0];
-
-    const [selectedService, setSelectedService] = useState(host.services[0]);
+    const [host, setHost] = useState<Listing | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedService, setSelectedService] = useState('Boarding');
     const [isBookingModalVisible, setBookingModalVisible] = useState(false);
     const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
 
     const { user } = useAuthStore();
+
+    useEffect(() => {
+        const loadListing = async () => {
+            if (typeof id !== 'string') return;
+            const data = await ListingService.getListingById(id);
+            setHost(data);
+            setSelectedService(data?.services?.[0] || 'Boarding');
+            setIsLoading(false);
+        };
+        loadListing();
+    }, [id]);
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -84,6 +97,16 @@ export default function HostDetailScreen() {
             ),
         };
     });
+
+    if (isLoading) {
+        return (
+            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.bg2 }}>
+                <ActivityIndicator size="large" color={c.primary} />
+            </View>
+        );
+    }
+
+    if (!host) return null;
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2 }]}>
@@ -147,10 +170,10 @@ export default function HostDetailScreen() {
                             <View style={styles.stat}>
                                 <Ionicons name="star" size={20} color="#FFD700" />
                                 <Text style={[styles.statValue, { color: c.text }]}>
-                                    {host.rating}
+                                    {4.9}
                                 </Text>
                                 <Text style={[styles.statLabel, { color: c.textMuted }]}>
-                                    {i18n.t('host_reviews', { count: host.reviewCount })}
+                                    {i18n.t('host_reviews', { count: 12 })}
                                 </Text>
                             </View>
                             <View style={[styles.divider, { backgroundColor: c.border }]} />
@@ -244,8 +267,8 @@ export default function HostDetailScreen() {
                             guestId: user.uid,
                             guestName: guestName,
                             guestAvatar: guestAvatar,
-                            hostId: host.id,
-                            hostName: host.name,
+                            hostId: host.hostId, // Store actual user uid as hostId for booking
+                            hostName: host.hostName,
                             serviceType: selectedService,
                             petType: `x${data.petCount} Pets`,
                             startDate: data.startDate.toISOString(),

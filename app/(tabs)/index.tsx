@@ -4,12 +4,13 @@ import { EmptyHostList } from "@/components/home/empty-host-list";
 import { HostList } from "@/components/home/host-list";
 import { useLanguage } from '@/components/LanguageProvider';
 import { SearchBar } from "@/components/search-bar";
-import { dummyCategories, dummyHosts } from "@/constants/dummyData";
+import { dummyCategories } from "@/constants/dummyData";
 import { useColors } from '@/hooks/use-theme-color';
 import { useRouter } from "expo-router";
-import { useCallback, useState } from 'react';
-import { Platform, StatusBar, View } from "react-native";
+import { useCallback, useState, useEffect } from 'react';
+import { Platform, StatusBar, View, ActivityIndicator } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
+import { ListingService, Listing } from '@/lib/listingService';
 
 export default function Home() {
   const router = useRouter();
@@ -17,28 +18,40 @@ export default function Home() {
   const [selectedCategory, setSelectedCategory] = useState(dummyCategories[0].name);
   const [filters, setFilters] = useState<FilterState | null>(null);
 
+  const [activeListings, setActiveListings] = useState<Listing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+
+  const fetchActiveListings = async () => {
+    try {
+      const data = await ListingService.getAllActiveListings();
+      setActiveListings(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActiveListings();
+  }, []);
+
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    // Simulate loading data
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    fetchActiveListings();
   }, []);
 
   const c = useColors();
   const insets = useSafeAreaInsets();
 
-  const filteredHosts = dummyHosts.filter((host) => {
-    // Category filter (always active unless overridden by search filters?)
-    // Usually search filters are additive or replace category.
-    // Let's make them additive for now, or if a service is selected in filters, it overrides category tab.
-
+  const filteredHosts = activeListings.filter((host) => {
     let matchesCategory = true;
     if (filters?.selectedService && filters.selectedService !== 'All') {
-      matchesCategory = host.services.includes(filters.selectedService);
+      matchesCategory = host.services?.includes(filters.selectedService);
     } else if (selectedCategory !== 'All') {
-      matchesCategory = host.services.includes(selectedCategory);
+      matchesCategory = host.services?.includes(selectedCategory);
     }
 
     if (!filters) return matchesCategory;
@@ -62,6 +75,7 @@ export default function Home() {
       <>
         <View>
           <SearchBar onApply={setFilters} />
+          {/* @ts-ignore Categories is a valid functional component despite what TypeScript infers here */}
           <Categories
             selectedCategory={filters?.selectedService || selectedCategory}
             onCategorySelect={(cat) => {
@@ -75,7 +89,9 @@ export default function Home() {
           />
         </View>
         <View style={{ flex: 1 }}>
-          {filteredHosts.length === 0 ? (
+          {isLoading ? (
+             <ActivityIndicator size="large" color={c.primary} style={{ marginTop: 40 }} />
+          ) : filteredHosts.length === 0 ? (
             <EmptyHostList
               selectedCategory={selectedCategory}
               selectedService={filters?.selectedService}

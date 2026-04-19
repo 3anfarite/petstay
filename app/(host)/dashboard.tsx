@@ -7,13 +7,13 @@ import { useScrollToTop } from '@react-navigation/native';
 import React, { useCallback, useRef, useState } from 'react';
 import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 
 export default function HostDashboard() {
     const c = useColors();
+    const router = useRouter();
     const insets = useSafeAreaInsets();
     const { locale } = useLanguage(); // Force re-render on language change
-
-    // Refresh controls
     const [refreshing, setRefreshing] = useState(false);
     const scrollRef = useRef(null);
     useScrollToTop(scrollRef);
@@ -54,47 +54,18 @@ export default function HostDashboard() {
                     </View>
                 </View>
 
-                {/* Recent Activity Mock */}
-                <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_dashboard_activity')}</Text>
-
-                <View style={{ gap: 16 }}>
-                    <View style={[styles.activityCard, { backgroundColor: c.bg2 }]}>
-                        <View style={{ flexDirection: 'row', gap: 16 }}>
-                            <Image
-                                source={{ uri: 'https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=100&h=100&fit=crop' }}
-                                style={styles.petImage}
-                            />
-                            <View style={{ flex: 1, justifyContent: 'center', gap: 6 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={[styles.activityTitle, { color: c.text }]}>{i18n.t('host_activity_new_reservation')}</Text>
-                                    <View style={[styles.badge, { backgroundColor: c.primary + '20' }]}>
-                                        <Text style={[styles.badgeText, { color: c.primary }]}>Nov 28</Text>
-                                    </View>
-                                </View>
-                                <Text style={[styles.activityDesc, { color: c.textMuted }]}>Alex • Dec 20-24</Text>
-                                <Text style={[styles.activityPrice, { color: c.text }]}>$120 total</Text>
-                            </View>
+                <View style={styles.actionGrid}>
+                    <TouchableOpacity 
+                        style={[styles.actionCard, { backgroundColor: c.primary + '15', borderColor: c.primary + '30' }]}
+                        onPress={() => router.push('/(host)/listings')}
+                    >
+                        <Ionicons name="list" size={28} color={c.primary} />
+                        <View style={styles.actionTextContainer}>
+                            <Text style={[styles.actionTitle, { color: c.text }]}>Manage Listings</Text>
+                            <Text style={[styles.actionDesc, { color: c.textMuted }]}>Create or edit your active property listings</Text>
                         </View>
-                    </View>
-
-                    <View style={[styles.activityCard, { backgroundColor: c.bg2 }]}>
-                        <View style={{ flexDirection: 'row', gap: 16 }}>
-                            <Image
-                                source={{ uri: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?w=100&h=100&fit=crop' }}
-                                style={styles.petImage}
-                            />
-                            <View style={{ flex: 1, justifyContent: 'center', gap: 6 }}>
-                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <Text style={[styles.activityTitle, { color: c.text }]}>{i18n.t('host_activity_new_review')}</Text>
-                                    <View style={[styles.badge, { backgroundColor: '#FF980020' }]}>
-                                        <Text style={[styles.badgeText, { color: '#FF9800' }]}>Nov 25</Text>
-                                    </View>
-                                </View>
-                                <Text style={[styles.activityDesc, { color: c.textMuted }]}>Sarah left 5 stars!</Text>
-                                <Text style={[styles.activityPrice, { color: c.text }]}>"Great host, very kind..."</Text>
-                            </View>
-                        </View>
-                    </View>
+                        <Ionicons name="chevron-forward" size={20} color={c.textMuted} />
+                    </TouchableOpacity>
                 </View>
 
                 {/* Host Tips */}
@@ -168,57 +139,29 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         fontFamily: AppFonts.bodyBold,
     },
-    activityCard: {
-        padding: 12,
-        borderRadius: 16,
+    actionGrid: {
+        marginTop: 8,
+        marginBottom: 24,
     },
-    petImage: {
-        width: 72,
-        height: 72,
-        borderRadius: 12,
-    },
-    activityTitle: {
-        fontSize: 14,
-        fontFamily: AppFonts.bodyBold,
-    },
-    activityDesc: {
-        fontSize: 13,
-        fontFamily: AppFonts.body,
-    },
-    activityPrice: {
-        fontSize: 12,
-        fontFamily: AppFonts.bodyBold,
-    },
-    badge: {
-        paddingVertical: 4,
-        paddingHorizontal: 8,
-        borderRadius: 8,
-    },
-    badgeText: {
-        fontSize: 10,
-        fontFamily: AppFonts.bodyBold,
-    },
-    // Action Card Styles
     actionCard: {
-        width: 160,
-        padding: 16,
-        borderRadius: 16,
-        gap: 8,
-    },
-    actionIcon: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 4,
+        padding: 20,
+        borderRadius: 24,
+        borderWidth: 1,
+        gap: 16,
+    },
+    actionTextContainer: {
+        flex: 1,
     },
     actionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 4,
     },
     actionDesc: {
-        fontSize: 12,
+        fontSize: 14,
+        lineHeight: 20,
     },
     // Tip Card Styles
     tipCard: {
