@@ -2,7 +2,7 @@ import { Lato_400Regular, Lato_700Bold } from '@expo-google-fonts/lato';
 import { Montserrat_700Bold, useFonts } from '@expo-google-fonts/montserrat';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack, useRootNavigationState, useRouter } from 'expo-router';
+import { Stack, useRootNavigationState, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef } from 'react';
@@ -24,6 +24,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const router = useRouter();
+  const segments = useSegments();
   const navigationState = useRootNavigationState();
   const loaded = navigationState?.key; // Check if navigation state is loaded using key
 
@@ -59,29 +60,54 @@ export default function RootLayout() {
     }
   }, [loaded, fontsLoaded, isLoading, user, activeRole]);
 
+  const isRouting = useRef(false);
+
   const handleInitialRoute = async () => {
+    if (isRouting.current) return;
+    isRouting.current = true;
+
     try {
       const hasSeenOnboarding = await AsyncStorage.getItem('hasSeenOnboarding');
+      const inAuthGroup = segments[0] === 'auth';
+      const inTabsGroup = segments[0] === '(tabs)';
+      const inHostGroup = segments[0] === '(host)';
+      const inOnboardingGroup = segments[0] === 'onboarding';
+      const currentPath = segments.join('/');
 
       if (!user) {
         // No session: Go to onboarding or welcome
         if (hasSeenOnboarding) {
-          router.replace('/auth/welcome');
+          if (!inAuthGroup) {
+            router.replace('/auth/welcome');
+          }
         } else {
-          router.replace('/onboarding');
+          if (!inOnboardingGroup) {
+            router.replace('/onboarding');
+          }
         }
       } else {
         // Session exists: Route based on their active role toggle
         if (activeRole === 'unassigned') {
-          router.replace('/auth/role-selection' as any);
+          if (currentPath !== 'auth/role-selection') {
+            router.replace('/auth/role-selection');
+          }
         } else if (activeRole === 'host') {
-          router.replace('/(host)/dashboard'); // Assuming dashboard is the default host screen
+          if (!inHostGroup) {
+            router.replace('/(host)/dashboard'); // Assuming dashboard is the default host screen
+          }
         } else {
-          router.replace('/(tabs)');
+          if (!inTabsGroup) {
+            router.replace('/(tabs)');
+          }
         }
       }
     } catch (e) {
       console.error('Routing error:', e);
+    } finally {
+      // Small delay to allow Expo Router animations to complete before unlocking
+      setTimeout(() => {
+        isRouting.current = false;
+      }, 500);
     }
   };
 

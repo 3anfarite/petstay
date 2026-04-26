@@ -1,17 +1,17 @@
 import { BookingModal } from '@/components/booking/booking-modal';
 import { GalleryList } from '@/components/host/gallery-list';
 import { ServiceList } from '@/components/host/service-list';
-import { dummyCategories } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import { Ionicons } from '@expo/vector-icons';
 import { BookingService } from '@/lib/bookingService';
 import { db } from '@/lib/firebaseConfig';
+import { Listing, ListingService } from '@/lib/listingService';
 import { useAuthStore } from '@/store/useAuthStore';
-import { doc, getDoc } from 'firebase/firestore';
+import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
     Dimensions,
@@ -20,8 +20,7 @@ import {
     StyleSheet,
     Text,
     TouchableOpacity,
-    View,
-    ScrollView,
+    View
 } from 'react-native';
 import Animated, {
     Extrapolation,
@@ -31,7 +30,6 @@ import Animated, {
     useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ListingService, Listing } from '@/lib/listingService';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -101,40 +99,51 @@ export default function HostDetailScreen() {
     if (isLoading) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.bg2 }}>
+                <Stack.Screen options={{ headerShown: false }} />
                 <ActivityIndicator size="large" color={c.primary} />
             </View>
         );
     }
 
-    if (!host) return null;
+    if (!host) {
+        return (
+            <View style={{ flex: 1, backgroundColor: c.bg2 }}>
+                <Stack.Screen options={{ headerShown: false }} />
+            </View>
+        );
+    }
+
+    const hasImage = !!host.image && host.image.trim() !== '';
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2 }]}>
             <Stack.Screen options={{ headerShown: false }} />
-            <StatusBar barStyle="light-content" />
+            <StatusBar barStyle={hasImage ? "light-content" : (c.text === '#000000' ? "dark-content" : "light-content")} />
 
             {/* Animated Header Image */}
-            <Animated.View style={[styles.imageContainer, headerStyle]}>
-                <Image source={{ uri: host.image }} style={styles.image} />
-                <Animated.View style={[StyleSheet.absoluteFill, headerBlurStyle]}>
-                    <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+            {hasImage && (
+                <Animated.View style={[styles.imageContainer, headerStyle]}>
+                    <Image source={{ uri: host.image }} style={styles.image} />
+                    <Animated.View style={[StyleSheet.absoluteFill, headerBlurStyle]}>
+                        <BlurView intensity={80} tint="dark" style={StyleSheet.absoluteFill} />
+                    </Animated.View>
                 </Animated.View>
-            </Animated.View>
+            )}
 
             {/* Navigation Header */}
             <View style={[styles.navHeader, { paddingTop: insets.top }]}>
                 <TouchableOpacity
                     onPress={() => router.back()}
-                    style={styles.iconButton}
+                    style={[styles.iconButton, !hasImage && { backgroundColor: 'transparent' }]}
                 >
-                    <Ionicons name="arrow-back" size={24} color="white" />
+                    <Ionicons name="arrow-back" size={24} color={hasImage ? "white" : c.text} />
                 </TouchableOpacity>
                 <View style={styles.rightIcons}>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Ionicons name="share-outline" size={24} color="white" />
+                    <TouchableOpacity style={[styles.iconButton, !hasImage && { backgroundColor: 'transparent' }]}>
+                        <Ionicons name="share-outline" size={24} color={hasImage ? "white" : c.text} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
-                        <Ionicons name="heart-outline" size={24} color="white" />
+                    <TouchableOpacity style={[styles.iconButton, !hasImage && { backgroundColor: 'transparent' }]}>
+                        <Ionicons name="heart-outline" size={24} color={hasImage ? "white" : c.text} />
                     </TouchableOpacity>
                 </View>
             </View>
@@ -142,14 +151,16 @@ export default function HostDetailScreen() {
             <Animated.ScrollView
                 onScroll={scrollHandler}
                 scrollEventThrottle={16}
-                contentContainerStyle={{ paddingTop: IMG_HEIGHT - 32, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingTop: hasImage ? IMG_HEIGHT - 32 : insets.top + 60, paddingBottom: 100 }}
                 showsVerticalScrollIndicator={false}
             >
-                <View style={[styles.content, { backgroundColor: c.bg2 }]}>
+                <View style={[styles.content, { backgroundColor: c.bg2, borderTopLeftRadius: hasImage ? 32 : 0, borderTopRightRadius: hasImage ? 32 : 0 }]}>
                     {/* Handle Bar */}
-                    <View style={styles.handleBarContainer}>
-                        <View style={[styles.handleBar, { backgroundColor: c.border }]} />
-                    </View>
+                    {hasImage && (
+                        <View style={styles.handleBarContainer}>
+                            <View style={[styles.handleBar, { backgroundColor: c.border }]} />
+                        </View>
+                    )}
 
                     {/* Title Section */}
                     <View style={styles.section}>
@@ -212,7 +223,11 @@ export default function HostDetailScreen() {
                     <View style={[styles.separator, { backgroundColor: c.border }]} />
 
                     {/* Gallery Preview */}
-                    <GalleryList images={host.gallery || []} />
+                    {(() => {
+                        const validGallery = host.gallery?.filter(img => img && img.trim() !== '') || [];
+                        if (validGallery.length === 0) return null;
+                        return <GalleryList images={validGallery} />;
+                    })()}
                 </View>
             </Animated.ScrollView>
 
@@ -257,7 +272,7 @@ export default function HostDetailScreen() {
 
                     try {
                         setIsSubmittingBooking(true);
-                        
+
                         // Grab Guest's denormalized data
                         const guestDoc = await getDoc(doc(db, 'users', user.uid));
                         const guestName = guestDoc.exists() ? (guestDoc.data()?.name || 'Guest') : 'Guest';

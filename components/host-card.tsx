@@ -5,7 +5,7 @@ import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react
 
 type HostCardProps = {
   name: string;
-  rating: number;
+  rating?: number;
   location: string;
   price: string;
   services: string[];
@@ -53,7 +53,7 @@ export default function HostCard({
           <Text style={styles.locationText}>{location}</Text>
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={16} color="#FFD700" />
-            <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+            <Text style={styles.ratingText}>{rating != null ? rating.toFixed(1) : "New"}</Text>
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>

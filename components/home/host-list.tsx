@@ -7,7 +7,7 @@ import { FlatList, RefreshControl } from "react-native";
 interface Host {
     id: string;
     name: string;
-    rating: number;
+    rating?: number;
     location: string;
     price: number;
     services: string[];

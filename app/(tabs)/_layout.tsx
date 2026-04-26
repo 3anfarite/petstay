@@ -1,5 +1,5 @@
 import i18n from '@/i18n';
-import { Tabs, Redirect } from 'expo-router';
+import { Redirect, Tabs } from 'expo-router';
 import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
@@ -14,10 +14,7 @@ export default function TabLayout() {
   const { locale } = useLanguage();
   const { user, activeRole } = useAuthStore();
 
-  // Instant declarative routing guards to physically prevent FOUC screen flashing
-  if (!user) return <Redirect href="/auth/welcome" />;
-  if (activeRole === 'host') return <Redirect href="/(host)/dashboard" />;
-  if (activeRole === 'unassigned') return <Redirect href="/auth/role-selection" />;
+  // Routing is managed securely in app/_layout.tsx
 
   return (
     <Tabs
