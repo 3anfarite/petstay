@@ -1,6 +1,7 @@
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import * as ImagePicker from 'expo-image-picker';
 import React, { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput, ScrollView, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,6 +29,8 @@ export default function HostListings() {
     const [formPrice, setFormPrice] = useState('');
     const [formLocation, setFormLocation] = useState('');
     const [formAbout, setFormAbout] = useState('');
+    const [formImage, setFormImage] = useState<string | null>(null);
+    const [formGallery, setFormGallery] = useState<string[]>([]);
 
     const fetchListings = async () => {
         if (!user?.uid) return;
@@ -52,6 +55,8 @@ export default function HostListings() {
         setFormPrice(listing.price.toString());
         setFormLocation(listing.location);
         setFormAbout(listing.about);
+        setFormImage(listing.image || null);
+        setFormGallery(listing.gallery || []);
         setIsFormVisible(true);
     };
 
@@ -61,6 +66,8 @@ export default function HostListings() {
         setFormPrice('35');
         setFormLocation('');
         setFormAbout('');
+        setFormImage(null);
+        setFormGallery([]);
         setIsFormVisible(true);
     };
 
@@ -86,9 +93,39 @@ export default function HostListings() {
         );
     };
 
+    const pickCoverImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            setFormImage(result.assets[0].uri);
+        }
+    };
+
+    const pickGalleryImages = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsMultipleSelection: true,
+            quality: 0.8,
+        });
+
+        if (!result.canceled) {
+            const newUris = result.assets.map(asset => asset.uri);
+            setFormGallery(prev => [...prev, ...newUris]);
+        }
+    };
+
+    const removeGalleryImage = (index: number) => {
+        setFormGallery(prev => prev.filter((_, i) => i !== index));
+    };
+
     const submitForm = async () => {
         if (!user?.uid) return;
-        if (!formTitle.trim() || !formPrice.trim() || !formLocation.trim()) {
+        if (!formTitle.trim() || !formPrice.trim() || !formLocation.trim() || !formImage) {
             Alert.alert(i18n.t('host_form_missing'), i18n.t('host_form_missing_desc'));
             return;
         }
@@ -103,6 +140,8 @@ export default function HostListings() {
                 price: parseFloat(formPrice) || 0,
                 location: formLocation,
                 about: formAbout,
+                image: formImage,
+                gallery: formGallery,
             };
 
             if (editingId) {
@@ -113,11 +152,6 @@ export default function HostListings() {
                     hostName: profile.name || 'Host',
                     hostAvatar: profile.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
                     services: profile.services?.length ? profile.services : ['Boarding'],
-                    image: 'https://images.unsplash.com/photo-1517423568366-eb51fb77d418?w=800&h=600&fit=crop',
-                    gallery: [
-                        'https://images.unsplash.com/photo-1517423568366-eb51fb77d418?w=800&h=600&fit=crop',
-                        'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?w=800&h=600&fit=crop'
-                    ],
                     verified: true,
                     status: 'active',
                     ...payload,
@@ -227,20 +261,35 @@ export default function HostListings() {
 
                     <ScrollView contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled">
                         
-                        {/* Image Upload Mock UI */}
+                        {/* Image Upload UI */}
                         <Text style={[styles.inputLabel, { color: c.text }]}>{i18n.t('host_form_photos')}</Text>
                         <View style={styles.photoContainer}>
-                            <TouchableOpacity style={[styles.mainPhotoPicker, { backgroundColor: c.bg, borderColor: c.border }]}>
-                                <Ionicons name="camera" size={32} color={c.textMuted} />
-                                <Text style={{ color: c.textMuted, marginTop: 8 }}>{i18n.t('host_form_add_cover')}</Text>
+                            <TouchableOpacity style={[styles.mainPhotoPicker, { backgroundColor: c.bg, borderColor: c.border }]} onPress={pickCoverImage}>
+                                {formImage ? (
+                                    <Image source={{ uri: formImage }} style={{ width: '100%', height: '100%', borderRadius: 14 }} />
+                                ) : (
+                                    <>
+                                        <Ionicons name="camera" size={32} color={c.textMuted} />
+                                        <Text style={{ color: c.textMuted, marginTop: 8 }}>{i18n.t('host_form_add_cover')}</Text>
+                                    </>
+                                )}
                             </TouchableOpacity>
-                            <View style={styles.galleryRow}>
-                                {[1, 2, 3].map((i) => (
+                            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.galleryRow}>
+                                {formGallery.map((uri, i) => (
                                     <View key={i} style={[styles.galleryThumbnail, { backgroundColor: c.bg, borderColor: c.border }]}>
-                                        <Ionicons name="add" size={24} color={c.border} />
+                                        <Image source={{ uri }} style={{ width: '100%', height: '100%', borderRadius: 10 }} />
+                                        <TouchableOpacity 
+                                            style={{ position: 'absolute', top: -6, right: -6, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12 }}
+                                            onPress={() => removeGalleryImage(i)}
+                                        >
+                                            <Ionicons name="close-circle" size={24} color="white" />
+                                        </TouchableOpacity>
                                     </View>
                                 ))}
-                            </View>
+                                <TouchableOpacity onPress={pickGalleryImages} style={[styles.galleryThumbnail, { backgroundColor: c.bg, borderColor: c.border }]}>
+                                    <Ionicons name="add" size={24} color={c.border} />
+                                </TouchableOpacity>
+                            </ScrollView>
                         </View>
 
                         <Text style={[styles.inputLabel, { color: c.text }]}>{i18n.t('host_form_title_label')}</Text>

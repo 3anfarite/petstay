@@ -28,6 +28,8 @@ import Animated, {
     useAnimatedScrollHandler,
     useAnimatedStyle,
     useSharedValue,
+    withRepeat,
+    withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -97,12 +99,7 @@ export default function HostDetailScreen() {
     });
 
     if (isLoading) {
-        return (
-            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: c.bg2 }}>
-                <Stack.Screen options={{ headerShown: false }} />
-                <ActivityIndicator size="large" color={c.primary} />
-            </View>
-        );
+        return <HostDetailSkeleton />;
     }
 
     if (!host) {
@@ -165,10 +162,7 @@ export default function HostDetailScreen() {
                     {/* Title Section */}
                     <View style={styles.section}>
                         <View style={styles.titleRow}>
-                            <Text style={[styles.name, { color: c.text }]}>{host.name}</Text>
-                            {host.verified && (
-                                <Ionicons name="checkmark-circle" size={20} color={c.primary} />
-                            )}
+                            <Text style={[styles.name, { color: c.text }]}>{host.title}</Text>
                         </View>
                         <View style={styles.locationRow}>
                             <Ionicons name="location-outline" size={16} color={c.textMuted} />
@@ -224,7 +218,12 @@ export default function HostDetailScreen() {
 
                     {/* Gallery Preview */}
                     {(() => {
-                        const validGallery = host.gallery?.filter(img => img && img.trim() !== '') || [];
+                        const galleryItems = [...(host.gallery || [])];
+                        if (host.image && !galleryItems.includes(host.image)) {
+                            galleryItems.unshift(host.image);
+                        }
+                        const validGallery = galleryItems.filter(img => img && img.trim() !== '');
+                        
                         if (validGallery.length === 0) return null;
                         return <GalleryList images={validGallery} />;
                     })()}
@@ -303,6 +302,86 @@ export default function HostDetailScreen() {
                 pricePerNight={host.price}
                 hostName={host.name}
             />
+        </View>
+    );
+}
+
+function HostDetailSkeleton() {
+    const c = useColors();
+    const insets = useSafeAreaInsets();
+    const opacity = useSharedValue(0.3);
+
+    useEffect(() => {
+        opacity.value = withRepeat(
+            withTiming(0.7, { duration: 1000 }),
+            -1,
+            true
+        );
+    }, []);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
+
+    const SkeletonItem = ({ style }: { style: any }) => (
+        <Animated.View style={[{ backgroundColor: c.border, borderRadius: 8 }, style, animatedStyle]} />
+    );
+
+    return (
+        <View style={{ flex: 1, backgroundColor: c.bg2 }}>
+            <Stack.Screen options={{ headerShown: false }} />
+            {/* Header Image Skeleton */}
+            <View style={{ height: IMG_HEIGHT, backgroundColor: c.border }} />
+            
+            <View style={{ flex: 1, marginTop: -32, backgroundColor: c.bg2, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24 }}>
+                {/* Title */}
+                <SkeletonItem style={{ width: '60%', height: 32, marginBottom: 12 }} />
+                {/* Location */}
+                <SkeletonItem style={{ width: '40%', height: 20, marginBottom: 24 }} />
+                
+                {/* Stats */}
+                <View style={{ flexDirection: 'row', gap: 16, marginBottom: 32 }}>
+                    <SkeletonItem style={{ flex: 1, height: 80, borderRadius: 16 }} />
+                    <SkeletonItem style={{ flex: 1, height: 80, borderRadius: 16 }} />
+                </View>
+                
+                {/* About */}
+                <SkeletonItem style={{ width: '30%', height: 24, marginBottom: 16 }} />
+                <SkeletonItem style={{ width: '100%', height: 16, marginBottom: 8 }} />
+                <SkeletonItem style={{ width: '100%', height: 16, marginBottom: 8 }} />
+                <SkeletonItem style={{ width: '80%', height: 16, marginBottom: 24 }} />
+                
+                {/* Services */}
+                <SkeletonItem style={{ width: '40%', height: 24, marginBottom: 16 }} />
+                <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <SkeletonItem style={{ width: 100, height: 120, borderRadius: 16 }} />
+                    <SkeletonItem style={{ width: 100, height: 120, borderRadius: 16 }} />
+                    <SkeletonItem style={{ width: 100, height: 120, borderRadius: 16 }} />
+                </View>
+            </View>
+            
+            {/* Footer */}
+            <View style={{ 
+                height: 100, 
+                backgroundColor: c.bg2, 
+                borderTopWidth: 1, 
+                borderTopColor: c.border, 
+                padding: 24, 
+                paddingBottom: insets.bottom + 16,
+                flexDirection: 'row', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0
+            }}>
+                <View>
+                    <SkeletonItem style={{ width: 80, height: 24, marginBottom: 4 }} />
+                    <SkeletonItem style={{ width: 60, height: 16 }} />
+                </View>
+                <SkeletonItem style={{ width: 120, height: 48, borderRadius: 24 }} />
+            </View>
         </View>
     );
 }

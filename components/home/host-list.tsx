@@ -6,7 +6,7 @@ import { FlatList, RefreshControl } from "react-native";
 
 interface Host {
     id: string;
-    name: string;
+    title: string;
     rating?: number;
     location: string;
     price: number;
@@ -34,7 +34,7 @@ export function HostList({ hosts, onHostPress, refreshing = false, onRefresh }: 
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
                 <HostCard
-                    name={item.name}
+                    name={item.title}
                     rating={item.rating}
                     location={item.location}
                     price={`${item.price}`}

@@ -50,16 +50,16 @@ export default function HostCard({
 
       <View style={styles.infoContainer}>
         <View style={styles.header}>
-          <Text style={styles.locationText}>{location}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, flex: 1 }}>
+            <Text style={styles.titleText} numberOfLines={1}>{name}</Text>
+            {verified && <Ionicons name="checkmark-circle" size={14} color={c.primary} />}
+          </View>
           <View style={styles.ratingContainer}>
             <Ionicons name="star" size={16} color="#FFD700" />
             <Text style={styles.ratingText}>{rating != null ? rating.toFixed(1) : "New"}</Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-          <Text style={styles.nameText}>{name}</Text>
-          {verified && <Ionicons name="checkmark-circle" size={14} color={c.primary} style={{ marginTop: 4 }} />}
-        </View>
+        <Text style={styles.subtitleText}>{location}</Text>
         <Text style={styles.dateText}>Oct 20 - 25</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.priceText}>{price}</Text>
@@ -135,7 +135,7 @@ export const makeStyles = (c: ReturnType<typeof useColors>) =>
       justifyContent: "space-between",
       alignItems: "center",
     },
-    locationText: {
+    titleText: {
       fontSize: 16,
       fontWeight: "600",
       color: c.text,
@@ -150,7 +150,7 @@ export const makeStyles = (c: ReturnType<typeof useColors>) =>
       color: c.text,
       fontWeight: "500",
     },
-    nameText: {
+    subtitleText: {
       fontSize: 15,
       color: c.textMuted,
       marginTop: 4,
