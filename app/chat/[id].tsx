@@ -1,6 +1,7 @@
 import { useColors } from '@/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import i18n from '@/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     FlatList,
@@ -104,7 +105,7 @@ export default function ChatDetailScreen() {
                         <Text style={[styles.name, { color: c.text }]}>
                             {params.name || 'Guest'}
                         </Text>
-                        <Text style={[styles.status, { color: c.textMuted }]}>Active</Text>
+                        <Text style={[styles.status, { color: c.textMuted }]}>{i18n.t('chat_status_active', { defaultValue: 'Active' })}</Text>
                     </View>
                 </View>
 
@@ -163,7 +164,7 @@ export default function ChatDetailScreen() {
 
                     <TextInput
                         style={[styles.input, { backgroundColor: c.bg2, color: c.text }]}
-                        placeholder="Type a message..."
+                        placeholder={i18n.t('chat_input_placeholder', { defaultValue: 'Type a message...' })}
                         placeholderTextColor={c.textMuted}
                         value={inputText}
                         onChangeText={setInputText}

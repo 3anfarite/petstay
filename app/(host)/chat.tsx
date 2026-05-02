@@ -78,7 +78,7 @@ export default function ChatScreen() {
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
             <Ionicons name="chatbubbles-outline" size={48} color={c.textMuted} />
-            <Text style={{ color: c.textMuted, marginTop: 16 }}>No messages yet</Text>
+            <Text style={{ color: c.textMuted, marginTop: 16 }}>{i18n.t('chat_no_messages', { defaultValue: 'No messages yet' })}</Text>
           </View>
         }
         renderItem={({ item }) => {

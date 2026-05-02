@@ -262,5 +262,14 @@ export default {
     host_form_price: "Tarif par nuit / session ($)",
     host_form_price_ph: "ex. 35",
     host_form_about: "À propos de cette annonce",
-    host_form_about_ph: "Décrivez votre propriété, vos règles...",
+    host_form_about_ph: "Décrivez votre propriété, les règles et ce que les animaux vivront...",
+
+    // New keys for reservations and chat
+    host_action_message: "Contacter le client",
+    host_action_accept: "Accepter",
+    host_action_decline: "Refuser",
+    host_action_cancel_booking: "Annuler la réservation",
+    chat_no_messages: "Aucun message pour le moment",
+    chat_status_active: "En ligne",
+    chat_input_placeholder: "Écrivez un message...",
 };

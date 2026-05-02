@@ -263,4 +263,13 @@ export default {
     host_form_price_ph: "e.g. 35",
     host_form_about: "About this listing",
     host_form_about_ph: "Describe your property, rules, and what pets will experience...",
+
+    // New keys for reservations and chat
+    host_action_message: "Message Guest",
+    host_action_accept: "Accept",
+    host_action_decline: "Decline",
+    host_action_cancel_booking: "Cancel Booking",
+    chat_no_messages: "No messages yet",
+    chat_status_active: "Active",
+    chat_input_placeholder: "Type a message...",
 };

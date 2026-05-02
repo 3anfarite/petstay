@@ -240,7 +240,7 @@ export default function HostReservationsScreen() {
                       <Text style={styles.dates}>{datesString}</Text>
                     </View>
 
-                    <Text style={styles.price}>${item.totalPrice} <Text style={styles.priceLabel}>total</Text></Text>
+                    <Text style={styles.price}>${item.totalPrice} <Text style={styles.priceLabel}>{i18n.t('booking_total_lower', { defaultValue: 'total' })}</Text></Text>
                   </View>
                 </View>
 
@@ -253,7 +253,7 @@ export default function HostReservationsScreen() {
                       params: { id: item.guestId, name: item.guestName || 'Guest', avatar: item.guestAvatar }
                     })}
                   >
-                    <Text style={styles.messageText}>Message Guest</Text>
+                    <Text style={styles.messageText}>{i18n.t('host_action_message', { defaultValue: 'Message Guest' })}</Text>
                   </TouchableOpacity>
 
                   {isPending && (
@@ -262,13 +262,13 @@ export default function HostReservationsScreen() {
                         style={[styles.cancelButton, { flex: 1, backgroundColor: c.success, borderWidth: 0 }]}
                         onPress={() => item.id && handleUpdateStatus(item.id, 'confirmed')}
                       >
-                        <Text style={[styles.cancelText, { color: 'white' }]}>Accept</Text>
+                        <Text style={[styles.cancelText, { color: 'white' }]}>{i18n.t('host_action_accept', { defaultValue: 'Accept' })}</Text>
                       </TouchableOpacity>
                       <TouchableOpacity 
                         style={[styles.cancelButton, { flex: 1, borderColor: c.error }]}
                         onPress={() => item.id && handleUpdateStatus(item.id, 'declined')}
                       >
-                        <Text style={[styles.cancelText, { color: c.error }]}>Decline</Text>
+                        <Text style={[styles.cancelText, { color: c.error }]}>{i18n.t('host_action_decline', { defaultValue: 'Decline' })}</Text>
                       </TouchableOpacity>
                     </View>
                   )}
@@ -278,7 +278,7 @@ export default function HostReservationsScreen() {
                       style={[styles.cancelButton, { width: '100%', marginTop: 12 }]}
                       onPress={() => item.id && handleUpdateStatus(item.id, 'cancelled')}
                     >
-                      <Text style={styles.cancelText}>Cancel Booking</Text>
+                      <Text style={styles.cancelText}>{i18n.t('host_action_cancel_booking', { defaultValue: 'Cancel Booking' })}</Text>
                     </TouchableOpacity>
                   )}
                 </View>
