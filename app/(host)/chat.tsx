@@ -2,76 +2,42 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { FlatList, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const CHATS = [
-  {
-    id: '1',
-    name: 'PetStay Support',
-    avatar: 'https://images.unsplash.com/photo-1556742049-0cfed4f7a07d?w=200&h=200&fit=crop',
-    lastMessage: 'Hi Alex! How can we help you with your booking today?',
-    time: '2m ago',
-    type: 'Support',
-    unread: 2,
-    isSupport: true,
-  },
-  {
-    id: '2',
-    name: 'Sarah Wilson',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop',
-    lastMessage: 'Looking forward to meeting Max this weekend! 🐕',
-    time: '1h ago',
-    type: 'Clients',
-    unread: 0,
-  },
-  {
-    id: '3',
-    name: 'David Chen',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop',
-    lastMessage: 'Thanks for the review! It was a pleasure hosting.',
-    time: '1d ago',
-    type: 'Clients',
-    unread: 0,
-  },
-  {
-    id: '4',
-    name: 'Emily Parker',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop',
-    lastMessage: 'Is 2 PM okay for drop-off?',
-    time: '2d ago',
-    type: 'Clients',
-    unread: 1,
-  },
-  {
-    id: '5',
-    name: 'Michael Brown',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop',
-    lastMessage: 'See you then!',
-    time: '3d ago',
-    type: 'Clients',
-    unread: 0,
-  },
-];
+import { Chat, ChatService } from '@/lib/chatService';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function ChatScreen() {
   const router = useRouter();
   const c = useColors();
   const [selectedTag, setSelectedTag] = useState('All');
   const insets = useSafeAreaInsets();
+  const { user } = useAuthStore();
+  const [chats, setChats] = useState<Chat[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const unsubscribe = ChatService.subscribeToChats(user.uid, (fetchedChats) => {
+      setChats(fetchedChats);
+    });
+    return () => unsubscribe();
+  }, [user]);
 
   // Translate tags dynamically
   const tags = [
     { id: 'All', label: i18n.t('chat_filter_all') },
-    { id: 'Clients', label: i18n.t('chat_filter_clients') },
+    { id: 'Hosts', label: i18n.t('chat_filter_hosts') },
     { id: 'Support', label: i18n.t('chat_filter_support') },
   ];
 
-  const filteredChats = CHATS.filter(chat => {
-    if (selectedTag === 'All') return true;
-    return chat.type === selectedTag;
-  });
+  const filteredChats = chats; // Keep it simple for now, since we only have user chats. You can add logic to filter by host/support if desired.
+
+  const formatTime = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
@@ -109,49 +75,64 @@ export default function ChatScreen() {
         data={filteredChats}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={[styles.chatRow, { borderBottomColor: c.border }]}
-            onPress={() => router.push({
-              pathname: `/chat/[id]`,
-              params: { id: item.id, name: item.name, avatar: item.avatar }
-            })}
-          >
-            <View style={styles.avatarContainer}>
-              <Image source={{ uri: item.avatar }} style={styles.avatar} />
-              {item.isSupport && (
-                <View style={[styles.badgeIcon, { backgroundColor: c.primary }]}>
-                  <Ionicons name="shield-checkmark" size={10} color="white" />
+        ListEmptyComponent={
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <Ionicons name="chatbubbles-outline" size={48} color={c.textMuted} />
+            <Text style={{ color: c.textMuted, marginTop: 16 }}>No messages yet</Text>
+          </View>
+        }
+        renderItem={({ item }) => {
+          // Identify the other participant
+          const otherUserId = item.participants.find(id => id !== user?.uid) || item.participants[0];
+          const otherUser = item.participantDetails[otherUserId] || { name: 'Unknown', avatar: '' };
+
+          let displayAvatar = otherUser.avatar;
+          if (!displayAvatar || displayAvatar.includes('unsplash.com') || displayAvatar.includes('placecats.com')) {
+            displayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.name || 'User')}&background=F3F4F6&color=374151&size=200`;
+          }
+
+          const isUnread = item.lastSenderId !== user?.uid; // Super simple unread logic
+
+          return (
+            <TouchableOpacity
+              style={[styles.chatRow, { borderBottomColor: c.border }]}
+              onPress={() => router.push({
+                pathname: `/chat/[id]`,
+                params: { id: otherUserId, name: otherUser.name, avatar: displayAvatar }
+              })}
+            >
+              <View style={styles.avatarContainer}>
+                <Image 
+                  source={{ uri: displayAvatar }} 
+                  style={styles.avatar} 
+                />
+              </View>
+
+              <View style={styles.chatContent}>
+                <View style={styles.chatHeader}>
+                  <Text style={[styles.name, { color: c.text }]}>{otherUser.name}</Text>
+                  <Text style={[styles.time, { color: c.textMuted }]}>{formatTime(item.lastMessageTime)}</Text>
                 </View>
+                <Text
+                  numberOfLines={1}
+                  style={[
+                    styles.message,
+                    {
+                      color: isUnread ? c.text : c.textMuted,
+                      fontWeight: isUnread ? '600' : '400'
+                    }
+                  ]}
+                >
+                  {item.lastMessage}
+                </Text>
+              </View>
+
+              {isUnread && (
+                <View style={[styles.unreadBadge, { backgroundColor: c.primary }]} />
               )}
-            </View>
-
-            <View style={styles.chatContent}>
-              <View style={styles.chatHeader}>
-                <Text style={[styles.name, { color: c.text }]}>{item.name}</Text>
-                <Text style={[styles.time, { color: c.textMuted }]}>{item.time}</Text>
-              </View>
-              <Text
-                numberOfLines={1}
-                style={[
-                  styles.message,
-                  {
-                    color: item.unread ? c.text : c.textMuted,
-                    fontWeight: item.unread ? '600' : '400'
-                  }
-                ]}
-              >
-                {item.lastMessage}
-              </Text>
-            </View>
-
-            {item.unread > 0 && (
-              <View style={[styles.unreadBadge, { backgroundColor: c.primary }]}>
-                <Text style={styles.unreadText}>{item.unread}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
+            </TouchableOpacity>
+          );
+        }}
       />
     </View>
   );
@@ -204,18 +185,6 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: 28,
   },
-  badgeIcon: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'white',
-  },
   chatContent: {
     flex: 1,
     gap: 4,
@@ -236,16 +205,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   unreadBadge: {
-    minWidth: 20,
-    height: 20,
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 6,
-  },
-  unreadText: {
-    color: 'white',
-    fontSize: 10,
-    fontWeight: 'bold',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
 });

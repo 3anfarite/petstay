@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AuthService } from '@/lib/authService';
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=F3F4F6&color=374151&size=256';
 
 const SkeletonView = ({ width, height, borderRadius, style }: any) => {
     const c = useColors();
@@ -251,7 +251,7 @@ export default function HostProfile() {
                     ) : (
                         <>
                             <Image
-                                source={{ uri: profileData?.profilePic || DEFAULT_AVATAR }}
+                                source={{ uri: profileData?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.name || 'User')}&background=F3F4F6&color=374151&size=256` }}
                                 style={styles.avatar}
                             />
                             <View style={styles.userInfoText}>
@@ -431,7 +431,9 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
-        padding: 24,
+        paddingHorizontal: 24,
+        paddingTop: 24,
+        paddingBottom: 8,
     },
     title: {
         fontSize: 32,
@@ -531,9 +533,9 @@ const styles = StyleSheet.create({
     userRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 20,
-        paddingHorizontal: 20,
-        marginTop: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        marginTop: 0,
     },
     avatar: {
         width: 64,

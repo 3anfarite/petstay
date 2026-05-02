@@ -1,9 +1,11 @@
 import { BookingModal } from '@/components/booking/booking-modal';
 import { GalleryList } from '@/components/host/gallery-list';
+import { LocationMap } from '@/components/host/location-map';
 import { ServiceList } from '@/components/host/service-list';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { BookingService } from '@/lib/bookingService';
+import { ChatService } from '@/lib/chatService';
 import { db } from '@/lib/firebaseConfig';
 import { Listing, ListingService } from '@/lib/listingService';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -227,6 +229,11 @@ export default function HostDetailScreen() {
                         if (validGallery.length === 0) return null;
                         return <GalleryList images={validGallery} />;
                     })()}
+
+                    <View style={[styles.separator, { backgroundColor: c.border }]} />
+
+                    {/* Location Map */}
+                    <LocationMap location={host.location} />
                 </View>
             </Animated.ScrollView>
 
@@ -283,12 +290,24 @@ export default function HostDetailScreen() {
                             guestAvatar: guestAvatar,
                             hostId: host.hostId, // Store actual user uid as hostId for booking
                             hostName: host.hostName,
+                            location: host.location,
                             serviceType: selectedService,
                             petType: `x${data.petCount} Pets`,
                             startDate: data.startDate.toISOString(),
                             endDate: data.endDate.toISOString(),
                             totalPrice: data.totalPrice,
                         });
+
+                        // Send an automated greeting message from the Host to the Guest
+                        await ChatService.startChatAndSendMessage(
+                            host.hostId,
+                            user.uid,
+                            host.hostName,
+                            guestName,
+                            host.hostAvatar || '',
+                            guestAvatar,
+                            `Hi ${guestName}! Thank you for your booking request for ${data.petCount} pet(s). I will review it and get back to you shortly!`
+                        );
 
                         setBookingModalVisible(false);
                         setIsSubmittingBooking(false);

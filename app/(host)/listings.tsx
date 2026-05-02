@@ -1,23 +1,24 @@
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
-import * as ImagePicker from 'expo-image-picker';
-import React, { useEffect, useState } from 'react';
-import { FlatList, Image, StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, Alert, Modal, TextInput, ScrollView, Platform } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { useAuthStore } from '@/store/useAuthStore';
-import { ListingService, Listing } from '@/lib/listingService';
-import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
+import { Listing, ListingService } from '@/lib/listingService';
+import { uploadImage, uploadImages } from '@/lib/storageService';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, FlatList, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HostListings() {
     const c = useColors();
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const { user } = useAuthStore();
-    
+
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -77,9 +78,9 @@ export default function HostListings() {
             i18n.t('host_delete_desc'),
             [
                 { text: i18n.t('host_delete_cancel'), style: "cancel" },
-                { 
-                    text: i18n.t('host_action_delete'), 
-                    style: "destructive", 
+                {
+                    text: i18n.t('host_action_delete'),
+                    style: "destructive",
                     onPress: async () => {
                         try {
                             await ListingService.deleteListing(id);
@@ -87,7 +88,7 @@ export default function HostListings() {
                         } catch (e) {
                             Alert.alert(i18n.t('host_form_error'), i18n.t('host_form_error_delete'));
                         }
-                    } 
+                    }
                 }
             ]
         );
@@ -134,14 +135,21 @@ export default function HostListings() {
         try {
             const docSnap = await getDoc(doc(db, "users", user.uid));
             const profile = docSnap.exists() ? docSnap.data() : {};
-            
+
+            // Upload images to Firebase Storage so URLs persist across rebuilds
+            const listingId = editingId || `new_${Date.now()}`;
+            const uploadedCover = await uploadImage(formImage, `listings/${user.uid}/${listingId}/cover.jpg`);
+            const uploadedGallery = formGallery.length > 0
+                ? await uploadImages(formGallery, `listings/${user.uid}/${listingId}/gallery`)
+                : [];
+
             const payload = {
                 title: formTitle,
                 price: parseFloat(formPrice) || 0,
                 location: formLocation,
                 about: formAbout,
-                image: formImage,
-                gallery: formGallery,
+                image: uploadedCover,
+                gallery: uploadedGallery,
             };
 
             if (editingId) {
@@ -150,14 +158,14 @@ export default function HostListings() {
                 await ListingService.createListing({
                     hostId: user.uid,
                     hostName: profile.name || 'Host',
-                    hostAvatar: profile.profilePic || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop',
+                    hostAvatar: profile.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'Host')}&background=F3F4F6&color=374151&size=200`,
                     services: profile.services?.length ? profile.services : ['Boarding'],
                     verified: true,
                     status: 'active',
                     ...payload,
                 });
             }
-            
+
             setIsFormVisible(false);
             fetchListings();
         } catch (error) {
@@ -182,7 +190,7 @@ export default function HostListings() {
                 </View>
                 <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_listings_title')}</Text>
             </View>
-            
+
             {isLoading ? (
                 <ActivityIndicator size="large" color={c.primary} style={{ marginTop: 40 }} />
             ) : (
@@ -202,7 +210,7 @@ export default function HostListings() {
                                     </Text>
                                 </View>
                             </View>
-                            
+
                             <View style={styles.cardContent}>
                                 <View style={styles.cardHeader}>
                                     <View style={{ flex: 1 }}>
@@ -221,14 +229,14 @@ export default function HostListings() {
                                 <View style={[styles.divider, { backgroundColor: c.border }]} />
 
                                 <View style={styles.cardActions}>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.actionBtn, { backgroundColor: c.primary + '15' }]}
                                         onPress={() => openEditForm(item)}
                                     >
                                         <Ionicons name="pencil" size={18} color={c.primary} />
                                         <Text style={[styles.actionBtnText, { color: c.primary }]}>{i18n.t('host_action_edit')}</Text>
                                     </TouchableOpacity>
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         style={[styles.actionBtn, { backgroundColor: '#F4433615' }]}
                                         onPress={() => handleDeleteListing(item.id!)}
                                     >
@@ -260,7 +268,7 @@ export default function HostListings() {
                     </View>
 
                     <ScrollView contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled">
-                        
+
                         {/* Image Upload UI */}
                         <Text style={[styles.inputLabel, { color: c.text }]}>{i18n.t('host_form_photos')}</Text>
                         <View style={styles.photoContainer}>
@@ -278,7 +286,7 @@ export default function HostListings() {
                                 {formGallery.map((uri, i) => (
                                     <View key={i} style={[styles.galleryThumbnail, { backgroundColor: c.bg, borderColor: c.border }]}>
                                         <Image source={{ uri }} style={{ width: '100%', height: '100%', borderRadius: 10 }} />
-                                        <TouchableOpacity 
+                                        <TouchableOpacity
                                             style={{ position: 'absolute', top: -6, right: -6, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12 }}
                                             onPress={() => removeGalleryImage(i)}
                                         >

@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AuthService } from '@/lib/authService';
 
-const DEFAULT_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80';
+const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=F3F4F6&color=374151&size=256';
 
 type MenuItemProps = {
   icon: keyof typeof Ionicons.glyphMap;
@@ -202,7 +202,7 @@ export default function Profile() {
           ) : (
             <>
               <Image
-                source={{ uri: profileData?.profilePic || DEFAULT_AVATAR }}
+                source={{ uri: profileData?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.name || 'User')}&background=F3F4F6&color=374151&size=256` }}
                 style={styles.avatar}
               />
               <View style={styles.userInfoText}>
@@ -321,7 +321,8 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 8,
   },
   title: {
     fontSize: 32,
@@ -330,9 +331,9 @@ const styles = StyleSheet.create({
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 20,
+    paddingVertical: 12,
     paddingHorizontal: 20,
-    marginTop: 8,
+    marginTop: 0,
   },
   avatar: {
     width: 64,

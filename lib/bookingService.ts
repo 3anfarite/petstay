@@ -10,6 +10,7 @@ export interface Booking {
     guestAvatar?: string;
     hostId: string;
     hostName: string;
+    location?: string;
     serviceType: string;
     petType: string;
     startDate: string; // ISO 8601 Database string

@@ -1,7 +1,7 @@
 import { useColors } from '@/hooks/use-theme-color';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     FlatList,
     Image,
@@ -15,52 +15,37 @@ import {
     View,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const MOCK_MESSAGES = [
-    {
-        id: '1',
-        text: "Hi Alex! Thanks for booking with me. I'm looking forward to hosting Max!",
-        sender: 'them',
-        time: '09:41 AM',
-    },
-    {
-        id: '2',
-        text: "Hi Sarah! We're excited too. Quick question - do you have a fenced yard?",
-        sender: 'me',
-        time: '09:42 AM',
-    },
-    {
-        id: '3',
-        text: "Yes, I have a fully fenced backyard. It's about 500 sq ft, plenty of space for running around.",
-        sender: 'them',
-        time: '09:45 AM',
-    },
-    {
-        id: '4',
-        text: "That sounds perfect! What about walks? How many times a day do you usually go?",
-        sender: 'me',
-        time: '09:46 AM',
-    },
-    {
-        id: '5',
-        text: "I usually do a long morning walk (45 mins) and two shorter ones in the afternoon/evening. Does that work for Max?",
-        sender: 'them',
-        time: '09:48 AM',
-    },
-];
+import { ChatService, Message } from '@/lib/chatService';
+import { useAuthStore } from '@/store/useAuthStore';
 
 export default function ChatDetailScreen() {
     const router = useRouter();
     const params = useLocalSearchParams();
     const c = useColors();
     const insets = useSafeAreaInsets();
-    const [messages, setMessages] = useState(MOCK_MESSAGES);
+    const { user } = useAuthStore();
+    
+    const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const flatListRef = useRef<FlatList>(null);
-
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
-    React.useEffect(() => {
+    const otherUserId = params.id as string;
+    const chatId = user ? ChatService.getChatId(user.uid, otherUserId) : '';
+
+    useEffect(() => {
+        if (!chatId) return;
+        const unsubscribe = ChatService.subscribeToMessages(chatId, (fetchedMessages) => {
+            setMessages(fetchedMessages);
+            // Optional: scroll to end on new messages
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        });
+        return () => unsubscribe();
+    }, [chatId]);
+
+    useEffect(() => {
         const keyboardWillShow = Keyboard.addListener(
             Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
             () => setKeyboardVisible(true)
@@ -76,44 +61,50 @@ export default function ChatDetailScreen() {
         };
     }, []);
 
-    const sendMessage = () => {
-        // ... existing sendMessage logic ...
-        if (!inputText.trim()) return;
+    const sendMessage = async () => {
+        if (!inputText.trim() || !user || !chatId) return;
 
-        const newMessage = {
-            id: Date.now().toString(),
-            text: inputText.trim(),
-            sender: 'me',
-            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        };
+        const textToSend = inputText.trim();
+        setInputText(''); // Optimistic clear
 
-        setMessages([...messages, newMessage]);
-        setInputText('');
+        try {
+            await ChatService.sendMessage(chatId, user.uid, textToSend);
+            setTimeout(() => {
+                flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+        } catch (error) {
+            console.error("Failed to send message", error);
+            setInputText(textToSend); // Restore if failed
+        }
+    };
 
-        setTimeout(() => {
-            flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+    const formatTime = (timestamp: any) => {
+        if (!timestamp) return '';
+        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
-            {/* ... Header & List ... */}
             <View style={[styles.header, { borderBottomColor: c.border }]}>
-                {/* ... header content ... */}
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={c.text} />
                 </TouchableOpacity>
 
                 <View style={styles.headerContent}>
                     <Image
-                        source={{ uri: (params.avatar as string) || 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop' }}
+                        source={{ 
+                            uri: (params.avatar && !(params.avatar as string).includes('unsplash.com') && !(params.avatar as string).includes('placecats.com')) 
+                                ? (params.avatar as string) 
+                                : `https://ui-avatars.com/api/?name=${encodeURIComponent((params.name as string) || 'User')}&background=F3F4F6&color=374151&size=200` 
+                        }}
                         style={styles.avatar}
                     />
                     <View>
                         <Text style={[styles.name, { color: c.text }]}>
-                            {params.name || 'Sarah Wilson'}
+                            {params.name || 'Guest'}
                         </Text>
-                        <Text style={[styles.status, { color: c.textMuted }]}>Active now</Text>
+                        <Text style={[styles.status, { color: c.textMuted }]}>Active</Text>
                     </View>
                 </View>
 
@@ -126,28 +117,31 @@ export default function ChatDetailScreen() {
             <FlatList
                 ref={flatListRef}
                 data={messages}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.id!}
                 contentContainerStyle={styles.messageList}
-                renderItem={({ item }) => (
-                    <View style={[
-                        styles.messageBubble,
-                        item.sender === 'me' ? styles.myMessage : styles.theirMessage,
-                        item.sender === 'me' ? { backgroundColor: c.primary } : { backgroundColor: c.bg },
-                    ]}>
-                        <Text style={[
-                            styles.messageText,
-                            item.sender === 'me' ? { color: 'white' } : { color: c.text }
+                renderItem={({ item }) => {
+                    const isMe = item.senderId === user?.uid;
+                    return (
+                        <View style={[
+                            styles.messageBubble,
+                            isMe ? styles.myMessage : styles.theirMessage,
+                            isMe ? { backgroundColor: c.primary } : { backgroundColor: c.bg },
                         ]}>
-                            {item.text}
-                        </Text>
-                        <Text style={[
-                            styles.messageTime,
-                            item.sender === 'me' ? { color: 'rgba(255,255,255,0.7)' } : { color: c.textMuted }
-                        ]}>
-                            {item.time}
-                        </Text>
-                    </View>
-                )}
+                            <Text style={[
+                                styles.messageText,
+                                isMe ? { color: 'white' } : { color: c.text }
+                            ]}>
+                                {item.text}
+                            </Text>
+                            <Text style={[
+                                styles.messageTime,
+                                isMe ? { color: 'rgba(255,255,255,0.7)' } : { color: c.textMuted }
+                            ]}>
+                                {formatTime(item.createdAt)}
+                            </Text>
+                        </View>
+                    );
+                }}
             />
 
             {/* Input */}

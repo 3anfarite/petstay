@@ -45,7 +45,14 @@
       ],
       "expo-localization",
       "expo-font",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location to show nearby pet hosts."
+        }
+      ],
+      "expo-image-picker"
     ],
     "experiments": {
       "typedRoutes": true,

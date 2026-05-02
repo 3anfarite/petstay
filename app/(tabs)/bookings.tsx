@@ -203,7 +203,7 @@ export default function BookingScreen() {
         }
         renderItem={({ item }) => {
           // Fallback to dummy data for host visuals since we haven't stored them all strictly yet
-          const host = dummyHosts.find((h) => h.id === item.hostId) || { image: 'https://placecats.com/100/100', location: 'Remote' };
+          const host = dummyHosts.find((h) => h.id === item.hostId) || { image: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.hostName || 'Host')}&background=F3F4F6&color=374151&size=200`, location: 'Remote' };
 
           // Format ISO date safely
           const startStr = new Date(item.startDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
@@ -239,7 +239,7 @@ export default function BookingScreen() {
 
                   <View style={styles.detailRow}>
                     <Ionicons name="location-sharp" size={14} color={c.textMuted} />
-                    <Text style={styles.location} numberOfLines={1}>{host.location}</Text>
+                    <Text style={styles.location} numberOfLines={1}>{item.location || host.location}</Text>
                   </View>
 
                   <View style={styles.detailRow}>
@@ -253,7 +253,13 @@ export default function BookingScreen() {
 
               {/* Actions */}
               <View style={styles.cardFooter}>
-                <TouchableOpacity style={styles.messageButton}>
+                <TouchableOpacity 
+                  style={styles.messageButton}
+                  onPress={() => router.push({
+                    pathname: '/chat/[id]',
+                    params: { id: item.hostId, name: item.hostName || host.name, avatar: host.image }
+                  })}
+                >
                   <Text style={styles.messageText}>{i18n.t('booking_action_message')}</Text>
                 </TouchableOpacity>
 
