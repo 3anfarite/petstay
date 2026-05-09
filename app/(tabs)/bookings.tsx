@@ -183,22 +183,28 @@ export default function BookingScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <View style={styles.emptyIconContainer}>
-              <Ionicons name="map-outline" size={48} color={c.primary} />
+            <View style={[styles.emptyIconContainer, { backgroundColor: 'transparent', shadowOpacity: 0 }]}>
+              <Ionicons name="map-outline" size={64} color={c.textMuted} style={{ opacity: 0.3 }} />
             </View>
-            <Text style={styles.emptyTitle}>{i18n.t('bookings_empty_title')}</Text>
-            <Text style={styles.emptySubtitle}>
-              {i18n.t('bookings_empty_subtitle')}
+            <Text style={[styles.emptyTitle, { color: c.textMuted, fontSize: 18, fontWeight: '500' }]}>
+              No {activeTab} bookings
             </Text>
-            <TouchableOpacity
-              style={styles.exploreButton}
-              onPress={() => router.push('/(tabs)')}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.exploreButtonText}>
-                {i18n.t('bookings_empty_btn')}
-              </Text>
-            </TouchableOpacity>
+            {activeTab === 'upcoming' && (
+              <>
+                <Text style={styles.emptySubtitle}>
+                  {i18n.t('bookings_empty_subtitle')}
+                </Text>
+                <TouchableOpacity
+                  style={styles.exploreButton}
+                  onPress={() => router.push('/(tabs)')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={styles.exploreButtonText}>
+                    {i18n.t('bookings_empty_btn')}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         }
         renderItem={({ item }) => {
@@ -206,9 +212,19 @@ export default function BookingScreen() {
           const host = dummyHosts.find((h) => h.id === item.hostId) || { image: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.hostName || 'Host')}&background=F3F4F6&color=374151&size=200`, location: 'Remote' };
 
           // Format ISO date safely
-          const startStr = new Date(item.startDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
-          const endStr = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
-          const datesString = `${startStr} - ${endStr}`;
+          const startD = new Date(item.startDate);
+          const startStr = startD.toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+          
+          const isHourly = ['grooming', 'walking', 'training', 'vets'].includes((item.serviceType || '').toLowerCase());
+          let datesString = '';
+          
+          if (isHourly) {
+              const timeStr = startD.toLocaleTimeString(i18n.locale || 'en-US', { hour: 'numeric', minute: '2-digit' });
+              datesString = `${startStr} • ${timeStr}`;
+          } else {
+              const endStr = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+              datesString = `${startStr} - ${endStr}`;
+          }
           
           const isUpcoming = item.status === 'pending' || item.status === 'confirmed';
           const isCancelled = item.status === 'cancelled' || item.status === 'declined';

@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDocs, orderBy, query, updateDoc, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, orderBy, query, updateDoc, where, getDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 
 export type BookingStatus = 'pending' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
@@ -27,6 +27,50 @@ export const BookingService = {
      */
     createBooking: async (bookingData: Omit<Booking, 'id' | 'status' | 'createdAt'>): Promise<string> => {
         try {
+            // 1. Removed personal overlap check per user request
+            
+            const bookingsRef = collection(db, "bookings");
+            const reqStart = new Date(bookingData.startDate).getTime();
+            const reqEnd = new Date(bookingData.endDate).getTime();
+
+            // 2. Check global host capacity
+            const hostDocRef = doc(db, "users", bookingData.hostId);
+            const hostDocSnap = await getDoc(hostDocRef);
+            const hostData = hostDocSnap.exists() ? hostDocSnap.data() : null;
+            const maxCapacity = hostData?.maxPetCapacity || 1; // default to 1 if not set
+
+            const allHostBookingsQuery = query(
+                bookingsRef,
+                where("hostId", "==", bookingData.hostId),
+                where("status", "in", ["pending", "confirmed"])
+            );
+            const allHostBookings = await getDocs(allHostBookingsQuery);
+
+            let overlappingPets = 0;
+            allHostBookings.docs.forEach(d => {
+                const b = d.data() as Booking;
+                const bStart = new Date(b.startDate).getTime();
+                const bEnd = new Date(b.endDate).getTime();
+                
+                if (reqStart < bEnd && reqEnd > bStart) {
+                    const match = b.petType.match(/\d+/);
+                    const pets = match ? parseInt(match[0], 10) : 1;
+                    overlappingPets += pets;
+                }
+            });
+
+            const newPetsMatch = bookingData.petType.match(/\d+/);
+            const newPets = newPetsMatch ? parseInt(newPetsMatch[0], 10) : 1;
+
+            if (overlappingPets + newPets > maxCapacity) {
+                if (newPets > maxCapacity) {
+                    throw new Error(`You are requesting to book for ${newPets} pet(s), but this host has a maximum capacity of ${maxCapacity} pet(s).`);
+                } else {
+                    const availableSpace = maxCapacity - overlappingPets;
+                    throw new Error(`The host cannot accommodate ${newPets} pet(s) for these dates. They only have space for ${availableSpace} more pet(s) (Max capacity: ${maxCapacity}, Already booked: ${overlappingPets}).`);
+                }
+            }
+
             const newBooking: Booking = {
                 ...bookingData,
                 status: 'pending',

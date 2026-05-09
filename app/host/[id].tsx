@@ -16,6 +16,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
     ActivityIndicator,
+    Alert,
     Dimensions,
     Image,
     StatusBar,
@@ -50,6 +51,11 @@ export default function HostDetailScreen() {
     const [selectedService, setSelectedService] = useState('Boarding');
     const [isBookingModalVisible, setBookingModalVisible] = useState(false);
     const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
+    const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
+    const [hostActiveBookings, setHostActiveBookings] = useState<any[]>([]);
+    const [hostVacationDates, setHostVacationDates] = useState<Date[]>([]);
+    const [hostMaxCapacity, setHostMaxCapacity] = useState(1);
+    const [unavailableTimes, setUnavailableTimes] = useState<Record<string, string[]>>({});
 
     const { user } = useAuthStore();
 
@@ -60,9 +66,104 @@ export default function HostDetailScreen() {
             setHost(data);
             setSelectedService(data?.services?.[0] || 'Boarding');
             setIsLoading(false);
+
+            if (data?.hostId) {
+                try {
+                    // Fetch host document for capacity and vacationDates
+                    const hostDocSnap = await getDoc(doc(db, "users", data.hostId));
+                    if (hostDocSnap.exists()) {
+                        const hd = hostDocSnap.data();
+                        setHostMaxCapacity(hd.maxPetCapacity || 1);
+                        if (hd.vacationDates && Array.isArray(hd.vacationDates)) {
+                            setHostVacationDates(hd.vacationDates.map((d: string) => new Date(d)));
+                        }
+                    }
+
+                    // Fetch active bookings
+                    const bookings = await BookingService.getHostBookings(data.hostId);
+                    const activeBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+                    setHostActiveBookings(activeBookings);
+                } catch (error) {
+                    console.error('Failed to fetch host details', error);
+                }
+            }
         };
         loadListing();
     }, [id]);
+
+    useEffect(() => {
+        const dailyPets: Record<string, number> = {};
+        const guestDates: Record<string, boolean> = {};
+        const hourlyPets: Record<string, Record<string, number>> = {};
+        const timesToDisable: Record<string, string[]> = {};
+        
+        const isHourly = ['grooming', 'walking', 'training', 'vets'].includes((selectedService || '').toLowerCase());
+
+        hostActiveBookings.forEach(b => {
+            const start = new Date(b.startDate);
+            const end = new Date(b.endDate);
+            const petsMatch = b.petType.match(/\d+/);
+            const pets = petsMatch ? parseInt(petsMatch[0]) : 1;
+            
+            const bIsHourly = ['grooming', 'walking', 'training', 'vets'].includes((b.serviceType || '').toLowerCase());
+
+            if (bIsHourly) {
+                // If a booking is hourly, we check if it conflicts with the current hour selection
+                const dateStr = `${start.getFullYear()}-${(start.getMonth() + 1).toString().padStart(2, '0')}-${start.getDate().toString().padStart(2, '0')}`;
+                const hours = start.getHours();
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                const h12 = hours % 12 || 12;
+                const timeStr = `${h12.toString().padStart(2, '0')}:00 ${ampm}`;
+
+                if (!hourlyPets[dateStr]) hourlyPets[dateStr] = {};
+                hourlyPets[dateStr][timeStr] = (hourlyPets[dateStr][timeStr] || 0) + pets;
+
+                if (!timesToDisable[dateStr]) timesToDisable[dateStr] = [];
+                
+                // Block if this guest already has a booking at this exact hour (regardless of service)
+                if (b.guestId === user?.uid && !timesToDisable[dateStr].includes(timeStr)) {
+                    timesToDisable[dateStr].push(timeStr);
+                }
+            } else {
+                let current = new Date(start);
+                current.setHours(0,0,0,0);
+                const endDateNormalized = new Date(end);
+                endDateNormalized.setHours(0,0,0,0);
+
+                while(current <= endDateNormalized) {
+                    const dateStr = `${current.getFullYear()}-${(current.getMonth() + 1).toString().padStart(2, '0')}-${current.getDate().toString().padStart(2, '0')}`;
+                    dailyPets[dateStr] = (dailyPets[dateStr] || 0) + pets;
+                    
+                    if (!isHourly && b.guestId === user?.uid && b.serviceType.toLowerCase() === selectedService.toLowerCase()) {
+                        guestDates[dateStr] = true;
+                    }
+                    
+                    current.setDate(current.getDate() + 1);
+                }
+            }
+        });
+
+        // Add hours that reach host capacity to timesToDisable
+        Object.entries(hourlyPets).forEach(([dateStr, times]) => {
+            Object.entries(times).forEach(([timeStr, pets]) => {
+                if (pets >= hostMaxCapacity) {
+                    if (!timesToDisable[dateStr]) timesToDisable[dateStr] = [];
+                    if (!timesToDisable[dateStr].includes(timeStr)) {
+                        timesToDisable[dateStr].push(timeStr);
+                    }
+                }
+            });
+        });
+
+        const fullyBookedDates = Object.entries(dailyPets)
+            .filter(([_, count]) => count >= hostMaxCapacity)
+            .map(([dateStr]) => new Date(dateStr));
+
+        const userBookedDates = Object.keys(guestDates).map(dateStr => new Date(dateStr));
+
+        setUnavailableDates([...hostVacationDates, ...fullyBookedDates, ...userBookedDates]);
+        setUnavailableTimes(timesToDisable);
+    }, [hostActiveBookings, selectedService, hostVacationDates, hostMaxCapacity, user?.uid]);
 
     const scrollHandler = useAnimatedScrollHandler((event) => {
         scrollY.value = event.contentOffset.y;
@@ -312,14 +413,16 @@ export default function HostDetailScreen() {
                         setBookingModalVisible(false);
                         setIsSubmittingBooking(false);
                         router.push('/(tabs)/bookings');
-                    } catch (error) {
+                    } catch (error: any) {
                         console.error('Submission failed:', error);
                         setIsSubmittingBooking(false);
-                        // Show error toast normally here
+                        Alert.alert("Booking Failed", error.message || "An unexpected error occurred.");
                     }
                 }}
                 pricePerNight={host.price}
                 hostName={host.name}
+                unavailableDates={unavailableDates}
+                unavailableTimes={unavailableTimes}
             />
         </View>
     );

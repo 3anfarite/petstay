@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState, useEffect } from 'react';
 import { BookingService, Booking } from '@/lib/bookingService';
+import { ChatService } from '@/lib/chatService';
 import { useAuthStore } from '@/store/useAuthStore';
 import {
   Alert,
@@ -120,8 +121,24 @@ export default function HostReservationsScreen() {
           style: status === 'confirmed' ? 'default' : 'destructive',
           onPress: async () => {
             try {
-              await BookingService.updateBookingStatus(bookingId, status);
-              setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status } : b));
+              const bookingToUpdate = bookings.find(b => b.id === bookingId);
+              const dbStatus = status === 'declined' ? 'cancelled' : status;
+              
+              await BookingService.updateBookingStatus(bookingId, dbStatus);
+              setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: dbStatus } : b));
+
+              // If declining, send an automated message
+              if (status === 'declined' && bookingToUpdate && user) {
+                await ChatService.startChatAndSendMessage(
+                  user.uid,
+                  bookingToUpdate.guestId,
+                  bookingToUpdate.hostName,
+                  bookingToUpdate.guestName,
+                  user.profilePic || '', // Use the host's avatar or a fallback
+                  bookingToUpdate.guestAvatar || '',
+                  `Hello ${bookingToUpdate.guestName}, unfortunately I have to decline your booking request for ${new Date(bookingToUpdate.startDate).toLocaleDateString()}. I'm sorry for the inconvenience!`
+                );
+              }
             } catch (error) {
               console.error('Failed to update booking:', error);
               Alert.alert('Error', 'Could not update the booking. Please try again.');
@@ -192,16 +209,28 @@ export default function HostReservationsScreen() {
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <View style={styles.emptyIconContainer}>
-                <Ionicons name="calendar-outline" size={48} color={c.primary} />
+              <View style={[styles.emptyIconContainer, { backgroundColor: 'transparent', shadowOpacity: 0 }]}>
+                <Ionicons name="calendar-clear-outline" size={64} color={c.textMuted} style={{ opacity: 0.3 }} />
               </View>
-              <Text style={styles.emptyTitle}>{i18n.t('host_reservations_empty')}</Text>
+              <Text style={[styles.emptyTitle, { color: c.textMuted, fontSize: 18, fontWeight: '500' }]}>
+                No {activeTab} reservations
+              </Text>
             </View>
           }
           renderItem={({ item }) => {
-            const startStr = new Date(item.startDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
-            const endStr = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
-            const datesString = `${startStr} - ${endStr}`;
+            const startD = new Date(item.startDate);
+            const startStr = startD.toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+            
+            const isHourly = ['grooming', 'walking', 'training', 'vets'].includes((item.serviceType || '').toLowerCase());
+            let datesString = '';
+            
+            if (isHourly) {
+                const timeStr = startD.toLocaleTimeString(i18n.locale || 'en-US', { hour: 'numeric', minute: '2-digit' });
+                datesString = `${startStr} • ${timeStr}`;
+            } else {
+                const endStr = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
+                datesString = `${startStr} - ${endStr}`;
+            }
             
             const isPending = item.status === 'pending';
             const isUpcoming = item.status === 'pending' || item.status === 'confirmed';

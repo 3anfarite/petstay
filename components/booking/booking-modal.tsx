@@ -13,18 +13,20 @@ type BookingModalProps = {
     hostName: string;
     isSubmitting?: boolean;
     serviceType: string;
+    unavailableDates?: Date[];
+    unavailableTimes?: Record<string, string[]>;
 };
 
 const TIME_SLOTS = ["08:00 AM", "10:00 AM", "12:00 PM", "02:00 PM", "04:00 PM", "06:00 PM"];
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 
-export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostName, isSubmitting, serviceType }: BookingModalProps) {
+export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostName, isSubmitting, serviceType, unavailableDates = [], unavailableTimes = {} }: BookingModalProps) {
     const c = useColors();
     const styles = makeStyles(c);
     const insets = useSafeAreaInsets();
 
-    const isHourlyService = ['Grooming', 'Walking', 'Training', 'Vets', 'Daycare'].includes(serviceType);
+    const isHourlyService = ['grooming', 'walking', 'training', 'vets'].includes((serviceType || '').toLowerCase());
 
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
@@ -122,6 +124,8 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
     }, [currentMonth]);
 
     const handleDatePress = (date: Date) => {
+        if (isDateDisabled(date)) return;
+
         if (isHourlyService) {
             setStartDate(date);
             setEndDate(null);
@@ -135,7 +139,28 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
             if (date < startDate) {
                 setStartDate(date);
             } else {
-                setEndDate(date);
+                let hasDisabledDate = false;
+                const current = new Date(startDate);
+                current.setDate(current.getDate() + 1);
+                current.setHours(0,0,0,0);
+                
+                const end = new Date(date);
+                end.setHours(0,0,0,0);
+
+                while (current <= end) {
+                    if (isDateDisabled(current)) {
+                        hasDisabledDate = true;
+                        break;
+                    }
+                    current.setDate(current.getDate() + 1);
+                }
+
+                if (hasDisabledDate) {
+                    setStartDate(date);
+                    setEndDate(null);
+                } else {
+                    setEndDate(date);
+                }
             }
         }
     };
@@ -145,6 +170,18 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
         if (startDate.getTime() === date.getTime()) return true;
         if (!isHourlyService && endDate && endDate.getTime() === date.getTime()) return true;
         return false;
+    };
+
+    const isDateDisabled = (date: Date) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (date < today) return true;
+
+        return unavailableDates.some(unavailable => 
+            unavailable.getDate() === date.getDate() &&
+            unavailable.getMonth() === date.getMonth() &&
+            unavailable.getFullYear() === date.getFullYear()
+        );
     };
 
     const isDateInRange = (date: Date) => {
@@ -250,6 +287,7 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                                     const isSelected = isDateSelected(date);
                                     const inRange = isDateInRange(date);
                                     const isToday = new Date().toDateString() === date.toDateString();
+                                    const isDisabled = isDateDisabled(date);
 
                                     return (
                                         <TouchableOpacity
@@ -258,14 +296,17 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                                                 styles.dayCell,
                                                 isSelected && styles.selectedDay,
                                                 inRange && styles.inRangeDay,
+                                                isDisabled && styles.disabledDay,
                                             ]}
                                             onPress={() => handleDatePress(date)}
+                                            disabled={isDisabled}
                                         >
                                             <Text style={[
                                                 styles.dayText,
                                                 isSelected && styles.selectedDayText,
                                                 inRange && styles.inRangeDayText,
-                                                isToday && !isSelected && !inRange && styles.todayText
+                                                isToday && !isSelected && !inRange && !isDisabled && styles.todayText,
+                                                isDisabled && styles.disabledDayText
                                             ]}>
                                                 {date.getDate()}
                                             </Text>
@@ -287,19 +328,30 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                         {isHourlyService && (
                             <>
                                 <View style={styles.section}>
-                                    <Text style={styles.sectionTitle}>{i18n.t('booking_time_slot', { defaultValue: 'Select Time' })}</Text>
+                                    <Text style={styles.sectionTitle}>{i18n.t('booking_time_slot')}</Text>
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timeScroll}>
-                                        {TIME_SLOTS.map(time => (
-                                            <TouchableOpacity
-                                                key={time}
-                                                style={[styles.timeSlotBtn, selectedTime === time && styles.timeSlotBtnSelected, { borderColor: c.border }]}
-                                                onPress={() => setSelectedTime(time)}
-                                            >
-                                                <Text style={[styles.timeSlotText, { color: selectedTime === time ? 'white' : c.text }]}>
-                                                    {time}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
+                                        {TIME_SLOTS.map(time => {
+                                            const dateStr = startDate ? `${startDate.getFullYear()}-${(startDate.getMonth() + 1).toString().padStart(2, '0')}-${startDate.getDate().toString().padStart(2, '0')}` : '';
+                                            const bookedTimes = unavailableTimes[dateStr] || [];
+                                            const isDisabled = bookedTimes.includes(time);
+                                            return (
+                                                <TouchableOpacity
+                                                    key={time}
+                                                    style={[
+                                                        styles.timeSlotBtn, 
+                                                        selectedTime === time && styles.timeSlotBtnSelected, 
+                                                        { borderColor: c.border },
+                                                        isDisabled && { opacity: 0.3, backgroundColor: c.border }
+                                                    ]}
+                                                    onPress={() => setSelectedTime(time)}
+                                                    disabled={isDisabled}
+                                                >
+                                                    <Text style={[styles.timeSlotText, { color: selectedTime === time ? 'white' : (isDisabled ? c.textMuted : c.text) }]}>
+                                                        {time}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            );
+                                        })}
                                     </ScrollView>
                                 </View>
                                 <View style={styles.divider} />
@@ -337,7 +389,7 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                                 <Text style={styles.sectionTitle}>{i18n.t('booking_price_breakdown')}</Text>
                                 <View style={styles.priceRow}>
                                     <Text style={styles.priceLabel}>
-                                        {isHourlyService ? i18n.t('booking_session_rate', { defaultValue: `Session Rate ($${pricePerNight})` }) : i18n.t('booking_nightly_rate', { price: pricePerNight, count: nights })}
+                                        {isHourlyService ? i18n.t('booking_session_rate', { price: pricePerNight }) : i18n.t('booking_nightly_rate', { price: pricePerNight, count: nights })}
                                     </Text>
                                     <Text style={styles.priceValue}>${pricePerNight * nights}</Text>
                                 </View>
@@ -460,6 +512,13 @@ const makeStyles = (c: any) => StyleSheet.create({
     inRangeDayText: {
         color: c.primary,
         fontWeight: '600',
+    },
+    disabledDay: {
+        opacity: 0.4,
+    },
+    disabledDayText: {
+        color: c.textMuted,
+        textDecorationLine: 'line-through',
     },
     todayText: {
         color: c.primary,

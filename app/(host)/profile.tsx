@@ -116,6 +116,11 @@ export default function HostProfile() {
     const [isCapacityModalVisible, setCapacityModalVisible] = useState(false);
     const [editingCapacity, setEditingCapacity] = useState(1);
 
+    // Vacation Modal State
+    const [isVacationModalVisible, setVacationModalVisible] = useState(false);
+    const [editingVacationDates, setEditingVacationDates] = useState<string[]>([]);
+    const [currentMonth, setCurrentMonth] = useState(new Date());
+
     const router = useRouter(); // Added router for navigation
 
     // Animation values
@@ -186,6 +191,57 @@ export default function HostProfile() {
         } finally {
             setIsLoadingProfile(false);
         }
+    };
+
+    const openVacationModal = () => {
+        setEditingVacationDates(profileData?.vacationDates || []);
+        setCurrentMonth(new Date());
+        setVacationModalVisible(true);
+    };
+
+    const saveVacationDates = async () => {
+        if (!user?.uid) return;
+        try {
+            setIsLoadingProfile(true);
+            setVacationModalVisible(false);
+            await updateDoc(doc(db, "users", user.uid), {
+                vacationDates: editingVacationDates
+            });
+            setProfileData((prev: any) => ({ ...prev, vacationDates: editingVacationDates }));
+        } catch (error) {
+            console.error("Failed to update vacation dates", error);
+        } finally {
+            setIsLoadingProfile(false);
+        }
+    };
+
+    const toggleVacationDate = (date: Date) => {
+        const dateStr = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+        setEditingVacationDates(prev => 
+            prev.includes(dateStr) 
+            ? prev.filter(d => d !== dateStr) 
+            : [...prev, dateStr]
+        );
+    };
+
+    const calendarDays = React.useMemo(() => {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        const firstDay = new Date(year, month, 1);
+        const lastDay = new Date(year, month + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDayIndex = firstDay.getDay(); 
+
+        const days = [];
+        for (let i = 0; i < startingDayIndex; i++) days.push(null);
+        for (let i = 1; i <= daysInMonth; i++) days.push(new Date(year, month, i));
+        return days;
+    }, [currentMonth]);
+
+    const changeMonth = (increment: number) => {
+        const newDate = new Date(currentMonth);
+        newDate.setMonth(newDate.getMonth() + increment);
+        setCurrentMonth(newDate);
     };
 
     const screenHeight = Dimensions.get('window').height;
@@ -288,8 +344,14 @@ export default function HostProfile() {
                     <MenuItem
                         icon="people-outline"
                         label={i18n.t('host_profile_capacity', { defaultValue: 'Max Capacity' })}
-                        value={profileData?.maxPetCapacity ? `${profileData.maxPetCapacity} Pets` : 'Not Set'}
+                        value={profileData?.maxPetCapacity ? `${profileData.maxPetCapacity} ${i18n.t('booking_pets')}` : i18n.t('host_profile_none')}
                         onPress={openCapacityModal}
+                    />
+                    <MenuItem
+                        icon="calendar-outline"
+                        label={i18n.t('host_profile_vacation_dates')}
+                        value={profileData?.vacationDates?.length ? i18n.t('host_profile_vacation_days_count', { count: profileData.vacationDates.length, defaultValue: `${profileData.vacationDates.length} Days` }) : i18n.t('host_profile_none')}
+                        onPress={openVacationModal}
                     />
                     <MenuItem
                         icon="paw-outline"
@@ -417,6 +479,85 @@ export default function HostProfile() {
                         </View>
 
                         <TouchableOpacity style={[styles.saveButton, { backgroundColor: c.primary }]} onPress={saveCapacity}>
+                            <Text style={styles.saveButtonText}>{i18n.t('menu_save', { defaultValue: 'Save Configuration' })}</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Vacation Modal */}
+            <Modal
+                visible={isVacationModalVisible}
+                transparent={true}
+                animationType="fade"
+                onRequestClose={() => setVacationModalVisible(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: c.bg2, maxHeight: '80%' }]}>
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: c.text }]}>
+                                {i18n.t('host_profile_vacation_dates')}
+                            </Text>
+                            <TouchableOpacity onPress={() => setVacationModalVisible(false)}>
+                                <Ionicons name="close" size={24} color={c.text} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={[styles.capacityDescription, { color: c.textMuted }]}>
+                            {i18n.t('host_profile_vacation_description')}
+                        </Text>
+
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <TouchableOpacity onPress={() => changeMonth(-1)} style={{ padding: 8 }}>
+                                <Ionicons name="chevron-back" size={24} color={c.text} />
+                            </TouchableOpacity>
+                            <Text style={{ fontSize: 16, fontWeight: 'bold', color: c.text }}>
+                                {currentMonth.toLocaleString(i18n.locale || 'en-US', { month: 'long', year: 'numeric' })}
+                            </Text>
+                            <TouchableOpacity onPress={() => changeMonth(1)} style={{ padding: 8 }}>
+                                <Ionicons name="chevron-forward" size={24} color={c.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 20 }}>
+                            {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => (
+                                <Text key={d} style={{ width: '14.28%', textAlign: 'center', color: c.textMuted, fontSize: 12, fontWeight: '600', marginBottom: 8 }}>{d}</Text>
+                            ))}
+                            {calendarDays.map((date, index) => {
+                                if (!date) return <View key={`empty-${index}`} style={{ width: '14.28%', aspectRatio: 1 }} />;
+                                
+                                const dateStr = new Date(date.getTime() - (date.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+                                const isSelected = editingVacationDates.includes(dateStr);
+                                const isPast = date < new Date(new Date().setHours(0,0,0,0));
+
+                                return (
+                                    <View key={index} style={{ width: '14.28%', aspectRatio: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                        <TouchableOpacity
+                                            style={{
+                                                width: 36,
+                                                height: 36,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                backgroundColor: isSelected ? c.primary : 'transparent',
+                                                borderRadius: 18,
+                                                opacity: isPast ? 0.3 : 1
+                                            }}
+                                            onPress={() => toggleVacationDate(date)}
+                                            disabled={isPast}
+                                        >
+                                            <Text style={{
+                                                color: isSelected ? 'white' : c.text,
+                                                fontWeight: isSelected ? 'bold' : 'normal'
+                                            }}>
+                                                {date.getDate()}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                );
+                            })}
+                        </View>
+
+                        <TouchableOpacity style={[styles.saveButton, { backgroundColor: c.primary }]} onPress={saveVacationDates}>
                             <Text style={styles.saveButtonText}>{i18n.t('menu_save', { defaultValue: 'Save Configuration' })}</Text>
                         </TouchableOpacity>
                     </View>
