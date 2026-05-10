@@ -1,6 +1,7 @@
-import { dummyCategories, dummyHosts } from '@/constants/dummyData';
+import { dummyCategories } from '@/constants/dummyData';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { Listing } from '@/lib/listingService';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useMemo, useState } from 'react';
 import {
@@ -15,6 +16,7 @@ import {
 } from 'react-native';
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LocationPickerModal } from './host/LocationPickerModal';
 
 export type FilterState = {
     location: string;
@@ -24,28 +26,29 @@ export type FilterState = {
     isVerified: boolean;
 };
 
-export function FilterModalContent({ onClose, onApply }: { onClose: () => void, onApply?: (filters: FilterState) => void }) {
+export function FilterModalContent({ onClose, onApply, listings = [] }: { onClose: () => void, onApply?: (filters: FilterState) => void, listings?: Listing[] }) {
     const c = useColors();
     const styles = makeStyles(c);
     const insets = useSafeAreaInsets();
 
     const [location, setLocation] = useState('');
+    const [isMapVisible, setIsMapVisible] = useState(false);
     const [selectedService, setSelectedService] = useState<string | null>(null);
     const [minPrice, setMinPrice] = useState('');
     const [maxPrice, setMaxPrice] = useState('');
     const [isVerified, setIsVerified] = useState(false);
 
     const filteredCount = useMemo(() => {
-        return dummyHosts.filter(host => {
+        return listings.filter(host => {
             const matchesLocation = location ? host.location.toLowerCase().includes(location.toLowerCase()) : true;
-            const matchesService = (selectedService && selectedService !== 'All') ? host.services.includes(selectedService) : true;
+            const matchesService = (selectedService && selectedService !== 'All') ? host.services?.includes(selectedService) : true;
             const matchesMinPrice = minPrice ? host.price >= parseInt(minPrice) : true;
             const matchesMaxPrice = maxPrice ? host.price <= parseInt(maxPrice) : true;
             const matchesVerified = isVerified ? host.verified : true;
 
             return matchesLocation && matchesService && matchesMinPrice && matchesMaxPrice && matchesVerified;
         }).length;
-    }, [location, selectedService, minPrice, maxPrice, isVerified]);
+    }, [location, selectedService, minPrice, maxPrice, isVerified, listings]);
 
     const handleApply = () => {
         onApply?.({
@@ -82,16 +85,15 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
                 {/* Location Section */}
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>{i18n.t('filter_location')}</Text>
-                    <View style={styles.inputContainer}>
+                    <TouchableOpacity
+                        style={styles.inputContainer}
+                        onPress={() => setIsMapVisible(true)}
+                    >
                         <Ionicons name="location-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
-                        <TextInput
-                            style={styles.input}
-                            placeholder={i18n.t('search_placeholder')}
-                            placeholderTextColor={c.textMuted}
-                            value={location}
-                            onChangeText={setLocation}
-                        />
-                    </View>
+                        <Text style={{ flex: 1, fontSize: 16, color: location ? c.text : c.textMuted }}>
+                            {location || i18n.t('search_placeholder')}
+                        </Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Services Section */}
@@ -175,6 +177,15 @@ export function FilterModalContent({ onClose, onApply }: { onClose: () => void, 
                     <Text style={styles.searchButtonText}>{i18n.t('show_homes', { count: filteredCount })}</Text>
                 </TouchableOpacity>
             </View>
+
+            <LocationPickerModal
+                visible={isMapVisible}
+                onClose={() => setIsMapVisible(false)}
+                onConfirm={(addr) => {
+                    setLocation(addr);
+                    setIsMapVisible(false);
+                }}
+            />
         </View>
     );
 }

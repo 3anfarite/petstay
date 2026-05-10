@@ -334,7 +334,7 @@ export default function HostDetailScreen() {
                     <View style={[styles.separator, { backgroundColor: c.border }]} />
 
                     {/* Location Map */}
-                    <LocationMap location={host.location} />
+                    <LocationMap location={host.location} locationCoords={host.locationCoords} />
                 </View>
             </Animated.ScrollView>
 

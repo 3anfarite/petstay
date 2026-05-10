@@ -9,6 +9,7 @@ import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withTiming } fr
 
 type LocationMapProps = {
     location: string;
+    locationCoords?: Coords;
 };
 
 type Coords = {
@@ -16,10 +17,10 @@ type Coords = {
     longitude: number;
 };
 
-export function LocationMap({ location }: LocationMapProps) {
+export function LocationMap({ location, locationCoords }: LocationMapProps) {
     const c = useColors();
-    const [coords, setCoords] = useState<Coords | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [coords, setCoords] = useState<Coords | null>(locationCoords || null);
+    const [isLoading, setIsLoading] = useState(!locationCoords);
     const [error, setError] = useState(false);
 
     // Shimmer animation
@@ -33,6 +34,12 @@ export function LocationMap({ location }: LocationMapProps) {
         let cancelled = false;
 
         const geocode = async () => {
+            if (locationCoords) {
+                setCoords(locationCoords);
+                setIsLoading(false);
+                return;
+            }
+
             if (!location || !location.trim()) {
                 setError(true);
                 setIsLoading(false);
@@ -59,7 +66,7 @@ export function LocationMap({ location }: LocationMapProps) {
 
         geocode();
         return () => { cancelled = true; };
-    }, [location]);
+    }, [location, locationCoords]);
 
     const openInMaps = () => {
         if (!coords) return;

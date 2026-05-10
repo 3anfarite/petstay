@@ -191,7 +191,7 @@ export default {
     continue: "Continue",
     cancel: "Cancel",
     save: "Save",
-    show_homes: "Show {{count}} homes",
+    show_homes: "Show {{count}} hosts",
 
     // Host Setup Wizard
     host_setup_title: "Host Profile",

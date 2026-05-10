@@ -74,7 +74,7 @@ export default function Home() {
       }} >
       <>
         <View>
-          <SearchBar onApply={setFilters} />
+          <SearchBar onApply={setFilters} listings={activeListings} />
           {/* @ts-ignore Categories is a valid functional component despite what TypeScript infers here */}
           <Categories
             selectedCategory={filters?.selectedService || selectedCategory}

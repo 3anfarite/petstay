@@ -5,6 +5,7 @@ import { db } from '@/lib/firebaseConfig';
 import { Listing, ListingService } from '@/lib/listingService';
 import { uploadImage, uploadImages } from '@/lib/storageService';
 import { useAuthStore } from '@/store/useAuthStore';
+import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
@@ -29,6 +30,8 @@ export default function HostListings() {
     const [formTitle, setFormTitle] = useState('');
     const [formPrice, setFormPrice] = useState('');
     const [formLocation, setFormLocation] = useState('');
+    const [formLocationCoords, setFormLocationCoords] = useState<LocationCoords | undefined>(undefined);
+    const [isMapVisible, setIsMapVisible] = useState(false);
     const [formAbout, setFormAbout] = useState('');
     const [formImage, setFormImage] = useState<string | null>(null);
     const [formGallery, setFormGallery] = useState<string[]>([]);
@@ -55,6 +58,7 @@ export default function HostListings() {
         setFormTitle(listing.title);
         setFormPrice(listing.price.toString());
         setFormLocation(listing.location);
+        setFormLocationCoords(listing.locationCoords);
         setFormAbout(listing.about);
         setFormImage(listing.image || null);
         setFormGallery(listing.gallery || []);
@@ -66,6 +70,7 @@ export default function HostListings() {
         setFormTitle('');
         setFormPrice('35');
         setFormLocation('');
+        setFormLocationCoords(undefined);
         setFormAbout('');
         setFormImage(null);
         setFormGallery([]);
@@ -147,6 +152,7 @@ export default function HostListings() {
                 title: formTitle,
                 price: parseFloat(formPrice) || 0,
                 location: formLocation,
+                locationCoords: formLocationCoords,
                 about: formAbout,
                 image: uploadedCover,
                 gallery: uploadedGallery,
@@ -310,13 +316,15 @@ export default function HostListings() {
                         />
 
                         <Text style={[styles.inputLabel, { color: c.text }]}>{i18n.t('host_form_location_label')}</Text>
-                        <TextInput
-                            style={[styles.textInput, { backgroundColor: c.bg, color: c.text, borderColor: c.border }]}
-                            placeholder={i18n.t('host_form_location_ph')}
-                            placeholderTextColor={c.textMuted}
-                            value={formLocation}
-                            onChangeText={setFormLocation}
-                        />
+                        <TouchableOpacity 
+                            style={[styles.textInput, { backgroundColor: c.bg, borderColor: c.border, flexDirection: 'row', alignItems: 'center' }]}
+                            onPress={() => setIsMapVisible(true)}
+                        >
+                            <Ionicons name="location-outline" size={20} color={c.textMuted} style={{ marginRight: 8 }} />
+                            <Text style={{ color: formLocation ? c.text : c.textMuted, flex: 1 }}>
+                                {formLocation || i18n.t('host_form_location_ph')}
+                            </Text>
+                        </TouchableOpacity>
 
                         <Text style={[styles.inputLabel, { color: c.text }]}>{i18n.t('host_form_price')}</Text>
                         <TextInput
@@ -339,9 +347,20 @@ export default function HostListings() {
                             value={formAbout}
                             onChangeText={setFormAbout}
                         />
+                        <LocationPickerModal
+                            visible={isMapVisible}
+                            onClose={() => setIsMapVisible(false)}
+                            initialCoords={formLocationCoords}
+                            onConfirm={(addr, coords) => {
+                                setFormLocation(addr);
+                                setFormLocationCoords(coords);
+                                setIsMapVisible(false);
+                            }}
+                        />
                     </ScrollView>
                 </View>
             </Modal>
+
         </View>
     );
 }

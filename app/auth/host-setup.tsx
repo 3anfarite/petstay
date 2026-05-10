@@ -19,6 +19,7 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 
 type ServiceType = 'boarding' | 'walking' | 'daycare' | 'grooming' | 'training' | 'vets';
 type PetType = 'all' | 'dogs' | 'cats' | 'exotics';
@@ -45,6 +46,8 @@ export default function HostSetupScreen() {
     const { user, setRole } = useAuthStore();
 
     const [location, setLocation] = useState('');
+    const [locationCoords, setLocationCoords] = useState<LocationCoords | undefined>(undefined);
+    const [isMapVisible, setIsMapVisible] = useState(false);
     const [bio, setBio] = useState('');
 
     // Multi-select states
@@ -83,6 +86,7 @@ export default function HostSetupScreen() {
         try {
             const hostData = {
                 location,
+                locationCoords,
                 services,
                 petsAllowed,
                 bio,
@@ -122,19 +126,18 @@ export default function HostSetupScreen() {
                         </Text>
                     </View>
 
-                    {/* Basic Info */}
+                    {/* Location */}
                     <View style={styles.section}>
                         <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_setup_location')}</Text>
-                        <View style={[styles.inputBox, { backgroundColor: c.bg2, borderColor: c.border }]}>
+                        <TouchableOpacity 
+                            style={[styles.inputBox, { backgroundColor: c.bg2, borderColor: c.border }]}
+                            onPress={() => setIsMapVisible(true)}
+                        >
                             <Ionicons name="location-outline" size={20} color={c.textMuted} style={styles.icon} />
-                            <TextInput
-                                style={[styles.input, { color: c.text }]}
-                                placeholder={i18n.t('host_setup_location_ph')}
-                                placeholderTextColor={c.textMuted}
-                                value={location}
-                                onChangeText={setLocation}
-                            />
-                        </View>
+                            <Text style={[styles.input, { color: location ? c.text : c.textMuted }]}>
+                                {location || i18n.t('host_setup_location_ph')}
+                            </Text>
+                        </TouchableOpacity>
                     </View>
 
                     {/* Services Array */}
@@ -218,6 +221,17 @@ export default function HostSetupScreen() {
 
                 </ScrollView>
             </KeyboardAvoidingView>
+            
+            <LocationPickerModal 
+                visible={isMapVisible}
+                onClose={() => setIsMapVisible(false)}
+                initialCoords={locationCoords}
+                onConfirm={(addr, coords) => {
+                    setLocation(addr);
+                    setLocationCoords(coords);
+                    setIsMapVisible(false);
+                }}
+            />
         </SafeAreaView>
     );
 }

@@ -13,12 +13,15 @@ import {
 import { FilterModalContent, FilterState } from './filter-modal';
 import ExpandingModal from './search-modal';
 
+import { Listing } from '@/lib/listingService';
+
 interface Props {
   onPress?: () => void;
   onApply?: (filters: FilterState) => void;
+  listings?: Listing[];
 }
 
-export const SearchBar: React.FC<Props> = ({ onPress, onApply }) => {
+export const SearchBar: React.FC<Props> = ({ onPress, onApply, listings = [] }) => {
   const c = useColors();
   const [visible, setVisible] = React.useState(false);
   const [measured, setMeasured] = React.useState<null | { x: number; y: number; width: number; height: number }>(null);
@@ -67,7 +70,7 @@ export const SearchBar: React.FC<Props> = ({ onPress, onApply }) => {
           setMeasured(null);
         }}
       >
-        <FilterModalContent onClose={() => { }} onApply={onApply} />
+        <FilterModalContent onClose={() => { }} onApply={onApply} listings={listings} />
       </ExpandingModal>
     </>
   );

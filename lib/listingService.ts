@@ -8,6 +8,7 @@ export interface Listing {
     hostAvatar?: string;
     title: string;
     location: string;
+    locationCoords?: { latitude: number; longitude: number };
     price: number;
     services: string[];
     image: string;

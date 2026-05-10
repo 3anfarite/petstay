@@ -11,6 +11,9 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
+
 import { AuthService } from '@/lib/authService';
 
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=F3F4F6&color=374151&size=256';
@@ -116,6 +119,9 @@ export default function HostProfile() {
     const [isCapacityModalVisible, setCapacityModalVisible] = useState(false);
     const [editingCapacity, setEditingCapacity] = useState(1);
 
+    // Location Modal State
+    const [isLocationModalVisible, setLocationModalVisible] = useState(false);
+
     // Vacation Modal State
     const [isVacationModalVisible, setVacationModalVisible] = useState(false);
     const [editingVacationDates, setEditingVacationDates] = useState<string[]>([]);
@@ -188,6 +194,23 @@ export default function HostProfile() {
             setProfileData((prev: any) => ({ ...prev, maxPetCapacity: editingCapacity }));
         } catch (error) {
             console.error("Failed to update capacity", error);
+        } finally {
+            setIsLoadingProfile(false);
+        }
+    };
+
+    const handleSaveLocation = async (address: string, coords: LocationCoords) => {
+        if (!user?.uid) return;
+        try {
+            setIsLoadingProfile(true);
+            await updateDoc(doc(db, "users", user.uid), {
+                location: address,
+                locationCoords: coords
+            });
+            setProfileData((prev: any) => ({ ...prev, location: address, locationCoords: coords }));
+            setLocationModalVisible(false);
+        } catch (error) {
+            console.error("Failed to update location", error);
         } finally {
             setIsLoadingProfile(false);
         }
@@ -340,6 +363,7 @@ export default function HostProfile() {
                         icon="location-outline"
                         label={i18n.t('host_profile_location')}
                         value={profileData?.location || i18n.t('host_profile_none')}
+                        onPress={() => setLocationModalVisible(true)}
                     />
                     <MenuItem
                         icon="people-outline"
@@ -563,6 +587,14 @@ export default function HostProfile() {
                     </View>
                 </View>
             </Modal>
+            
+            {/* Location Picker Modal */}
+            <LocationPickerModal
+                visible={isLocationModalVisible}
+                onClose={() => setLocationModalVisible(false)}
+                initialCoords={profileData?.locationCoords}
+                onConfirm={handleSaveLocation}
+            />
         </View>
     );
 }
