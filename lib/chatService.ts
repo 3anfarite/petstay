@@ -13,6 +13,9 @@ export interface Chat {
     lastMessage: string;
     lastMessageTime: any;
     lastSenderId: string;
+    unreadCount?: {
+        [uid: string]: number;
+    };
 }
 
 export interface Message {
@@ -49,9 +52,12 @@ export const ChatService = {
                 [hostId]: { name: hostName, avatar: hostAvatar || '' },
                 [guestId]: { name: guestName, avatar: guestAvatar || '' },
             },
-            lastMessage: messageText,
             lastMessageTime: serverTimestamp(),
             lastSenderId: hostId,
+            unreadCount: {
+                [guestId]: 1,
+                [hostId]: 0
+            }
         }, { merge: true });
 
         // Add the actual message to the subcollection
@@ -64,13 +70,14 @@ export const ChatService = {
         return chatId;
     },
 
-    sendMessage: async (chatId: string, senderId: string, text: string) => {
+    sendMessage: async (chatId: string, senderId: string, text: string, recipientId: string) => {
         const chatRef = doc(db, "chats", chatId);
         
         await updateDoc(chatRef, {
             lastMessage: text,
             lastMessageTime: serverTimestamp(),
             lastSenderId: senderId,
+            [`unreadCount.${recipientId}`]: 1 // In a production app, use increment(1)
         });
 
         await addDoc(collection(chatRef, "messages"), {
@@ -78,6 +85,17 @@ export const ChatService = {
             senderId: senderId,
             createdAt: serverTimestamp()
         });
+    },
+
+    markAsRead: async (chatId: string, userId: string) => {
+        const chatRef = doc(db, "chats", chatId);
+        try {
+            await updateDoc(chatRef, {
+                [`unreadCount.${userId}`]: 0
+            });
+        } catch (e) {
+            // Silently fail if doc doesn't exist
+        }
     },
 
     subscribeToChats: (userId: string, callback: (chats: Chat[]) => void) => {

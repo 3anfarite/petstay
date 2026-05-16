@@ -11,6 +11,10 @@ import { useCallback, useState, useEffect } from 'react';
 import { Platform, StatusBar, View, ActivityIndicator } from "react-native";
 import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context";
 import { ListingService, Listing } from '@/lib/listingService';
+import { useAuthStore } from '@/store/useAuthStore';
+import { WishlistService } from '@/lib/wishlistService';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebaseConfig';
 
 export default function Home() {
   const router = useRouter();
@@ -21,6 +25,8 @@ export default function Home() {
   const [activeListings, setActiveListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+  const { user } = useAuthStore();
 
   const fetchActiveListings = async () => {
     try {
@@ -37,6 +43,30 @@ export default function Home() {
   useEffect(() => {
     fetchActiveListings();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setWishlistIds([]);
+      return;
+    }
+
+    // Subscribe to user wishlist changes
+    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (doc) => {
+      if (doc.exists()) {
+        setWishlistIds(doc.data().wishlist || []);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  const toggleWishlist = async (listingId: string) => {
+    if (!user) {
+      router.push('/auth/welcome');
+      return;
+    }
+    await WishlistService.toggleWishlist(user.uid, listingId);
+  };
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -100,6 +130,8 @@ export default function Home() {
             <HostList
               hosts={filteredHosts}
               onHostPress={(id) => router.push(`/host/${id}`)}
+              wishlistIds={wishlistIds}
+              onToggleWishlist={toggleWishlist}
               refreshing={refreshing}
               onRefresh={onRefresh}
             />

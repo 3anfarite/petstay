@@ -11,7 +11,9 @@ type HostCardProps = {
   services: string[];
   image: string;
   verified?: boolean;
+  isWishlisted?: boolean;
   onPress?: () => void;
+  onToggleWishlist?: () => void;
 };
 
 export default function HostCard({
@@ -22,7 +24,9 @@ export default function HostCard({
   services,
   image,
   verified,
+  isWishlisted,
   onPress,
+  onToggleWishlist,
 }: HostCardProps) {
   const c = useColors();
   const styles = makeStyles(c);
@@ -31,8 +35,12 @@ export default function HostCard({
     <TouchableOpacity style={styles.card} activeOpacity={0.95} onPress={onPress}>
       <View style={styles.imageContainer}>
         <Image source={{ uri: image }} style={styles.image} />
-        <TouchableOpacity style={styles.favoriteButton}>
-          <Ionicons name="heart-outline" size={24} color={c.bg2} />
+        <TouchableOpacity style={styles.favoriteButton} onPress={onToggleWishlist}>
+          <Ionicons 
+            name={isWishlisted ? "heart" : "heart-outline"} 
+            size={24} 
+            color={isWishlisted ? "#FF385C" : c.bg2} 
+          />
         </TouchableOpacity>
         <View style={styles.servicesContainer}>
           {services.slice(0, 2).map((service, index) => (

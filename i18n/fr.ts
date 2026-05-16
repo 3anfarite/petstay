@@ -10,7 +10,7 @@ export default {
     wishlist_title: "Favoris",
     wishlist_empty_title: "Faites un vœu !",
     wishlist_empty_subtitle: "Enregistrez vos gardiens et maisons préférés ici pour un accès facile.",
-    wishlist_empty_btn: "Explorer les maisons",
+    wishlist_empty_btn: "Explorer les hôtes",
 
     // Host
     host_tab_dashboard: "Tableau de bord",

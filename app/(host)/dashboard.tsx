@@ -71,7 +71,10 @@ export default function HostDashboard() {
                 {/* Host Tips */}
                 <Text style={[styles.sectionTitle, { color: c.text, marginTop: 32 }]}>{i18n.t('host_dashboard_tips')}</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
-                    <TouchableOpacity style={[styles.tipCard, { backgroundColor: c.bg }]}>
+                    <TouchableOpacity 
+                        style={[styles.tipCard, { backgroundColor: c.bg }]}
+                        onPress={() => router.push({ pathname: '/(host)/profile', params: { openVacation: 'true' } })}
+                    >
                         <View style={[styles.tipIcon, { backgroundColor: '#E0F7FA' }]}>
                             <Ionicons name="calendar-outline" size={24} color="#00BCD4" />
                         </View>

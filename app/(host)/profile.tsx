@@ -5,7 +5,7 @@ import { db } from '@/lib/firebaseConfig';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, Dimensions, Image, Modal, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -128,6 +128,7 @@ export default function HostProfile() {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const router = useRouter(); // Added router for navigation
+    const params = useLocalSearchParams();
 
     // Animation values
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -299,6 +300,14 @@ export default function HostProfile() {
     useEffect(() => {
         fetchProfile();
     }, [user, locale]); // added locale to re-fetch/re-render if needed
+
+    useEffect(() => {
+        if (params.openVacation === 'true' && profileData) {
+            openVacationModal();
+            // Clear the param from the URL so it doesn't re-open on every render
+            router.setParams({ openVacation: '' });
+        }
+    }, [params.openVacation, profileData]);
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);

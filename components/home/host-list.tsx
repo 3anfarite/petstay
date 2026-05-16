@@ -18,11 +18,13 @@ interface Host {
 interface HostListProps {
     hosts: Host[];
     onHostPress: (id: string) => void;
+    wishlistIds: string[];
+    onToggleWishlist: (id: string) => void;
     refreshing?: boolean;
     onRefresh?: () => void;
 }
 
-export function HostList({ hosts, onHostPress, refreshing = false, onRefresh }: HostListProps) {
+export function HostList({ hosts, onHostPress, wishlistIds, onToggleWishlist, refreshing = false, onRefresh }: HostListProps) {
     const c = useColors();
     const scrollRef = useRef(null);
     useScrollToTop(scrollRef);
@@ -41,7 +43,9 @@ export function HostList({ hosts, onHostPress, refreshing = false, onRefresh }: 
                     services={item.services}
                     image={item.image}
                     verified={item.verified}
+                    isWishlisted={wishlistIds.includes(item.id)}
                     onPress={() => onHostPress(item.id)}
+                    onToggleWishlist={() => onToggleWishlist(item.id)}
                 />
             )}
             contentContainerStyle={{ padding: 16, paddingBottom: 16 }}

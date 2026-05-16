@@ -12,6 +12,7 @@ import { LanguageProvider } from '@/components/LanguageProvider';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 import { useAuthStore } from '@/store/useAuthStore';
+import { NotificationService } from '@/lib/notificationService';
 
 export const unstable_settings = {
   // Ensure that reloading on `/modal` keeps a back button present.
@@ -42,6 +43,13 @@ export default function RootLayout() {
     const unsubscribe = initializeAuthListener();
     return () => unsubscribe();
   }, []);
+
+  // Register for notifications when user logs in
+  useEffect(() => {
+    if (user) {
+      NotificationService.registerForPushNotificationsAsync(user.uid);
+    }
+  }, [user]);
 
   useEffect(() => {
     if (loaded && fontsLoaded && !isLoading) {

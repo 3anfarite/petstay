@@ -91,7 +91,7 @@ export default function ChatScreen() {
             displayAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(otherUser.name || 'User')}&background=F3F4F6&color=374151&size=200`;
           }
 
-          const isUnread = item.lastSenderId !== user?.uid; // Super simple unread logic
+          const isUnread = (item.unreadCount?.[user?.uid || ''] || 0) > 0;
 
           return (
             <TouchableOpacity

@@ -10,7 +10,7 @@ export default {
     wishlist_title: "Wishlist",
     wishlist_empty_title: "Make a wish!",
     wishlist_empty_subtitle: "Save your favorite pet sitters and homes here for easy access.",
-    wishlist_empty_btn: "Explore Homes",
+    wishlist_empty_btn: "Explore Hosts",
 
     // Host
     host_tab_dashboard: "Dashboard",
