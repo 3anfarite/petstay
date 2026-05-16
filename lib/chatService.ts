@@ -124,7 +124,7 @@ export const ChatService = {
     subscribeToMessages: (chatId: string, callback: (messages: Message[]) => void) => {
         const q = query(
             collection(db, `chats/${chatId}/messages`),
-            orderBy("createdAt", "asc")
+            orderBy("createdAt", "desc")
         );
 
         return onSnapshot(q, (snapshot) => {

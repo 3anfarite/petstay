@@ -250,6 +250,7 @@ export default {
     host_form_error_save: "Échec de l'enregistrement de l'annonce.",
     host_profile_vacation_dates: "Dates de vacances",
     host_profile_vacation_description: "Sélectionnez les dates où vous ne serez pas disponible pour accueillir des animaux.",
+    host_profile_vacation_days_count: "{{count}} Jours",
     host_profile_vacation_days_count_one: "1 Jour",
     host_profile_vacation_days_count_other: "{{count}} Jours",
     booking_time_slot: "Sélectionner l'heure",

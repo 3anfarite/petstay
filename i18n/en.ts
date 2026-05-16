@@ -250,6 +250,7 @@ export default {
     host_form_error_save: "Failed to save listing.",
     host_profile_vacation_dates: "Vacation Dates",
     host_profile_vacation_description: "Select the dates you won't be available to host.",
+    host_profile_vacation_days_count: "{{count}} Days",
     host_profile_vacation_days_count_one: "1 Day",
     host_profile_vacation_days_count_other: "{{count}} Days",
     booking_time_slot: "Select Time",

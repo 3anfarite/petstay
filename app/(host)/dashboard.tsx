@@ -4,10 +4,10 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
-import React, { useCallback, useRef, useState } from 'react';
-import { Image, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import React, { useCallback, useRef, useState } from 'react';
+import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function HostDashboard() {
     const c = useColors();
@@ -42,12 +42,12 @@ export default function HostDashboard() {
                 {/* Stats Cards */}
                 {/* Stats Cards */}
                 <View style={styles.statsContainer}>
-                    <View style={[styles.statCard, { backgroundColor: c.bg }]}>
+                    <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
                         <Ionicons name="wallet-outline" size={24} color={c.primary} />
                         <Text style={[styles.statValue, { color: c.text }]}>$1,240</Text>
                         <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_earnings')}</Text>
                     </View>
-                    <View style={[styles.statCard, { backgroundColor: c.bg }]}>
+                    <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
                         <Ionicons name="star-outline" size={24} color={c.primary} />
                         <Text style={[styles.statValue, { color: c.text }]}>4.92</Text>
                         <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_rating')}</Text>
@@ -56,7 +56,7 @@ export default function HostDashboard() {
 
                 <View style={styles.actionGrid}>
                     <TouchableOpacity 
-                        style={[styles.actionCard, { backgroundColor: c.primary + '15', borderColor: c.primary + '30' }]}
+                        style={[styles.actionCard, { backgroundColor: c.bg2 }]}
                         onPress={() => router.push('/(host)/listings')}
                     >
                         <Ionicons name="list" size={28} color={c.primary} />
@@ -70,9 +70,9 @@ export default function HostDashboard() {
 
                 {/* Host Tips */}
                 <Text style={[styles.sectionTitle, { color: c.text, marginTop: 32 }]}>{i18n.t('host_dashboard_tips')}</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 16 }}>
-                    <TouchableOpacity 
-                        style={[styles.tipCard, { backgroundColor: c.bg }]}
+                <View style={{ gap: 16 }}>
+                    <TouchableOpacity
+                        style={[styles.tipCard, { backgroundColor: c.bg2 }]}
                         onPress={() => router.push({ pathname: '/(host)/profile', params: { openVacation: 'true' } })}
                     >
                         <View style={[styles.tipIcon, { backgroundColor: '#E0F7FA' }]}>
@@ -83,8 +83,8 @@ export default function HostDashboard() {
                             <Text style={[styles.tipDesc, { color: c.textMuted }]}>{i18n.t('host_tip_update_calendar_desc')}</Text>
                         </View>
                     </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.tipCard, { backgroundColor: c.bg }]}>
+ 
+                    <TouchableOpacity style={[styles.tipCard, { backgroundColor: c.bg2 }]}>
                         <View style={[styles.tipIcon, { backgroundColor: '#FCE4EC' }]}>
                             <Ionicons name="flash-outline" size={24} color="#E91E63" />
                         </View>
@@ -93,7 +93,7 @@ export default function HostDashboard() {
                             <Text style={[styles.tipDesc, { color: c.textMuted }]}>{i18n.t('host_tip_boost_listing_desc')}</Text>
                         </View>
                     </TouchableOpacity>
-                </ScrollView>
+                </View>
             </ScrollView>
         </View>
     );
@@ -137,6 +137,18 @@ const styles = StyleSheet.create({
         fontSize: 14,
         fontFamily: AppFonts.body,
     },
+    statCard: {
+        width: '48%',
+        padding: 20,
+        borderRadius: 24,
+        alignItems: 'center',
+        gap: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
+    },
     sectionTitle: {
         fontSize: 20,
         marginBottom: 16,
@@ -151,8 +163,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         padding: 20,
         borderRadius: 24,
-        borderWidth: 1,
         gap: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
     },
     actionTextContainer: {
         flex: 1,
@@ -168,12 +184,17 @@ const styles = StyleSheet.create({
     },
     // Tip Card Styles
     tipCard: {
-        width: 260,
+        width: '100%',
         flexDirection: 'row',
         padding: 16,
-        borderRadius: 16,
+        borderRadius: 20,
         alignItems: 'center',
         gap: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
     },
     tipIcon: {
         width: 48,
@@ -188,7 +209,6 @@ const styles = StyleSheet.create({
     },
     tipDesc: {
         fontSize: 13,
-        maxWidth: 160,
         fontFamily: AppFonts.body,
     },
 });

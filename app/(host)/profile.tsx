@@ -13,8 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
+import { AppFonts } from '@/constants/theme';
+import { ListingService } from '@/lib/listingService';
 
 import { AuthService } from '@/lib/authService';
+import { Alert } from 'react-native';
 
 const DEFAULT_AVATAR = 'https://ui-avatars.com/api/?name=User&background=F3F4F6&color=374151&size=256';
 
@@ -52,61 +55,75 @@ const SkeletonView = ({ width, height, borderRadius, style }: any) => {
     );
 };
 
-// MenuItem component definition
 interface MenuItemProps {
     icon: keyof typeof Ionicons.glyphMap;
     label: string;
     value?: string;
     onPress?: () => void;
     isDestructive?: boolean;
+    showArrow?: boolean;
 }
 
-const MenuItem: React.FC<MenuItemProps> = ({ icon, label, value, onPress, isDestructive }) => {
+const SettingItem: React.FC<MenuItemProps & { subValue?: string }> = ({ icon, label, value, subValue, onPress, isDestructive, showArrow = true }) => {
     const c = useColors();
-    const ContainerStr = onPress ? TouchableOpacity : View;
+    const Container = onPress ? TouchableOpacity : View;
 
     return (
-        <ContainerStr
-            style={[menuItemStyles.menuItem, { borderBottomColor: c.border }]}
+        <Container
+            style={[settingItemStyles.item, { borderBottomColor: c.border }]}
             onPress={onPress}
-            disabled={!onPress}
+            activeOpacity={0.7}
         >
-            <View style={menuItemStyles.leftContent}>
-                <Ionicons name={icon} size={24} color={isDestructive ? c.error : c.text} />
-                <Text style={[menuItemStyles.menuItemLabel, { color: isDestructive ? c.error : c.text }]}>{label}</Text>
+            <View style={[settingItemStyles.iconBox, { backgroundColor: isDestructive ? c.error + '10' : c.primary + '10' }]}>
+                <Ionicons name={icon} size={20} color={isDestructive ? c.error : c.primary} />
             </View>
-            <View style={menuItemStyles.rightContent}>
-                {value && <Text style={[menuItemStyles.menuItemValue, { color: c.textMuted }]}>{value}</Text>}
-                {onPress && <Ionicons name="chevron-forward-outline" size={20} color={c.textMuted} />}
+            <View style={settingItemStyles.content}>
+                <Text style={[settingItemStyles.label, { color: c.text }]}>{label}</Text>
+                {subValue && <Text style={[settingItemStyles.subValue, { color: c.textMuted }]}>{subValue}</Text>}
             </View>
-        </ContainerStr>
+            <View style={settingItemStyles.right}>
+                {value && !subValue && <Text style={[settingItemStyles.value, { color: c.textMuted }]}>{value}</Text>}
+                {onPress && showArrow && <Ionicons name="chevron-forward" size={18} color={c.textMuted} />}
+            </View>
+        </Container>
     );
 };
 
-const menuItemStyles = StyleSheet.create({
-    menuItem: {
+const settingItemStyles = StyleSheet.create({
+    item: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 16,
-        borderBottomWidth: 1,
+        paddingVertical: 14,
+        gap: 12,
     },
-    leftContent: {
+    iconBox: {
+        width: 36,
+        height: 36,
+        borderRadius: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    content: {
+        flex: 1,
+    },
+    label: {
+        fontSize: 15,
+        fontFamily: AppFonts.bodyBold,
+    },
+    subValue: {
+        fontSize: 13,
+        fontFamily: AppFonts.body,
+        marginTop: 2,
+    },
+    value: {
+        fontSize: 14,
+        fontFamily: AppFonts.body,
+    },
+    right: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 16,
-    },
-    rightContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 8,
-    },
-    menuItemLabel: {
-        fontSize: 16,
-    },
-    menuItemValue: {
-        fontSize: 16,
-    },
+        gap: 4,
+    }
 });
 
 export default function HostProfile() {
@@ -248,6 +265,11 @@ export default function HostProfile() {
         );
     };
 
+    const handlePreview = async () => {
+        if (!user?.uid) return;
+        router.push(`/host-profile/${user.uid}`);
+    };
+
     const calendarDays = React.useMemo(() => {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
@@ -313,115 +335,166 @@ export default function HostProfile() {
         setRefreshing(true);
         fetchProfile();
     }, []);
-
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
             <View style={styles.header}>
                 <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_profile_title')}</Text>
+                <TouchableOpacity 
+                    style={[styles.previewBtn, { backgroundColor: c.primary + '10' }]}
+                    onPress={handlePreview}
+                >
+                    <Ionicons name="eye-outline" size={18} color={c.primary} />
+                    <Text style={[styles.previewBtnText, { color: c.primary }]}>Preview</Text>
+                </TouchableOpacity>
             </View>
 
             <ScrollView
                 ref={scrollRef}
                 contentContainerStyle={styles.scrollContent}
+                showsVerticalScrollIndicator={false}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={c.primary} />}
             >
-
-                {/* User Info List Item */}
-                <TouchableOpacity style={[styles.userRow, { borderBottomColor: c.border }]} disabled={isLoadingProfile}>
-                    {isLoadingProfile ? (
-                        <>
-                            <SkeletonView width={64} height={64} borderRadius={32} style={styles.avatar} />
-                            <View style={styles.userInfoText}>
-                                <SkeletonView width={140} height={24} style={{ marginBottom: 6 }} />
-                                <SkeletonView width={200} height={16} />
+                {isLoadingProfile ? (
+                    <View style={{ gap: 24 }}>
+                        {/* Profile Card Skeleton */}
+                        <View style={[styles.profileCard, { backgroundColor: c.bg2, shadowColor: '#000' }]}>
+                            <View style={styles.profileMain}>
+                                <SkeletonView width={80} height={80} borderRadius={40} />
+                                <View style={{ gap: 8 }}>
+                                    <SkeletonView width={150} height={24} />
+                                    <SkeletonView width={200} height={16} />
+                                </View>
                             </View>
-                        </>
-                    ) : (
-                        <>
-                            <Image
-                                source={{ uri: profileData?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.name || 'User')}&background=F3F4F6&color=374151&size=256` }}
-                                style={styles.avatar}
+                            <View style={[styles.statsRow, { borderTopColor: c.border }]}>
+                                <View style={{ flex: 1, alignItems: 'center' }}><SkeletonView width={40} height={24} /></View>
+                                <View style={{ flex: 1, alignItems: 'center' }}><SkeletonView width={40} height={24} /></View>
+                                <View style={{ flex: 1, alignItems: 'center' }}><SkeletonView width={40} height={24} /></View>
+                            </View>
+                        </View>
+
+                        {/* Card Skeletons */}
+                        {[1, 2, 3].map(i => (
+                            <View key={i} style={[styles.card, { backgroundColor: c.bg2 }]}>
+                                <SkeletonView width={140} height={20} style={{ marginBottom: 20 }} />
+                                <View style={{ gap: 16 }}>
+                                    <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                                        <SkeletonView width={36} height={36} borderRadius={10} />
+                                        <View style={{ gap: 6 }}><SkeletonView width={100} height={16} /><SkeletonView width={160} height={12} /></View>
+                                    </View>
+                                    <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+                                        <SkeletonView width={36} height={36} borderRadius={10} />
+                                        <View style={{ gap: 6 }}><SkeletonView width={100} height={16} /><SkeletonView width={160} height={12} /></View>
+                                    </View>
+                                </View>
+                            </View>
+                        ))}
+                    </View>
+                ) : (
+                    <>
+                        {/* Profile Card */}
+                        <View style={[styles.profileCard, { backgroundColor: c.bg2, shadowColor: '#000' }]}>
+                            <View style={styles.profileMain}>
+                                <View style={styles.avatarWrapper}>
+                                    <Image
+                                        source={{ uri: profileData?.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileData?.name || 'User')}&background=F3F4F6&color=374151&size=256` }}
+                                        style={styles.avatar}
+                                    />
+                                    <View style={[styles.badge, { backgroundColor: c.primary }]}>
+                                        <Ionicons name="star" size={10} color="white" />
+                                    </View>
+                                </View>
+                                <View style={styles.profileInfo}>
+                                    <Text style={[styles.profileName, { color: c.text }]}>{profileData?.name || 'PetStay Host'}</Text>
+                                    <Text style={[styles.profileEmail, { color: c.textMuted }]}>{user?.email}</Text>
+                                </View>
+                            </View>
+
+                            <View style={[styles.statsRow, { borderTopColor: c.border }]}>
+                                <View style={styles.statItem}>
+                                    <Text style={[styles.statNum, { color: c.text }]}>4.9</Text>
+                                    <Text style={[styles.statLabel, { color: c.textMuted }]}>Rating</Text>
+                                </View>
+                                <View style={[styles.statDivider, { backgroundColor: c.border }]} />
+                                <View style={styles.statItem}>
+                                    <Text style={[styles.statNum, { color: c.text }]}>24</Text>
+                                    <Text style={[styles.statLabel, { color: c.textMuted }]}>Reviews</Text>
+                                </View>
+                                <View style={[styles.statDivider, { backgroundColor: c.border }]} />
+                                <View style={styles.statItem}>
+                                    <Text style={[styles.statNum, { color: c.text }]}>100%</Text>
+                                    <Text style={[styles.statLabel, { color: c.textMuted }]}>Response</Text>
+                                </View>
+                            </View>
+                        </View>
+
+                        {/* Section: Business Storefront */}
+                        <View style={[styles.card, { backgroundColor: c.bg2 }]}>
+                            <Text style={[styles.cardTitle, { color: c.text }]}>Business Storefront</Text>
+                            <SettingItem 
+                                icon="location-outline" 
+                                label={i18n.t('host_profile_location')} 
+                                subValue={profileData?.location || i18n.t('host_profile_none')}
+                                onPress={() => setLocationModalVisible(true)}
                             />
-                            <View style={styles.userInfoText}>
-                                <Text style={[styles.name, { color: c.text }]}>{profileData?.name || 'PetStay Host'}</Text>
-                                <Text style={[styles.email, { color: c.textMuted }]}>{user?.email}</Text>
-                            </View>
-                        </>
-                    )}
-                </TouchableOpacity>
+                            <SettingItem 
+                                icon="paw-outline" 
+                                label={i18n.t('host_profile_services')} 
+                                subValue={profileData?.services?.length ? profileData.services.map((s: string) => i18n.t(`service_${s}`)).join(', ') : i18n.t('host_profile_none')}
+                                onPress={() => {}} // Could lead to a services editor
+                            />
+                            <SettingItem 
+                                icon="document-text-outline" 
+                                label={i18n.t('host_profile_bio')} 
+                                subValue={profileData?.bio || "No bio set yet."}
+                                onPress={() => {}} // Could lead to a bio editor
+                            />
+                        </View>
 
-                {/* Menu Sections */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: c.textMuted }]}>{i18n.t('section_account')}</Text>
-                    <MenuItem icon="person-outline" label={i18n.t('menu_personal_info')} />
-                    <MenuItem icon="card-outline" label={i18n.t('menu_payments')} />
-                    <MenuItem icon="notifications-outline" label={i18n.t('menu_notifications')} />
-                    <MenuItem icon="shield-checkmark-outline" label={i18n.t('menu_privacy')} />
-                    <MenuItem
-                        icon="globe-outline"
-                        label={i18n.t('menu_language')}
-                        value={i18n.locale === 'en' ? 'English' : 'Français'}
-                        onPress={openLanguageModal}
-                    />
-                </View>
+                        {/* Section: Operations */}
+                        <View style={[styles.card, { backgroundColor: c.bg2 }]}>
+                            <Text style={[styles.cardTitle, { color: c.text }]}>Operations & Schedule</Text>
+                            <SettingItem 
+                                icon="people-outline" 
+                                label={i18n.t('host_profile_capacity')} 
+                                subValue={profileData?.maxPetCapacity ? `${profileData.maxPetCapacity} ${i18n.t('booking_pets')}` : "Not set"}
+                                onPress={openCapacityModal}
+                            />
+                            <SettingItem 
+                                icon="calendar-outline" 
+                                label={i18n.t('host_profile_vacation_dates')} 
+                                subValue={profileData?.vacationDates?.length ? i18n.t('host_profile_vacation_days_count', { count: profileData.vacationDates.length }) : "Fully available"}
+                                onPress={openVacationModal}
+                            />
+                            <SettingItem 
+                                icon="heart-outline" 
+                                label={i18n.t('host_profile_pets')} 
+                                subValue={profileData?.petsAllowed?.length ? profileData.petsAllowed.map((p: string) => i18n.t(`pet_${p}`)).join(', ') : "All pets"}
+                                onPress={() => {}} 
+                            />
+                        </View>
 
-                <View style={[styles.section, { marginTop: 8 }]}>
-                    <Text style={[styles.sectionTitle, { color: c.textMuted }]}>{i18n.t('section_hosting')}</Text>
+                        {/* Section: Account */}
+                        <View style={[styles.card, { backgroundColor: c.bg2 }]}>
+                            <Text style={[styles.cardTitle, { color: c.text }]}>Account & Support</Text>
+                            <SettingItem 
+                                icon="globe-outline" 
+                                label={i18n.t('menu_language')} 
+                                value={i18n.locale === 'en' ? 'English' : 'Français'}
+                                onPress={openLanguageModal}
+                            />
+                            <SettingItem icon="help-circle-outline" label={i18n.t('menu_help')} onPress={() => {}} />
+                            <SettingItem 
+                                icon="log-out-outline" 
+                                label={i18n.t('host_profile_logout')} 
+                                isDestructive 
+                                onPress={handleLogout} 
+                                showArrow={false}
+                            />
+                        </View>
 
-                    <MenuItem
-                        icon="location-outline"
-                        label={i18n.t('host_profile_location')}
-                        value={profileData?.location || i18n.t('host_profile_none')}
-                        onPress={() => setLocationModalVisible(true)}
-                    />
-                    <MenuItem
-                        icon="people-outline"
-                        label={i18n.t('host_profile_capacity', { defaultValue: 'Max Capacity' })}
-                        value={profileData?.maxPetCapacity ? `${profileData.maxPetCapacity} ${i18n.t('booking_pets')}` : i18n.t('host_profile_none')}
-                        onPress={openCapacityModal}
-                    />
-                    <MenuItem
-                        icon="calendar-outline"
-                        label={i18n.t('host_profile_vacation_dates')}
-                        value={profileData?.vacationDates?.length ? i18n.t('host_profile_vacation_days_count', { count: profileData.vacationDates.length, defaultValue: `${profileData.vacationDates.length} Days` }) : i18n.t('host_profile_none')}
-                        onPress={openVacationModal}
-                    />
-                    <MenuItem
-                        icon="paw-outline"
-                        label={i18n.t('host_profile_services')}
-                        value={profileData?.services?.length ? profileData.services.map((s: string) => i18n.t(`service_${s}`)).join(', ') : i18n.t('host_profile_none')}
-                    />
-                    <MenuItem
-                        icon="heart-outline"
-                        label={i18n.t('host_profile_pets')}
-                        value={profileData?.petsAllowed?.length ? profileData.petsAllowed.map((p: string) => i18n.t(`pet_${p}`)).join(', ') : i18n.t('host_profile_none')}
-                    />
-                    <MenuItem
-                        icon="document-text-outline"
-                        label={i18n.t('host_profile_bio')}
-                        value={profileData?.bio ? i18n.t('host_profile_configured') : i18n.t('host_profile_none')}
-                    />
-
-                    <MenuItem icon="stats-chart-outline" label={i18n.t('host_menu_insights')} />
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: c.textMuted }]}>{i18n.t('section_support')}</Text>
-                    <MenuItem icon="help-circle-outline" label={i18n.t('menu_help')} />
-                    <MenuItem icon="chatbox-ellipses-outline" label={i18n.t('menu_feedback')} />
-                </View>
-
-                <View style={[styles.section, { marginBottom: 40 }]}>
-                    <MenuItem
-                        icon="log-out-outline"
-                        label={i18n.t('host_profile_logout')}
-                        isDestructive
-                        onPress={handleLogout}
-                    />
-                </View>
-
-                <Text style={[styles.version, { color: c.textMuted }]}>Version 1.0.0</Text>
-
+                        <Text style={[styles.version, { color: c.textMuted }]}>PetStay Host Edition • Version 1.0.0</Text>
+                    </>
+                )}
             </ScrollView>
 
             {/* Language Selection Modal */}
@@ -613,68 +686,151 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
         paddingHorizontal: 24,
         paddingTop: 24,
-        paddingBottom: 8,
+        paddingBottom: 16,
     },
     title: {
-        fontSize: 32,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontFamily: AppFonts.title,
     },
-    hostIdentityCard: {
-        marginHorizontal: 20,
-        marginTop: 16,
-        padding: 20,
-        borderRadius: 20,
-        borderWidth: 1,
-    },
-    locationRow: {
+    previewBtn: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
+        gap: 6,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        borderRadius: 10,
     },
-    hostLocation: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginLeft: 4,
+    previewBtnText: {
+        fontSize: 14,
+        fontFamily: AppFonts.bodyBold,
     },
-    hostBio: {
-        fontSize: 15,
-        lineHeight: 24,
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingBottom: 40,
+    },
+    profileCard: {
+        padding: 24,
+        borderRadius: 24,
+        marginBottom: 24,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.06,
+        shadowRadius: 12,
+        elevation: 3,
+    },
+    profileMain: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 20,
         marginBottom: 20,
     },
-    tagsArea: {
-        marginTop: 4,
+    avatarWrapper: {
+        position: 'relative',
     },
-    tagsHeader: {
+    avatar: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+    },
+    badge: {
+        position: 'absolute',
+        bottom: 0,
+        right: 0,
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        borderWidth: 3,
+        borderColor: 'white',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    profileInfo: {
+        flex: 1,
+    },
+    profileName: {
+        fontSize: 22,
+        fontFamily: AppFonts.title,
+        marginBottom: 4,
+    },
+    profileEmail: {
         fontSize: 14,
-        fontWeight: '700',
-        marginBottom: 10,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
+        fontFamily: AppFonts.body,
     },
-    chipsContainer: {
+    statsRow: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
+        alignItems: 'center',
+        paddingTop: 20,
+        borderTopWidth: 1,
     },
-    chip: {
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 16,
+    statItem: {
+        flex: 1,
+        alignItems: 'center',
     },
-    chipText: {
-        fontSize: 13,
-        fontWeight: '600',
+    statNum: {
+        fontSize: 18,
+        fontFamily: AppFonts.title,
     },
-    langText: {
-        fontSize: 16,
-        fontWeight: '500',
+    statLabel: {
+        fontSize: 12,
+        fontFamily: AppFonts.body,
+        marginTop: 2,
+    },
+    statDivider: {
+        width: 1,
+        height: 30,
+    },
+    card: {
+        padding: 20,
+        borderRadius: 24,
+        marginBottom: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.04,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+    cardTitle: {
+        fontSize: 17,
+        fontFamily: AppFonts.title,
+        marginBottom: 16,
+    },
+    version: {
+        textAlign: 'center',
+        fontSize: 12,
+        fontFamily: AppFonts.body,
+        marginTop: 20,
+        marginBottom: 40,
+    },
+    modalOverlay: {
+        flex: 1,
+        justifyContent: 'flex-end',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+    },
+    modalContent: {
+        borderTopLeftRadius: 28,
+        borderTopRightRadius: 28,
+        paddingBottom: 40,
+        paddingHorizontal: 24,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 24,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontFamily: AppFonts.title,
     },
     capacityDescription: {
         fontSize: 14,
+        fontFamily: AppFonts.body,
         textAlign: 'center',
-        paddingHorizontal: 16,
         marginBottom: 24,
         lineHeight: 20,
     },
@@ -695,94 +851,28 @@ const styles = StyleSheet.create({
     },
     capacityValue: {
         fontSize: 32,
-        fontWeight: '700',
+        fontFamily: AppFonts.title,
     },
     saveButton: {
         width: '100%',
         paddingVertical: 16,
         borderRadius: 16,
         alignItems: 'center',
-        marginTop: 8,
     },
     saveButtonText: {
         color: 'white',
         fontSize: 16,
-        fontWeight: '600',
-    },
-    scrollContent: {
-        paddingBottom: 40,
-    },
-    userRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        marginTop: 0,
-    },
-    avatar: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        marginRight: 16,
-    },
-    userInfoText: {
-        flex: 1,
-        justifyContent: 'center',
-    },
-    name: {
-        fontSize: 20,
-        fontWeight: 'bold',
-        marginBottom: 4,
-    },
-    email: {
-        fontSize: 14,
-    },
-    section: {
-        marginTop: 24,
-        paddingHorizontal: 20,
-    },
-    sectionTitle: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 8,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    version: {
-        textAlign: 'center',
-        fontSize: 12,
-        marginTop: 20,
-        marginBottom: 40,
-    },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    modalContent: {
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        paddingBottom: 40,
-        paddingHorizontal: 20,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingVertical: 20,
-        marginBottom: 10,
-    },
-    modalTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.bodyBold,
     },
     languageOption: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingVertical: 16,
-        borderBottomWidth: 1,
+        borderBottomWidth: StyleSheet.hairlineWidth,
     },
     languageText: {
         fontSize: 16,
+        fontFamily: AppFonts.body,
     },
 });

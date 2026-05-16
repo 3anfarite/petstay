@@ -55,6 +55,7 @@ export default function HostDetailScreen() {
     const [hostActiveBookings, setHostActiveBookings] = useState<any[]>([]);
     const [hostVacationDates, setHostVacationDates] = useState<Date[]>([]);
     const [hostMaxCapacity, setHostMaxCapacity] = useState(1);
+    const [hostProfilePic, setHostProfilePic] = useState<string | null>(null);
     const [unavailableTimes, setUnavailableTimes] = useState<Record<string, string[]>>({});
 
     const { user } = useAuthStore();
@@ -74,6 +75,7 @@ export default function HostDetailScreen() {
                     if (hostDocSnap.exists()) {
                         const hd = hostDocSnap.data();
                         setHostMaxCapacity(hd.maxPetCapacity || 1);
+                        setHostProfilePic(hd.profilePic || null);
                         if (hd.vacationDates && Array.isArray(hd.vacationDates)) {
                             setHostVacationDates(hd.vacationDates.map((d: string) => new Date(d)));
                         }
@@ -217,7 +219,6 @@ export default function HostDetailScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2 }]}>
-            <Stack.Screen options={{ headerShown: false }} />
             <StatusBar barStyle={hasImage ? "light-content" : (c.text === '#000000' ? "dark-content" : "light-content")} />
 
             {/* Animated Header Image */}
@@ -305,6 +306,28 @@ export default function HostDetailScreen() {
                         <Text style={[styles.description, { color: c.textMuted }]}>
                             {host.about}
                         </Text>
+                    </View>
+
+                    <View style={[styles.separator, { backgroundColor: c.border }]} />
+
+                    {/* Host Profile Section */}
+                    <View style={styles.section}>
+                        <View style={styles.hostSectionHeader}>
+                            <View>
+                                <Text style={[styles.sectionTitle, { color: c.text, marginBottom: 4 }]}>Meet the Host</Text>
+                                <Text style={[styles.hostName, { color: c.text }]}>{host.hostName}</Text>
+                            </View>
+                            <Image 
+                                source={{ uri: hostProfilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(host.hostName || 'Host')}&background=F3F4F6&color=374151&size=256` }} 
+                                style={styles.hostAvatar} 
+                            />
+                        </View>
+                        <TouchableOpacity 
+                            style={[styles.viewProfileBtn, { borderColor: c.primary }]}
+                            onPress={() => router.push(`/host-profile/${host.hostId}`)}
+                        >
+                            <Text style={[styles.viewProfileText, { color: c.primary }]}>View Host Profile</Text>
+                        </TouchableOpacity>
                     </View>
 
                     <View style={[styles.separator, { backgroundColor: c.border }]} />
@@ -655,5 +678,31 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
+    },
+    hostSectionHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    hostName: {
+        fontSize: 20,
+        fontWeight: 'bold',
+    },
+    hostAvatar: {
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+    },
+    viewProfileBtn: {
+        borderWidth: 1,
+        borderRadius: 12,
+        paddingVertical: 12,
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    viewProfileText: {
+        fontSize: 15,
+        fontWeight: 'bold',
     },
 });

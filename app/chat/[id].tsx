@@ -38,14 +38,9 @@ export default function ChatDetailScreen() {
         if (!chatId) return;
         const unsubscribe = ChatService.subscribeToMessages(chatId, (fetchedMessages) => {
             setMessages(fetchedMessages);
-            // Mark as read when new messages arrive and we are in the chat
             if (user) {
                 ChatService.markAsRead(chatId, user.uid);
             }
-            // Optional: scroll to end on new messages
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
         });
         return () => unsubscribe();
     }, [chatId]);
@@ -74,9 +69,6 @@ export default function ChatDetailScreen() {
 
         try {
             await ChatService.sendMessage(chatId, user.uid, textToSend, otherUserId);
-            setTimeout(() => {
-                flatListRef.current?.scrollToEnd({ animated: true });
-            }, 100);
         } catch (error) {
             console.error("Failed to send message", error);
             setInputText(textToSend); // Restore if failed
@@ -122,6 +114,7 @@ export default function ChatDetailScreen() {
             <FlatList
                 ref={flatListRef}
                 data={messages}
+                inverted
                 keyExtractor={(item) => item.id!}
                 contentContainerStyle={styles.messageList}
                 renderItem={({ item }) => {
