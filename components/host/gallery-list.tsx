@@ -2,7 +2,8 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState } from 'react';
-import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type GalleryListProps = {
@@ -61,7 +62,7 @@ export function GalleryList({ images }: GalleryListProps) {
                                     <Image
                                         source={{ uri: selectedImage }}
                                         style={styles.fullScreenImage}
-                                        resizeMode="contain"
+                                        contentFit="contain"
                                     />
                                 </TouchableWithoutFeedback>
                             )}

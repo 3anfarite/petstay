@@ -1,3 +1,4 @@
+import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -5,13 +6,13 @@ import { db } from '@/lib/firebaseConfig';
 import { Listing, ListingService } from '@/lib/listingService';
 import { uploadImage, uploadImages } from '@/lib/storageService';
 import { useAuthStore } from '@/store/useAuthStore';
-import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, FlatList, Image, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, Animated, FlatList, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SkeletonPulse = ({ width, height, borderRadius, style }: any) => {
@@ -334,9 +335,9 @@ export default function HostListings() {
                             <Ionicons name="close" size={24} color={c.text} />
                         </TouchableOpacity>
                         <Text style={[styles.modalTitle, { color: c.text }]}>{editingId ? i18n.t('host_form_edit_title') : i18n.t('host_form_new_title')}</Text>
-                        <TouchableOpacity 
-                            onPress={submitForm} 
-                            disabled={isSubmitting} 
+                        <TouchableOpacity
+                            onPress={submitForm}
+                            disabled={isSubmitting}
                             style={[styles.saveBtn, { backgroundColor: c.primary, opacity: isSubmitting ? 0.6 : 1 }]}
                         >
                             {isSubmitting ? (
@@ -391,18 +392,18 @@ export default function HostListings() {
 
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>
                                 {AVAILABLE_SERVICES.map(service => (
-                                    <TouchableOpacity 
+                                    <TouchableOpacity
                                         key={service}
                                         style={[
-                                            styles.serviceSelectChip, 
-                                            { 
+                                            styles.serviceSelectChip,
+                                            {
                                                 backgroundColor: formService === service ? c.primary : c.bg,
                                                 borderColor: formService === service ? c.primary : c.border
                                             }
                                         ]}
                                         onPress={() => setFormService(service)}
                                     >
-                                        <Text style={{ 
+                                        <Text style={{
                                             color: formService === service ? 'white' : c.text,
                                             fontFamily: formService === service ? AppFonts.bodyBold : AppFonts.body
                                         }}>
@@ -423,7 +424,7 @@ export default function HostListings() {
                                 />
                             </View>
 
-                            <TouchableOpacity 
+                            <TouchableOpacity
                                 style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]}
                                 onPress={() => setIsMapVisible(true)}
                             >
@@ -463,21 +464,21 @@ export default function HostListings() {
                             />
                         </View>
 
-                        <LocationPickerModal
-                            visible={isMapVisible}
-                            onClose={() => setIsMapVisible(false)}
-                            initialCoords={formLocationCoords}
-                            onConfirm={(addr, coords) => {
-                                setFormLocation(addr);
-                                setFormLocationCoords(coords);
-                                setIsMapVisible(false);
-                            }}
-                        />
-                    </ScrollView>
-                </View>
-            </Modal>
-
+                <LocationPickerModal
+                    visible={isMapVisible}
+                    onClose={() => setIsMapVisible(false)}
+                    initialCoords={formLocationCoords}
+                    onConfirm={(addr, coords) => {
+                        setFormLocation(addr);
+                        setFormLocationCoords(coords);
+                        setIsMapVisible(false);
+                    }}
+                />
+            </ScrollView>
         </View>
+            </Modal >
+
+        </View >
     );
 }
 

@@ -97,10 +97,21 @@ export const BookingService = {
             );
             
             const querySnapshot = await getDocs(q);
-            const rawBookings = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as Booking));
+            const now = Date.now();
+            
+            const rawBookings = await Promise.all(querySnapshot.docs.map(async (docSnap) => {
+                const b = { id: docSnap.id, ...docSnap.data() } as Booking;
+                
+                // Auto-complete confirmed bookings that have passed their end date
+                if (b.status === 'confirmed') {
+                    const endTime = new Date(b.endDate).getTime();
+                    if (now > endTime) {
+                        await updateDoc(doc(db, "bookings", docSnap.id), { status: 'completed' });
+                        return { ...b, status: 'completed' as BookingStatus };
+                    }
+                }
+                return b;
+            }));
 
             // Sort manually in JS memory to bypass strict Firebase Composite Index requirements
             return rawBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -122,10 +133,21 @@ export const BookingService = {
             );
             
             const querySnapshot = await getDocs(q);
-            const rawBookings = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            } as Booking));
+            const now = Date.now();
+
+            const rawBookings = await Promise.all(querySnapshot.docs.map(async (docSnap) => {
+                const b = { id: docSnap.id, ...docSnap.data() } as Booking;
+                
+                // Auto-complete confirmed bookings that have passed their end date
+                if (b.status === 'confirmed') {
+                    const endTime = new Date(b.endDate).getTime();
+                    if (now > endTime) {
+                        await updateDoc(doc(db, "bookings", docSnap.id), { status: 'completed' });
+                        return { ...b, status: 'completed' as BookingStatus };
+                    }
+                }
+                return b;
+            }));
 
             // Sort manually in JS memory to bypass strict Firebase Composite Index requirements
             return rawBookings.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());

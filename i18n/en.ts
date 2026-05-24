@@ -77,6 +77,8 @@ export default {
     booking_status_confirmed: "Confirmed",
     booking_status_pending: "Pending",
     booking_status_cancelled: "Cancelled",
+    booking_status_completed: "Completed",
+    booking_status_declined: "Declined",
     booking_action_message: "Message",
     booking_action_cancel: "Cancel",
     bookings_empty_title: "No bookings... yet!",

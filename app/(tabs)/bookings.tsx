@@ -1,11 +1,13 @@
+import { ReviewModal } from '@/components/review-modal';
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { Booking, BookingService } from '@/lib/bookingService';
+import { ReviewService } from '@/lib/reviewService';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { BookingService, Booking } from '@/lib/bookingService';
-import { useAuthStore } from '@/store/useAuthStore';
-import { AppFonts } from '@/constants/theme';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Animated,
@@ -101,6 +103,11 @@ export default function BookingScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthStore();
 
+  // Review state
+  const [reviewModalVisible, setReviewModalVisible] = useState(false);
+  const [reviewBooking, setReviewBooking] = useState<Booking | null>(null);
+  const [reviewedBookingIds, setReviewedBookingIds] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     if (!user) return;
     const fetchBookings = async () => {
@@ -115,6 +122,21 @@ export default function BookingScreen() {
     };
     fetchBookings();
   }, [user]);
+
+  // Check which completed bookings have already been reviewed
+  useEffect(() => {
+    const checkReviewed = async () => {
+      const completedBookings = bookings.filter(b => b.status === 'completed' && b.id);
+      const reviewed = new Set<string>();
+      for (const b of completedBookings) {
+        if (b.id && await ReviewService.hasReviewedBooking(b.id)) {
+          reviewed.add(b.id);
+        }
+      }
+      setReviewedBookingIds(reviewed);
+    };
+    if (bookings.length > 0) checkReviewed();
+  }, [bookings]);
 
   const handleCancelBooking = (bookingId: string) => {
     Alert.alert(
@@ -154,11 +176,11 @@ export default function BookingScreen() {
   const renderBookingCard = ({ item }: { item: Booking }) => {
     const startD = new Date(item.startDate);
     const startStr = startD.toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
-    
+
     const isHourly = ['grooming', 'walking', 'training', 'vets'].includes((item.serviceType || '').toLowerCase());
     let endLabel = '';
     let endValue = '';
-    
+
     if (isHourly) {
       endLabel = i18n.t('booking_time', { defaultValue: 'Time' });
       endValue = startD.toLocaleTimeString(i18n.locale || 'en-US', { hour: 'numeric', minute: '2-digit' });
@@ -166,7 +188,7 @@ export default function BookingScreen() {
       endLabel = i18n.t('booking_checkout', { defaultValue: 'Check-out' });
       endValue = new Date(item.endDate).toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric' });
     }
-    
+
     const isUpcoming = item.status === 'pending' || item.status === 'confirmed';
     const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
     const serviceLabel = item.serviceType ? i18n.t(`service_${item.serviceType}`, { defaultValue: item.serviceType }) : '';
@@ -227,7 +249,7 @@ export default function BookingScreen() {
 
         {/* Actions */}
         <View style={styles.actionsRow}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.primaryAction, { backgroundColor: c.primary }]}
             onPress={() => router.push({
               pathname: '/chat/[id]',
@@ -239,12 +261,32 @@ export default function BookingScreen() {
           </TouchableOpacity>
 
           {isUpcoming && (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={[styles.secondaryAction, { borderColor: c.border }]}
               onPress={() => item.id && handleCancelBooking(item.id)}
             >
               <Text style={[styles.secondaryActionText, { color: c.text }]}>{i18n.t('booking_action_cancel')}</Text>
             </TouchableOpacity>
+          )}
+
+          {item.status === 'completed' && item.id && !reviewedBookingIds.has(item.id) && (
+            <TouchableOpacity
+              style={[styles.rateAction, { backgroundColor: '#FFD700' }]}
+              onPress={() => {
+                setReviewBooking(item);
+                setReviewModalVisible(true);
+              }}
+            >
+              <Ionicons name="star" size={16} color="#000" />
+              <Text style={styles.rateActionText}>{i18n.t('booking_action_rate', { defaultValue: 'Rate' })}</Text>
+            </TouchableOpacity>
+          )}
+
+          {item.status === 'completed' && item.id && reviewedBookingIds.has(item.id) && (
+            <View style={[styles.reviewedBadge, { backgroundColor: '#E6F4EA' }]}>
+              <Ionicons name="checkmark-circle" size={14} color="#1E8E3E" />
+              <Text style={[styles.reviewedText, { color: '#1E8E3E' }]}>{i18n.t('booking_reviewed', { defaultValue: 'Reviewed' })}</Text>
+            </View>
           )}
         </View>
       </View>
@@ -324,6 +366,34 @@ export default function BookingScreen() {
           renderItem={renderBookingCard}
         />
       )}
+
+      <ReviewModal
+        visible={reviewModalVisible}
+        onClose={() => {
+          setReviewModalVisible(false);
+          setReviewBooking(null);
+        }}
+        hostName={reviewBooking?.hostName || ''}
+        onSubmit={async (rating, comment) => {
+          if (!reviewBooking?.id || !user) return;
+          await ReviewService.submitReview({
+            hostId: reviewBooking.hostId,
+            guestId: user.uid,
+            guestName: reviewBooking.guestName || user.displayName || 'Guest',
+            bookingId: reviewBooking.id,
+            rating,
+            comment,
+          });
+          // Mark as reviewed locally
+          setReviewedBookingIds(prev => new Set(prev).add(reviewBooking.id!));
+          setReviewModalVisible(false);
+          setReviewBooking(null);
+          Alert.alert(
+            i18n.t('review_success_title', { defaultValue: 'Thank you!' }),
+            i18n.t('review_success_message', { defaultValue: 'Your review has been submitted.' })
+          );
+        }}
+      />
     </View>
   );
 }
@@ -498,6 +568,32 @@ const styles = StyleSheet.create({
   secondaryActionText: {
     fontFamily: AppFonts.bodyBold,
     fontSize: 14,
+  },
+  rateAction: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    paddingHorizontal: 20,
+    borderRadius: 14,
+  },
+  rateActionText: {
+    color: '#000',
+    fontFamily: AppFonts.bodyBold,
+    fontSize: 14,
+  },
+  reviewedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+  },
+  reviewedText: {
+    fontFamily: AppFonts.bodyBold,
+    fontSize: 13,
   },
   // Empty State
   emptyContainer: {

@@ -1,3 +1,4 @@
+import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -19,7 +20,6 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
 
 type ServiceType = 'boarding' | 'walking' | 'daycare' | 'grooming' | 'training' | 'vets';
 type PetType = 'all' | 'dogs' | 'cats' | 'exotics';
@@ -129,7 +129,7 @@ export default function HostSetupScreen() {
                     {/* Location */}
                     <View style={styles.section}>
                         <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_setup_location')}</Text>
-                        <TouchableOpacity 
+                        <TouchableOpacity
                             style={[styles.inputBox, { backgroundColor: c.bg2, borderColor: c.border }]}
                             onPress={() => setIsMapVisible(true)}
                         >
@@ -221,8 +221,8 @@ export default function HostSetupScreen() {
 
                 </ScrollView>
             </KeyboardAvoidingView>
-            
-            <LocationPickerModal 
+
+            <LocationPickerModal
                 visible={isMapVisible}
                 onClose={() => setIsMapVisible(false)}
                 initialCoords={locationCoords}

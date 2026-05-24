@@ -7,9 +7,6 @@ import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -17,12 +14,101 @@ import {
     View,
     Dimensions
 } from 'react-native';
+import { Image } from 'expo-image';
+import Animated, {
+    useAnimatedStyle,
+    useSharedValue,
+    withRepeat,
+    withTiming,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HostCard from '@/components/host-card';
 import { AppFonts } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
 
+/* ───────────── Skeleton Component ───────────── */
+function HostProfileSkeleton() {
+    const c = useColors();
+    const insets = useSafeAreaInsets();
+    const router = useRouter();
+    const opacity = useSharedValue(0.3);
+
+    useEffect(() => {
+        opacity.value = withRepeat(
+            withTiming(0.8, { duration: 900 }),
+            -1,
+            true
+        );
+    }, []);
+
+    const pulseStyle = useAnimatedStyle(() => ({
+        opacity: opacity.value,
+    }));
+
+    const Bone = ({ style }: { style: any }) => (
+        <Animated.View style={[{ backgroundColor: c.border, borderRadius: 8 }, style, pulseStyle]} />
+    );
+
+    return (
+        <View style={[styles.container, { backgroundColor: c.bg2 }]}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+                {/* Header / Cover skeleton */}
+                <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: c.primary + '10' }]}>
+                    <TouchableOpacity
+                        style={[styles.backButton, { backgroundColor: c.bg }]}
+                        onPress={() => router.back()}
+                    >
+                        <Ionicons name="arrow-back" size={24} color={c.text} />
+                    </TouchableOpacity>
+
+                    <View style={styles.profileInfo}>
+                        {/* Avatar */}
+                        <Bone style={{ width: 120, height: 120, borderRadius: 60, marginBottom: 16 }} />
+                        {/* Name */}
+                        <Bone style={{ width: 180, height: 28, marginBottom: 8 }} />
+                        {/* Location */}
+                        <Bone style={{ width: 140, height: 16, marginBottom: 16 }} />
+                        {/* Badges */}
+                        <View style={styles.badgeRow}>
+                            <Bone style={{ width: 90, height: 30, borderRadius: 20 }} />
+                            <Bone style={{ width: 100, height: 30, borderRadius: 20 }} />
+                        </View>
+                    </View>
+                </View>
+
+                <View style={styles.content}>
+                    {/* Bio section */}
+                    <View style={styles.section}>
+                        <Bone style={{ width: 80, height: 22, marginBottom: 16 }} />
+                        <Bone style={{ width: '100%', height: 14, marginBottom: 8 }} />
+                        <Bone style={{ width: '100%', height: 14, marginBottom: 8 }} />
+                        <Bone style={{ width: '65%', height: 14 }} />
+                    </View>
+
+                    {/* Services section */}
+                    <View style={styles.section}>
+                        <Bone style={{ width: 100, height: 22, marginBottom: 16 }} />
+                        <View style={styles.servicesGrid}>
+                            <Bone style={{ width: 110, height: 38, borderRadius: 12 }} />
+                            <Bone style={{ width: 100, height: 38, borderRadius: 12 }} />
+                            <Bone style={{ width: 90, height: 38, borderRadius: 12 }} />
+                        </View>
+                    </View>
+
+                    {/* Listings section */}
+                    <View style={styles.section}>
+                        <Bone style={{ width: 150, height: 22, marginBottom: 16 }} />
+                        <Bone style={{ width: '100%', height: 200, borderRadius: 16, marginBottom: 16 }} />
+                        <Bone style={{ width: '100%', height: 200, borderRadius: 16 }} />
+                    </View>
+                </View>
+            </ScrollView>
+        </View>
+    );
+}
+
+/* ───────────── Main Screen ───────────── */
 export default function PublicHostProfile() {
     const { id } = useLocalSearchParams();
     const router = useRouter();
@@ -56,11 +142,7 @@ export default function PublicHostProfile() {
     }, [id]);
 
     if (isLoading) {
-        return (
-            <View style={[styles.centered, { backgroundColor: c.bg2 }]}>
-                <ActivityIndicator size="large" color={c.primary} />
-            </View>
-        );
+        return <HostProfileSkeleton />;
     }
 
     if (!hostData) {
@@ -102,7 +184,9 @@ export default function PublicHostProfile() {
                             </View>
                             <View style={[styles.badge, { backgroundColor: '#FFD70020' }]}>
                                 <Ionicons name="star" size={14} color="#D4AF37" />
-                                <Text style={[styles.badgeText, { color: '#D4AF37' }]}>4.9 Rating</Text>
+                                <Text style={[styles.badgeText, { color: '#D4AF37' }]}>
+                                    {hostData.reviewCount > 0 ? `${hostData.averageRating || 0} Rating` : 'New'}
+                                </Text>
                             </View>
                         </View>
                     </View>

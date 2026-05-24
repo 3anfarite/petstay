@@ -8,6 +8,7 @@ import { BookingService } from '@/lib/bookingService';
 import { ChatService } from '@/lib/chatService';
 import { db } from '@/lib/firebaseConfig';
 import { Listing, ListingService } from '@/lib/listingService';
+import { HostRatingSummary } from '@/lib/reviewService';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
@@ -18,13 +19,13 @@ import {
     ActivityIndicator,
     Alert,
     Dimensions,
-    Image,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
+import { Image } from 'expo-image';
 import Animated, {
     Extrapolation,
     interpolate,
@@ -57,6 +58,7 @@ export default function HostDetailScreen() {
     const [hostMaxCapacity, setHostMaxCapacity] = useState(1);
     const [hostProfilePic, setHostProfilePic] = useState<string | null>(null);
     const [unavailableTimes, setUnavailableTimes] = useState<Record<string, string[]>>({});
+    const [hostRating, setHostRating] = useState<HostRatingSummary>({ averageRating: 0, reviewCount: 0 });
 
     const { user } = useAuthStore();
 
@@ -76,6 +78,10 @@ export default function HostDetailScreen() {
                         const hd = hostDocSnap.data();
                         setHostMaxCapacity(hd.maxPetCapacity || 1);
                         setHostProfilePic(hd.profilePic || null);
+                        setHostRating({
+                            averageRating: hd.averageRating || 0,
+                            reviewCount: hd.reviewCount || 0,
+                        });
                         if (hd.vacationDates && Array.isArray(hd.vacationDates)) {
                             setHostVacationDates(hd.vacationDates.map((d: string) => new Date(d)));
                         }
@@ -279,10 +285,12 @@ export default function HostDetailScreen() {
                             <View style={styles.stat}>
                                 <Ionicons name="star" size={20} color="#FFD700" />
                                 <Text style={[styles.statValue, { color: c.text }]}>
-                                    {4.9}
+                                    {hostRating.reviewCount > 0 ? hostRating.averageRating : i18n.t('host_new', { defaultValue: 'New' })}
                                 </Text>
                                 <Text style={[styles.statLabel, { color: c.textMuted }]}>
-                                    {i18n.t('host_reviews', { count: 12 })}
+                                    {hostRating.reviewCount > 0
+                                        ? i18n.t('host_reviews', { count: hostRating.reviewCount })
+                                        : i18n.t('host_no_reviews', { defaultValue: 'No reviews yet' })}
                                 </Text>
                             </View>
                             <View style={[styles.divider, { backgroundColor: c.border }]} />
@@ -298,35 +306,36 @@ export default function HostDetailScreen() {
                         </View>
                     </View>
 
-                    <View style={[styles.separator, { backgroundColor: c.border }]} />
-
-                    {/* About Section */}
-                    <View style={styles.section}>
-                        <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_about')}</Text>
-                        <Text style={[styles.description, { color: c.textMuted }]}>
-                            {host.about}
-                        </Text>
-                    </View>
-
-                    <View style={[styles.separator, { backgroundColor: c.border }]} />
-
-                    {/* Host Profile Section */}
-                    <View style={styles.section}>
-                        <View style={styles.hostSectionHeader}>
-                            <View>
-                                <Text style={[styles.sectionTitle, { color: c.text, marginBottom: 4 }]}>Meet the Host</Text>
-                                <Text style={[styles.hostName, { color: c.text }]}>{host.hostName}</Text>
+                    {/* About Section — only if host provided one */}
+                    {host.about && host.about.trim() !== '' && (
+                        <>
+                            <View style={styles.section}>
+                                <Text style={[styles.sectionTitle, { color: c.text }]}>{i18n.t('host_about')}</Text>
+                                <Text style={[styles.description, { color: c.textMuted }]}>
+                                    {host.about}
+                                </Text>
                             </View>
+                            <View style={[styles.separator, { backgroundColor: c.border }]} />
+                        </>
+                    )}
+
+                    {/* Meet the Host */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: c.text }]}>Meet the Host</Text>
+                        <TouchableOpacity 
+                            style={[styles.hostCard, { backgroundColor: c.bg, borderColor: c.border }]}
+                            onPress={() => router.push(`/host-profile/${host.hostId}`)}
+                            activeOpacity={0.75}
+                        >
                             <Image 
                                 source={{ uri: hostProfilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(host.hostName || 'Host')}&background=F3F4F6&color=374151&size=256` }} 
                                 style={styles.hostAvatar} 
                             />
-                        </View>
-                        <TouchableOpacity 
-                            style={[styles.viewProfileBtn, { borderColor: c.primary }]}
-                            onPress={() => router.push(`/host-profile/${host.hostId}`)}
-                        >
-                            <Text style={[styles.viewProfileText, { color: c.primary }]}>View Host Profile</Text>
+                            <View style={styles.hostCardInfo}>
+                                <Text style={[styles.hostName, { color: c.text }]}>{host.hostName}</Text>
+                                <Text style={[styles.hostSubtitle, { color: c.textMuted }]}>{i18n.t('host_view_profile', { defaultValue: 'View profile' })}</Text>
+                            </View>
+                            <Ionicons name="chevron-forward" size={20} color={c.textMuted} />
                         </TouchableOpacity>
                     </View>
 
@@ -679,30 +688,28 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    hostSectionHeader: {
+    hostCard: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 16,
+        padding: 14,
+        borderRadius: 16,
+        borderWidth: 1,
+        gap: 14,
+    },
+    hostCardInfo: {
+        flex: 1,
     },
     hostName: {
-        fontSize: 20,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '600',
+    },
+    hostSubtitle: {
+        fontSize: 13,
+        marginTop: 2,
     },
     hostAvatar: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-    },
-    viewProfileBtn: {
-        borderWidth: 1,
-        borderRadius: 12,
-        paddingVertical: 12,
-        alignItems: 'center',
-        marginTop: 8,
-    },
-    viewProfileText: {
-        fontSize: 15,
-        fontWeight: 'bold',
+        width: 52,
+        height: 52,
+        borderRadius: 26,
     },
 });

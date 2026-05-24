@@ -8,13 +8,13 @@ import {
     Animated,
     Dimensions,
     FlatList,
-    Image,
     StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
     View
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
@@ -91,7 +91,8 @@ export default function OnboardingScreen() {
                         >
                             <Image
                                 source={{ uri: slide.image }}
-                                style={{ width, height, resizeMode: 'cover' }}
+                                style={{ width, height }}
+                                contentFit="cover"
                             />
                         </Animated.View>
                     );

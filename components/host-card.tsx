@@ -1,7 +1,8 @@
 import { useColors } from "@/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
-import { Image, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image } from 'expo-image';
 
 type HostCardProps = {
   name: string;

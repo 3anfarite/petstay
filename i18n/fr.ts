@@ -77,6 +77,8 @@ export default {
     booking_status_confirmed: "Confirmée",
     booking_status_pending: "En attente",
     booking_status_cancelled: "Annulée",
+    booking_status_completed: "Terminée",
+    booking_status_declined: "Refusée",
     booking_action_message: "Message",
     booking_action_cancel: "Annuler",
     bookings_empty_title: "Aucune réservation... pour l'instant !",

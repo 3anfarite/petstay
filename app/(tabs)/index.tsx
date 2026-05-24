@@ -13,7 +13,7 @@ import { SafeAreaView, useSafeAreaInsets } from "react-native-safe-area-context"
 import { ListingService, Listing } from '@/lib/listingService';
 import { useAuthStore } from '@/store/useAuthStore';
 import { WishlistService } from '@/lib/wishlistService';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 
 export default function Home() {
@@ -31,7 +31,33 @@ export default function Home() {
   const fetchActiveListings = async () => {
     try {
       const data = await ListingService.getAllActiveListings();
-      setActiveListings(data);
+      
+      // Enrich listings with real host ratings from user documents
+      const uniqueHostIds = [...new Set(data.map(l => l.hostId))];
+      const hostRatings: Record<string, { rating: number; reviewCount: number }> = {};
+      
+      await Promise.all(
+        uniqueHostIds.map(async (hostId) => {
+          try {
+            const hostDoc = await getDoc(doc(db, 'users', hostId));
+            if (hostDoc.exists()) {
+              const hd = hostDoc.data();
+              hostRatings[hostId] = {
+                rating: hd.averageRating || 0,
+                reviewCount: hd.reviewCount || 0,
+              };
+            }
+          } catch {} // Silently skip hosts that can't be fetched
+        })
+      );
+      
+      const enriched = data.map(l => ({
+        ...l,
+        rating: hostRatings[l.hostId]?.rating || undefined,
+        reviewCount: hostRatings[l.hostId]?.reviewCount || 0,
+      }));
+      
+      setActiveListings(enriched);
     } catch (e) {
       console.error(e);
     } finally {

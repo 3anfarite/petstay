@@ -5,7 +5,6 @@ import i18n from '@/i18n';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     FlatList,
-    Image,
     Keyboard,
     KeyboardAvoidingView,
     Platform,
@@ -15,6 +14,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChatService, Message } from '@/lib/chatService';
 import { useAuthStore } from '@/store/useAuthStore';

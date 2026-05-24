@@ -6,10 +6,11 @@ import { Ionicons } from '@expo/vector-icons';
 import * as AuthSession from 'expo-auth-session';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
+    Animated,
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
@@ -26,6 +27,19 @@ WebBrowser.maybeCompleteAuthSession();
 
 type AuthMode = 'login' | 'signup';
 
+const getPasswordStrength = (pw: string) => {
+    if (!pw) return { level: 0, label: '', color: 'transparent' };
+    let score = 0;
+    if (pw.length >= 6) score++;
+    if (pw.length >= 10) score++;
+    if (/[A-Z]/.test(pw)) score++;
+    if (/[0-9]/.test(pw)) score++;
+    if (/[^A-Za-z0-9]/.test(pw)) score++;
+    if (score <= 1) return { level: 1, label: 'Weak', color: '#EF4444' };
+    if (score <= 3) return { level: 2, label: 'Fair', color: '#F59E0B' };
+    return { level: 3, label: 'Strong', color: '#10B981' };
+};
+
 export default function AuthScreen() {
     const router = useRouter();
     const c = useColors();
@@ -36,8 +50,12 @@ export default function AuthScreen() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
+    const [focusedField, setFocusedField] = useState<string | null>(null);
 
     const [isLoadingAuth, setIsLoadingAuth] = useState(false);
+
+    const pwStrength = mode === 'signup' ? getPasswordStrength(password) : null;
 
     // Google Auth Configuration
     const [request, response, promptAsync] = AuthSession.useAuthRequest(
@@ -117,9 +135,9 @@ export default function AuthScreen() {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={{ flex: 1 }}
             >
-                {/* Floating Back Button */}
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="close" size={28} color={c.text} />
+                {/* Close Button */}
+                <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: c.bg2 }]}>
+                    <Ionicons name="close" size={22} color={c.text} />
                 </TouchableOpacity>
 
                 <ScrollView
@@ -129,7 +147,7 @@ export default function AuthScreen() {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.headerArea}>
-                        <View style={[styles.iconWrapper, { backgroundColor: c.primary + '20' }]}>
+                        <View style={[styles.iconWrapper, { backgroundColor: c.primary + '15' }]}>
                             <Ionicons name={mode === 'login' ? "paw" : "person-add"} size={32} color={c.primary} />
                         </View>
                         <Text style={[styles.title, { color: c.text }]}>
@@ -142,8 +160,8 @@ export default function AuthScreen() {
 
                     <View style={styles.form}>
                         {mode === 'signup' && (
-                            <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
-                                <Ionicons name="person-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
+                            <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: focusedField === 'name' ? c.primary : c.border }]}>
+                                <Ionicons name="person-outline" size={20} color={focusedField === 'name' ? c.primary : c.textMuted} style={styles.inputIcon} />
                                 <TextInput
                                     style={[styles.input, { color: c.text }]}
                                     placeholder={i18n.t('auth_name') || "Name"}
@@ -151,12 +169,14 @@ export default function AuthScreen() {
                                     value={name}
                                     onChangeText={setName}
                                     autoCapitalize="words"
+                                    onFocus={() => setFocusedField('name')}
+                                    onBlur={() => setFocusedField(null)}
                                 />
                             </View>
                         )}
 
-                        <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
-                            <Ionicons name="mail-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
+                        <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: focusedField === 'email' ? c.primary : c.border }]}>
+                            <Ionicons name="mail-outline" size={20} color={focusedField === 'email' ? c.primary : c.textMuted} style={styles.inputIcon} />
                             <TextInput
                                 style={[styles.input, { color: c.text }]}
                                 placeholder={i18n.t('auth_email') || "Email Address"}
@@ -165,19 +185,44 @@ export default function AuthScreen() {
                                 onChangeText={setEmail}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
+                                autoCorrect={false}
+                                onFocus={() => setFocusedField('email')}
+                                onBlur={() => setFocusedField(null)}
                             />
                         </View>
 
-                        <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: c.border }]}>
-                            <Ionicons name="lock-closed-outline" size={20} color={c.textMuted} style={styles.inputIcon} />
-                            <TextInput
-                                style={[styles.input, { color: c.text }]}
-                                placeholder={i18n.t('auth_password') || "Password"}
-                                placeholderTextColor={c.textMuted}
-                                value={password}
-                                onChangeText={setPassword}
-                                secureTextEntry
-                            />
+                        <View>
+                            <View style={[styles.inputContainer, { backgroundColor: c.bg2, borderColor: focusedField === 'password' ? c.primary : c.border }]}>
+                                <Ionicons name="lock-closed-outline" size={20} color={focusedField === 'password' ? c.primary : c.textMuted} style={styles.inputIcon} />
+                                <TextInput
+                                    style={[styles.input, { color: c.text }]}
+                                    placeholder={i18n.t('auth_password') || "Password"}
+                                    placeholderTextColor={c.textMuted}
+                                    value={password}
+                                    onChangeText={setPassword}
+                                    secureTextEntry={!showPassword}
+                                    onFocus={() => setFocusedField('password')}
+                                    onBlur={() => setFocusedField(null)}
+                                />
+                                <TouchableOpacity onPress={() => setShowPassword(!showPassword)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                                    <Ionicons name={showPassword ? "eye-off-outline" : "eye-outline"} size={20} color={c.textMuted} />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* Password Strength — signup only */}
+                            {mode === 'signup' && password.length > 0 && pwStrength && (
+                                <View style={styles.strengthRow}>
+                                    <View style={styles.strengthBars}>
+                                        {[1, 2, 3].map(i => (
+                                            <View
+                                                key={i}
+                                                style={[styles.strengthBar, { backgroundColor: i <= pwStrength.level ? pwStrength.color : c.border }]}
+                                            />
+                                        ))}
+                                    </View>
+                                    <Text style={[styles.strengthLabel, { color: pwStrength.color }]}>{pwStrength.label}</Text>
+                                </View>
+                            )}
                         </View>
 
                         {mode === 'login' && (
@@ -191,9 +236,10 @@ export default function AuthScreen() {
 
                     <View style={styles.footer}>
                         <TouchableOpacity
-                            style={[styles.button, { backgroundColor: c.primary }]}
+                            style={[styles.button, { backgroundColor: c.primary, opacity: isLoadingAuth ? 0.7 : 1 }]}
                             onPress={handleSubmit}
                             disabled={isLoadingAuth}
+                            activeOpacity={0.85}
                         >
                             {isLoadingAuth ? (
                                 <ActivityIndicator color="white" />
@@ -204,12 +250,20 @@ export default function AuthScreen() {
                             )}
                         </TouchableOpacity>
 
+                        {/* Divider */}
+                        <View style={styles.dividerRow}>
+                            <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+                            <Text style={[styles.dividerText, { color: c.textMuted }]}>{i18n.t('auth_or', { defaultValue: 'or' })}</Text>
+                            <View style={[styles.dividerLine, { backgroundColor: c.border }]} />
+                        </View>
+
                         <TouchableOpacity
-                            style={[styles.socialButton, { backgroundColor: c.bg2 }]}
+                            style={[styles.socialButton, { backgroundColor: c.bg2, borderColor: c.border }]}
                             onPress={() => promptAsync()}
                             disabled={!request || isLoadingAuth}
+                            activeOpacity={0.8}
                         >
-                            <Ionicons name="logo-google" size={22} color={c.text} style={{ position: 'absolute', left: 20 }} />
+                            <Ionicons name="logo-google" size={20} color="#4285F4" style={{ position: 'absolute', left: 20 }} />
                             <Text style={[styles.socialButtonText, { color: c.text }]}>{i18n.t('auth_continue_google')}</Text>
                         </TouchableOpacity>
 
@@ -219,7 +273,7 @@ export default function AuthScreen() {
                         >
                             <Text style={[styles.toggleModeText, { color: c.textMuted }]}>
                                 {mode === 'login' ? (i18n.locale === 'fr' ? "Pas encore de compte ? " : "Don't have an account? ") : (i18n.locale === 'fr' ? "Déjà un compte ? " : "Already have an account? ")}
-                                <Text style={{ color: c.text, fontFamily: AppFonts.bodyBold }}>
+                                <Text style={{ color: c.primary, fontFamily: AppFonts.bodyBold }}>
                                     {mode === 'login' ? (i18n.locale === 'fr' ? "S'inscrire" : "Sign up") : (i18n.locale === 'fr' ? "Se connecter" : "Log in")}
                                 </Text>
                             </Text>
@@ -242,8 +296,9 @@ const styles = StyleSheet.create({
         zIndex: 10,
         width: 40,
         height: 40,
+        borderRadius: 20,
         justifyContent: 'center',
-        alignItems: 'flex-end',
+        alignItems: 'center',
     },
     contentScroll: {
         flexGrow: 1,
@@ -258,7 +313,7 @@ const styles = StyleSheet.create({
     iconWrapper: {
         width: 72,
         height: 72,
-        borderRadius: 24,
+        borderRadius: 36,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 24,
@@ -283,7 +338,7 @@ const styles = StyleSheet.create({
         height: 58,
         borderRadius: 16,
         paddingHorizontal: 16,
-        borderWidth: 1,
+        borderWidth: 1.5,
     },
     inputIcon: {
         marginRight: 14,
@@ -291,6 +346,27 @@ const styles = StyleSheet.create({
     input: {
         flex: 1,
         fontSize: 16,
+        fontFamily: AppFonts.body,
+    },
+    strengthRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginTop: 10,
+        paddingHorizontal: 4,
+    },
+    strengthBars: {
+        flexDirection: 'row',
+        gap: 4,
+        flex: 1,
+    },
+    strengthBar: {
+        flex: 1,
+        height: 4,
+        borderRadius: 2,
+    },
+    strengthLabel: {
+        fontSize: 12,
         fontFamily: AppFonts.bodyBold,
     },
     forgotPassword: {
@@ -313,8 +389,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.15,
-        shadowRadius: 12,
+        shadowOpacity: 0.12,
+        shadowRadius: 10,
         elevation: 4,
     },
     buttonText: {
@@ -322,19 +398,33 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontFamily: AppFonts.bodyBold,
     },
+    dividerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 14,
+    },
+    dividerLine: {
+        flex: 1,
+        height: 1,
+    },
+    dividerText: {
+        fontSize: 13,
+        fontFamily: AppFonts.body,
+    },
     socialButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         height: 58,
         borderRadius: 16,
+        borderWidth: 1,
     },
     socialButtonText: {
         fontSize: 16,
         fontFamily: AppFonts.bodyBold,
     },
     toggleModeButton: {
-        marginTop: 16,
+        marginTop: 8,
         alignItems: 'center',
         padding: 8,
     },

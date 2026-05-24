@@ -3,10 +3,11 @@ import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, Dimensions, Image, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width, height } = Dimensions.get('window');
@@ -38,6 +39,7 @@ export default function WelcomeScreen() {
                 <Image
                     source={{ uri: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2969&auto=format&fit=crop' }}
                     style={styles.heroImage}
+                    contentFit="cover"
                 />
                 <LinearGradient
                     colors={['transparent', c.bg2]}
@@ -126,7 +128,6 @@ const styles = StyleSheet.create({
     heroImage: {
         width: '100%',
         height: '100%',
-        resizeMode: 'cover',
     },
     gradient: {
         position: 'absolute',

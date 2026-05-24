@@ -17,6 +17,8 @@ export interface Listing {
     verified: boolean;
     status: 'active' | 'inactive';
     createdAt: string;
+    rating?: number;
+    reviewCount?: number;
 }
 
 export const ListingService = {
