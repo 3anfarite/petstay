@@ -222,7 +222,6 @@ export default function HostListings() {
                     hostId: user.uid,
                     hostName: profile.name || 'Host',
                     hostAvatar: profile.profilePic || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.name || 'Host')}&background=F3F4F6&color=374151&size=200`,
-                    services: profile.services?.length ? profile.services : ['Boarding'],
                     verified: true,
                     status: 'active',
                     ...payload,
@@ -288,7 +287,7 @@ export default function HostListings() {
                                         </View>
                                     </View>
                                     <View style={[styles.priceChip, { backgroundColor: c.bg }]}>
-                                        <Text style={[styles.priceText, { color: c.text }]}>${item.price}</Text>
+                                        <Text style={[styles.priceText, { color: c.text }]}>{item.price} MAD</Text>
                                         <Text style={[styles.nightText, { color: c.textMuted }]}>{getServiceUnit(item.services?.[0])}</Text>
                                     </View>
                                 </View>
@@ -436,7 +435,7 @@ export default function HostListings() {
                             </TouchableOpacity>
 
                             <View style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]}>
-                                <Text style={{ fontSize: 18, color: c.textMuted }}>$</Text>
+                                <Text style={{ fontSize: 18, color: c.textMuted }}>MAD</Text>
                                 <TextInput
                                     style={[styles.groupInput, { color: c.text }]}
                                     placeholder={i18n.t('host_form_price_ph')}

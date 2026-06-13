@@ -237,7 +237,7 @@ export default function BookingScreen() {
         {/* Price + Pet */}
         <View style={styles.metaRow}>
           <Text style={[styles.price, { color: c.text }]}>
-            ${item.totalPrice} <Text style={[styles.priceLabel, { color: c.textMuted }]}>{i18n.t('booking_total_lower')}</Text>
+            {item.totalPrice} MAD <Text style={[styles.priceLabel, { color: c.textMuted }]}>{i18n.t('booking_total_lower')}</Text>
           </Text>
           {item.petType && (
             <View style={styles.infoRow}>
@@ -336,7 +336,7 @@ export default function BookingScreen() {
       ) : (
         <FlatList
           data={filteredBookings}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.id!}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={

@@ -44,7 +44,7 @@ export default function HostDashboard() {
                 <View style={styles.statsContainer}>
                     <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
                         <Ionicons name="wallet-outline" size={24} color={c.primary} />
-                        <Text style={[styles.statValue, { color: c.text }]}>$1,240</Text>
+                        <Text style={[styles.statValue, { color: c.text }]}>1,240 MAD</Text>
                         <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_earnings')}</Text>
                     </View>
                     <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
@@ -126,20 +126,6 @@ const styles = StyleSheet.create({
     statCard: {
         flex: 1,
         padding: 20,
-        borderRadius: 20,
-        gap: 8,
-    },
-    statValue: {
-        fontSize: 24,
-        fontFamily: AppFonts.bodyBold,
-    },
-    statLabel: {
-        fontSize: 14,
-        fontFamily: AppFonts.body,
-    },
-    statCard: {
-        width: '48%',
-        padding: 20,
         borderRadius: 24,
         alignItems: 'center',
         gap: 8,
@@ -148,6 +134,14 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.04,
         shadowRadius: 8,
         elevation: 2,
+    },
+    statValue: {
+        fontSize: 24,
+        fontFamily: AppFonts.bodyBold,
+    },
+    statLabel: {
+        fontSize: 14,
+        fontFamily: AppFonts.body,
     },
     sectionTitle: {
         fontSize: 20,

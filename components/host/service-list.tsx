@@ -52,7 +52,7 @@ export function ServiceList({
                                 {service}
                             </Text>
                             <Text style={styles.servicePrice}>
-                                ${price}
+                                {price} MAD
                                 <Text style={styles.serviceUnit}>/night</Text>
                             </Text>
                         </TouchableOpacity>

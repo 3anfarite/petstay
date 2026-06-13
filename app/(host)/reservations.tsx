@@ -153,7 +153,7 @@ export default function HostReservationsScreen() {
                   bookingToUpdate.guestId,
                   bookingToUpdate.hostName,
                   bookingToUpdate.guestName,
-                  user.profilePic || '',
+                  user.photoURL || '',
                   bookingToUpdate.guestAvatar || '',
                   `Hello ${bookingToUpdate.guestName}, unfortunately I have to decline your booking request for ${new Date(bookingToUpdate.startDate).toLocaleDateString()}. I'm sorry for the inconvenience!`
                 );
@@ -244,7 +244,7 @@ export default function HostReservationsScreen() {
         {/* Price */}
         <View style={styles.metaRow}>
           <Text style={[styles.price, { color: c.text }]}>
-            ${item.totalPrice} <Text style={[styles.priceLabel, { color: c.textMuted }]}>{i18n.t('booking_total_lower', { defaultValue: 'total' })}</Text>
+            {item.totalPrice} MAD <Text style={[styles.priceLabel, { color: c.textMuted }]}>{i18n.t('booking_total_lower', { defaultValue: 'total' })}</Text>
           </Text>
           {item.petType && (
             <View style={styles.infoRow}>

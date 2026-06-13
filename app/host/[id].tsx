@@ -225,7 +225,7 @@ export default function HostDetailScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: c.bg2 }]}>
-            <StatusBar barStyle={hasImage ? "light-content" : (c.text === '#000000' ? "dark-content" : "light-content")} />
+            <StatusBar barStyle={hasImage ? "light-content" : (c.text === '#111111' ? "dark-content" : "light-content")} />
 
             {/* Animated Header Image */}
             {hasImage && (
@@ -379,7 +379,7 @@ export default function HostDetailScreen() {
             >
                 <View>
                     <Text style={[styles.footerPrice, { color: c.text }]}>
-                        ${host.price}
+                        {host.price} MAD
                         <Text style={[styles.footerUnit, { color: c.textMuted }]}>
                             {' '}
                             {i18n.t('host_per_night')}
@@ -452,7 +452,7 @@ export default function HostDetailScreen() {
                     }
                 }}
                 pricePerNight={host.price}
-                hostName={host.name}
+                hostName={host.hostName}
                 unavailableDates={unavailableDates}
                 unavailableTimes={unavailableTimes}
             />

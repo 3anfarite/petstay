@@ -71,7 +71,7 @@ export default function HostCard({
         <Text style={styles.subtitleText}>{location}</Text>
         <Text style={styles.dateText}>Oct 20 - 25</Text>
         <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>{price}</Text>
+          <Text style={styles.priceText}>{price} MAD</Text>
           <Text style={styles.priceUnitText}>night</Text>
         </View>
       </View>

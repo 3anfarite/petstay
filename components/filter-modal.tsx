@@ -130,7 +130,7 @@ export function FilterModalContent({ onClose, onApply, listings = [] }: { onClos
                     <Text style={styles.sectionTitle}>{i18n.t('filter_price_range')}</Text>
                     <View style={styles.priceRow}>
                         <View style={styles.priceInputContainer}>
-                            <Text style={styles.currencyPrefix}>$</Text>
+                            <Text style={styles.currencyPrefix}>MAD</Text>
                             <TextInput
                                 style={styles.priceInput}
                                 placeholder={i18n.t('filter_min')}
@@ -142,7 +142,7 @@ export function FilterModalContent({ onClose, onApply, listings = [] }: { onClos
                         </View>
                         <Text style={styles.priceSeparator}>-</Text>
                         <View style={styles.priceInputContainer}>
-                            <Text style={styles.currencyPrefix}>$</Text>
+                            <Text style={styles.currencyPrefix}>MAD</Text>
                             <TextInput
                                 style={styles.priceInput}
                                 placeholder={i18n.t('filter_max')}

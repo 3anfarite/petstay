@@ -74,7 +74,7 @@ export default function WishlistScreen() {
                 ) : (
                     <FlatList
                         data={wishlistListings}
-                        keyExtractor={(item) => item.id}
+                        keyExtractor={(item) => item.id!}
                         contentContainerStyle={styles.listContent}
                         renderItem={({ item }) => (
                             <HostCard
@@ -85,7 +85,7 @@ export default function WishlistScreen() {
                                 image={item.image}
                                 isWishlisted={true}
                                 onPress={() => router.push(`/host/${item.id}`)}
-                                onToggleWishlist={() => toggleWishlist(item.id)}
+                                onToggleWishlist={() => toggleWishlist(item.id!)}
                             />
                         )}
                     />

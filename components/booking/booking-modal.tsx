@@ -391,16 +391,16 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                                     <Text style={styles.priceLabel}>
                                         {isHourlyService ? i18n.t('booking_session_rate', { price: pricePerNight }) : i18n.t('booking_nightly_rate', { price: pricePerNight, count: nights })}
                                     </Text>
-                                    <Text style={styles.priceValue}>${pricePerNight * nights}</Text>
+                                    <Text style={styles.priceValue}>{pricePerNight * nights} MAD</Text>
                                 </View>
                                 <View style={styles.priceRow}>
                                     <Text style={styles.priceLabel}>{i18n.t('booking_service_fee')}</Text>
-                                    <Text style={styles.priceValue}>${serviceFee}</Text>
+                                    <Text style={styles.priceValue}>{serviceFee} MAD</Text>
                                 </View>
                                 <View style={[styles.divider, { marginVertical: 12 }]} />
                                 <View style={styles.priceRow}>
                                     <Text style={styles.totalLabel}>{i18n.t('booking_total')}</Text>
-                                    <Text style={styles.totalValue}>${totalPrice}</Text>
+                                    <Text style={styles.totalValue}>{totalPrice} MAD</Text>
                                 </View>
                             </View>
                         )}
