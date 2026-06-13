@@ -11,6 +11,8 @@ export default {
     wishlist_empty_title: "Make a wish!",
     wishlist_empty_subtitle: "Save your favorite pet sitters and homes here for easy access.",
     wishlist_empty_btn: "Explore Hosts",
+    wishlist_saved_one: "{{count}} saved",
+    wishlist_saved_other: "{{count}} saved",
 
     // Host
     host_tab_dashboard: "Dashboard",
@@ -63,6 +65,7 @@ export default {
     booking_pets: "Pets",
     booking_price_breakdown: "Price Breakdown",
     booking_nightly_rate: "{{price}} MAD x {{count}} nights",
+    booking_night: "night",
     booking_service_fee: "Service fee",
     booking_total: "Total",
     booking_confirm: "Confirm Booking",

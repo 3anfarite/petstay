@@ -11,6 +11,8 @@ export default {
     wishlist_empty_title: "Faites un vœu !",
     wishlist_empty_subtitle: "Enregistrez vos gardiens et maisons préférés ici pour un accès facile.",
     wishlist_empty_btn: "Explorer les hôtes",
+    wishlist_saved_one: "{{count}} sauvegardé",
+    wishlist_saved_other: "{{count}} sauvegardés",
 
     // Host
     host_tab_dashboard: "Tableau de bord",
@@ -63,6 +65,7 @@ export default {
     booking_pets: "Animaux",
     booking_price_breakdown: "Détails du prix",
     booking_nightly_rate: "{{price}} MAD x {{count}} nuits",
+    booking_night: "nuit",
     booking_service_fee: "Frais de service",
     booking_total: "Total",
     booking_confirm: "Confirmer la réservation",

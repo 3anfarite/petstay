@@ -2,16 +2,16 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, ScrollView } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 import { WishlistService } from '@/lib/wishlistService';
 import { Listing } from '@/lib/listingService';
-import HostCard from '@/components/host-card';
-import { HostCardSkeleton } from '@/components/host-card-skeleton';
+import { WishlistCard, WishlistCardSkeleton } from '@/components/wishlist-card';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { useEffect, useState } from 'react';
+import { AppFonts } from '@/constants/theme';
 
 export default function WishlistScreen() {
     const c = useColors();
@@ -49,13 +49,21 @@ export default function WishlistScreen() {
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets?.top ?? 0 }]}>
             <View style={styles.header}>
                 <Text style={[styles.title, { color: c.text }]}>{i18n.t('wishlist_title')}</Text>
+                {!isLoading && wishlistListings.length > 0 && (
+                    <Text style={[styles.count, { color: c.textMuted }]}>
+                        {i18n.t(wishlistListings.length === 1 ? 'wishlist_saved_one' : 'wishlist_saved_other', { count: wishlistListings.length })}
+                    </Text>
+                )}
             </View>
 
             <View style={styles.content}>
                 {isLoading ? (
                     <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
-                        <HostCardSkeleton />
-                        <HostCardSkeleton />
+                        <WishlistCardSkeleton />
+                        <WishlistCardSkeleton />
+                        <WishlistCardSkeleton />
+                        <WishlistCardSkeleton />
+                        <WishlistCardSkeleton />
                     </ScrollView>
                 ) : wishlistListings.length === 0 ? (
                     <View style={styles.emptyStateContainer}>
@@ -80,16 +88,18 @@ export default function WishlistScreen() {
                         data={wishlistListings}
                         keyExtractor={(item) => item.id!}
                         contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
                         renderItem={({ item }) => (
-                            <HostCard
+                            <WishlistCard
                                 name={item.title}
                                 location={item.location}
                                 price={`${item.price}`}
                                 services={item.services}
                                 image={item.image}
-                                isWishlisted={true}
+                                rating={item.rating}
+                                verified={item.verified}
                                 onPress={() => router.push(`/host/${item.id}`)}
-                                onToggleWishlist={() => toggleWishlist(item.id!)}
+                                onRemove={() => toggleWishlist(item.id!)}
                             />
                         )}
                     />
@@ -105,17 +115,25 @@ const styles = StyleSheet.create({
     },
     header: {
         paddingHorizontal: 24,
-        paddingVertical: 16,
+        paddingTop: 20,
+        paddingBottom: 16,
     },
     title: {
         fontSize: 32,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.title,
+        letterSpacing: -0.5,
+    },
+    count: {
+        fontSize: 14,
+        fontFamily: AppFonts.body,
+        marginTop: 4,
     },
     content: {
         flex: 1,
     },
     listContent: {
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingBottom: 40,
     },
     emptyStateContainer: {
         flex: 1,
@@ -134,13 +152,14 @@ const styles = StyleSheet.create({
         marginBottom: 24,
     },
     emptyTitle: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 22,
+        fontFamily: AppFonts.bodyBold,
         marginBottom: 12,
         textAlign: 'center',
     },
     emptySubtitle: {
-        fontSize: 16,
+        fontSize: 15,
+        fontFamily: AppFonts.body,
         textAlign: 'center',
         marginBottom: 32,
         lineHeight: 24,
@@ -148,11 +167,11 @@ const styles = StyleSheet.create({
     exploreButton: {
         paddingVertical: 16,
         paddingHorizontal: 32,
-        borderRadius: 12,
+        borderRadius: 14,
     },
     buttonText: {
         color: 'white',
         fontSize: 16,
-        fontWeight: 'bold',
+        fontFamily: AppFonts.bodyBold,
     },
 });
