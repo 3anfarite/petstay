@@ -2,12 +2,13 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuthStore } from '@/store/useAuthStore';
 import { WishlistService } from '@/lib/wishlistService';
 import { Listing } from '@/lib/listingService';
 import HostCard from '@/components/host-card';
+import { HostCardSkeleton } from '@/components/host-card-skeleton';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { useEffect, useState } from 'react';
@@ -52,7 +53,10 @@ export default function WishlistScreen() {
 
             <View style={styles.content}>
                 {isLoading ? (
-                    <ActivityIndicator size="large" color={c.primary} />
+                    <ScrollView contentContainerStyle={styles.listContent} showsVerticalScrollIndicator={false}>
+                        <HostCardSkeleton />
+                        <HostCardSkeleton />
+                    </ScrollView>
                 ) : wishlistListings.length === 0 ? (
                     <View style={styles.emptyStateContainer}>
                         <View style={styles.emptyState}>

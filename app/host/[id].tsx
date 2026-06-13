@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc } from 'firebase/firestore';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
@@ -36,6 +36,7 @@ import Animated, {
     withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useQuery } from '@tanstack/react-query';
 
 const { width } = Dimensions.get('window');
 const IMG_HEIGHT = 300;
@@ -47,57 +48,74 @@ export default function HostDetailScreen() {
     const insets = useSafeAreaInsets();
     const scrollY = useSharedValue(0);
 
-    const [host, setHost] = useState<Listing | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [selectedService, setSelectedService] = useState('Boarding');
     const [isBookingModalVisible, setBookingModalVisible] = useState(false);
     const [isSubmittingBooking, setIsSubmittingBooking] = useState(false);
     const [unavailableDates, setUnavailableDates] = useState<Date[]>([]);
-    const [hostActiveBookings, setHostActiveBookings] = useState<any[]>([]);
-    const [hostVacationDates, setHostVacationDates] = useState<Date[]>([]);
-    const [hostMaxCapacity, setHostMaxCapacity] = useState(1);
-    const [hostProfilePic, setHostProfilePic] = useState<string | null>(null);
     const [unavailableTimes, setUnavailableTimes] = useState<Record<string, string[]>>({});
-    const [hostRating, setHostRating] = useState<HostRatingSummary>({ averageRating: 0, reviewCount: 0 });
 
     const { user } = useAuthStore();
 
-    useEffect(() => {
-        const loadListing = async () => {
-            if (typeof id !== 'string') return;
+    const { data: details, isLoading } = useQuery({
+        queryKey: ['hostDetails', id],
+        enabled: typeof id === 'string',
+        queryFn: async () => {
+            if (typeof id !== 'string') throw new Error('Invalid ID');
             const data = await ListingService.getListingById(id);
-            setHost(data);
-            setSelectedService(data?.services?.[0] || 'Boarding');
-            setIsLoading(false);
+            if (!data) throw new Error('Host listing not found');
 
-            if (data?.hostId) {
-                try {
-                    // Fetch host document for capacity and vacationDates
-                    const hostDocSnap = await getDoc(doc(db, "users", data.hostId));
-                    if (hostDocSnap.exists()) {
-                        const hd = hostDocSnap.data();
-                        setHostMaxCapacity(hd.maxPetCapacity || 1);
-                        setHostProfilePic(hd.profilePic || null);
-                        setHostRating({
-                            averageRating: hd.averageRating || 0,
-                            reviewCount: hd.reviewCount || 0,
-                        });
-                        if (hd.vacationDates && Array.isArray(hd.vacationDates)) {
-                            setHostVacationDates(hd.vacationDates.map((d: string) => new Date(d)));
-                        }
+            let hostMaxCapacity = 1;
+            let hostProfilePic = null;
+            let hostRating = { averageRating: 0, reviewCount: 0 };
+            let hostVacationDates: Date[] = [];
+            let hostActiveBookings: any[] = [];
+
+            try {
+                // Fetch host document for capacity and vacationDates
+                const hostDocSnap = await getDoc(doc(db, "users", data.hostId));
+                if (hostDocSnap.exists()) {
+                    const hd = hostDocSnap.data();
+                    hostMaxCapacity = hd.maxPetCapacity || 1;
+                    hostProfilePic = hd.profilePic || null;
+                    hostRating = {
+                        averageRating: hd.averageRating || 0,
+                        reviewCount: hd.reviewCount || 0,
+                    };
+                    if (hd.vacationDates && Array.isArray(hd.vacationDates)) {
+                        hostVacationDates = hd.vacationDates.map((d: string) => new Date(d));
                     }
-
-                    // Fetch active bookings
-                    const bookings = await BookingService.getHostBookings(data.hostId);
-                    const activeBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
-                    setHostActiveBookings(activeBookings);
-                } catch (error) {
-                    console.error('Failed to fetch host details', error);
                 }
+
+                // Fetch active bookings
+                const bookings = await BookingService.getHostBookings(data.hostId);
+                hostActiveBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+            } catch (error) {
+                console.error('Failed to fetch host details', error);
             }
-        };
-        loadListing();
-    }, [id]);
+
+            return {
+                host: data,
+                hostMaxCapacity,
+                hostProfilePic,
+                hostRating,
+                hostVacationDates,
+                hostActiveBookings,
+            };
+        }
+    });
+
+    const host = details?.host ?? null;
+    const hostMaxCapacity = details?.hostMaxCapacity ?? 1;
+    const hostProfilePic = details?.hostProfilePic ?? null;
+    const hostRating = useMemo(() => details?.hostRating ?? { averageRating: 0, reviewCount: 0 }, [details?.hostRating]);
+    const hostVacationDates = useMemo(() => details?.hostVacationDates ?? [], [details?.hostVacationDates]);
+    const hostActiveBookings = useMemo(() => details?.hostActiveBookings ?? [], [details?.hostActiveBookings]);
+
+    useEffect(() => {
+        if (host?.services?.[0]) {
+            setSelectedService(host.services[0]);
+        }
+    }, [host?.services?.[0]]);
 
     useEffect(() => {
         const dailyPets: Record<string, number> = {};
