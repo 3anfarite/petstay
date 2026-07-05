@@ -5,10 +5,15 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Dimensions, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { PetProfile, PetService } from '@/lib/petService';
+import { useAuthStore } from '@/store/useAuthStore';
+import { AppFonts } from '@/constants/theme';
+import { useQuery } from '@tanstack/react-query';
+
 type BookingModalProps = {
     visible: boolean;
     onClose: () => void;
-    onConfirm: (data: { startDate: Date; endDate: Date; petCount: number; totalPrice: number; nights: number }) => void;
+    onConfirm: (data: { startDate: Date; endDate: Date; pets: PetProfile[]; totalPrice: number; nights: number }) => void;
     pricePerNight: number;
     hostName: string;
     isSubmitting?: boolean;
@@ -31,7 +36,15 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [selectedTime, setSelectedTime] = useState<string>(TIME_SLOTS[0]);
-    const [petCount, setPetCount] = useState(1);
+    const { user } = useAuthStore();
+
+    const { data: myPets = [] } = useQuery({
+        queryKey: ['pets', user?.uid],
+        queryFn: () => PetService.getUserPets(user!.uid),
+        enabled: visible && !!user?.uid,
+    });
+
+    const [selectedPets, setSelectedPets] = useState<PetProfile[]>([]);
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     // Generate localized week days
@@ -224,7 +237,7 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
             finalEnd.setHours(finalEnd.getHours() + 1); // Exact 1 Hour block
         }
 
-        onConfirm({ startDate: finalStart, endDate: finalEnd, petCount, totalPrice, nights });
+        onConfirm({ startDate: finalStart, endDate: finalEnd, pets: selectedPets, totalPrice, nights });
     };
 
     if (!visible) return null;
@@ -358,27 +371,43 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                             </>
                         )}
 
-                        {/* Guests & Pets */}
+                        {/* Pets */}
                         <View style={styles.section}>
-                            <View style={styles.row}>
-                                <Text style={styles.label}>{i18n.t('booking_pets')}</Text>
-                                <View style={styles.counter}>
-                                    <TouchableOpacity
-                                        onPress={() => setPetCount(Math.max(1, petCount - 1))}
-                                        style={[styles.counterBtn, petCount <= 1 && styles.counterBtnDisabled]}
-                                        disabled={petCount <= 1}
-                                    >
-                                        <Ionicons name="remove" size={20} color={petCount <= 1 ? c.textMuted : c.text} />
-                                    </TouchableOpacity>
-                                    <Text style={styles.counterValue}>{petCount}</Text>
-                                    <TouchableOpacity
-                                        onPress={() => setPetCount(petCount + 1)}
-                                        style={styles.counterBtn}
-                                    >
-                                        <Ionicons name="add" size={20} color={c.text} />
-                                    </TouchableOpacity>
+                            <Text style={styles.sectionTitle}>{i18n.t('booking_pets', { defaultValue: 'Pets' })}</Text>
+                            {myPets.length === 0 ? (
+                                <Text style={{ color: c.textMuted, fontFamily: AppFonts.body, marginTop: 8 }}>
+                                    You haven't added any pets yet. Please add a pet in your profile first.
+                                </Text>
+                            ) : (
+                                <View style={{ gap: 10, marginTop: 8 }}>
+                                    {myPets.map(pet => {
+                                        const isSelected = selectedPets.some(p => p.id === pet.id);
+                                        return (
+                                            <TouchableOpacity 
+                                                key={pet.id!} 
+                                                style={[styles.petSelectRow, { borderColor: isSelected ? c.primary : c.border, backgroundColor: isSelected ? c.bg2 : c.bg }]}
+                                                onPress={() => {
+                                                    if (isSelected) {
+                                                        setSelectedPets(prev => prev.filter(p => p.id !== pet.id));
+                                                    } else {
+                                                        setSelectedPets(prev => [...prev, pet]);
+                                                    }
+                                                }}
+                                            >
+                                                <View style={{ flex: 1 }}>
+                                                    <Text style={{ color: c.text, fontFamily: AppFonts.bodyBold, fontSize: 16 }}>{pet.name}</Text>
+                                                    <Text style={{ color: c.textMuted, fontFamily: AppFonts.body, fontSize: 13, marginTop: 2 }}>{pet.breed} • {pet.age}</Text>
+                                                </View>
+                                                {isSelected ? (
+                                                    <Ionicons name="checkmark-circle" size={24} color={c.primary} />
+                                                ) : (
+                                                    <Ionicons name="ellipse-outline" size={24} color={c.border} />
+                                                )}
+                                            </TouchableOpacity>
+                                        );
+                                    })}
                                 </View>
-                            </View>
+                            )}
                         </View>
 
                         <View style={styles.divider} />
@@ -410,12 +439,12 @@ export function BookingModal({ visible, onClose, onConfirm, pricePerNight, hostN
                     {/* Footer Button */}
                     <View style={styles.footer}>
                         <TouchableOpacity
-                            style={[styles.confirmButton, (!startDate || (!isHourlyService && !endDate) || isSubmitting) && styles.confirmButtonDisabled]}
-                            disabled={!startDate || (!isHourlyService && !endDate) || isSubmitting}
+                            style={[styles.confirmButton, (!startDate || (!isHourlyService && !endDate) || selectedPets.length === 0 || isSubmitting) && styles.confirmButtonDisabled]}
+                            disabled={!startDate || (!isHourlyService && !endDate) || selectedPets.length === 0 || isSubmitting}
                             onPress={handleConfirm}
                         >
                             <Text style={styles.confirmButtonText}>
-                                {isSubmitting ? i18n.t('booking_processing', { defaultValue: 'Processing...' }) : (startDate && (isHourlyService || endDate) ? i18n.t('booking_confirm') : i18n.t('booking_select_dates'))}
+                                {isSubmitting ? i18n.t('booking_processing', { defaultValue: 'Processing...' }) : (startDate && (isHourlyService || endDate) ? (selectedPets.length > 0 ? i18n.t('booking_confirm') : 'Select Pets') : i18n.t('booking_select_dates'))}
                             </Text>
                         </TouchableOpacity>
                     </View>
@@ -613,12 +642,19 @@ const makeStyles = (c: any) => StyleSheet.create({
         alignItems: 'center',
     },
     confirmButtonDisabled: {
-        backgroundColor: c.border,
+        opacity: 0.5,
     },
     confirmButtonText: {
         color: 'white',
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: 'bold',
+    },
+    petSelectRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 14,
+        borderWidth: 1,
+        borderRadius: 12,
     },
     timeScroll: {
         gap: 12,

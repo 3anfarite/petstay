@@ -221,7 +221,7 @@ export default function HostReservationsScreen() {
           <View style={styles.infoRow}>
             <Ionicons name="paw" size={16} color={c.textMuted} />
             <Text style={[styles.locationText, { color: c.textMuted }]} numberOfLines={1}>
-              {item.petType} — {serviceLabel}
+              {item.pets && item.pets.length > 0 ? item.pets.map(p => p.name).join(', ') : item.petType} — {serviceLabel}
             </Text>
           </View>
         </View>

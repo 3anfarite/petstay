@@ -443,7 +443,8 @@ export default function HostDetailScreen() {
                             hostName: host.hostName,
                             location: host.location,
                             serviceType: selectedService,
-                            petType: `x${data.petCount} Pets`,
+                            petType: `${data.pets.length} Pets`,
+                            pets: data.pets,
                             startDate: data.startDate.toISOString(),
                             endDate: data.endDate.toISOString(),
                             totalPrice: data.totalPrice,
@@ -457,7 +458,7 @@ export default function HostDetailScreen() {
                             guestName,
                             host.hostAvatar || '',
                             guestAvatar,
-                            `Hi ${guestName}! Thank you for your booking request for ${data.petCount} pet(s). I will review it and get back to you shortly!`
+                            `Hi ${guestName}! Thank you for your booking request for ${data.pets.length} pet(s). I will review it and get back to you shortly!`
                         );
 
                         setBookingModalVisible(false);

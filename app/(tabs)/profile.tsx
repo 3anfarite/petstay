@@ -218,6 +218,11 @@ export default function Profile() {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: c.textMuted }]}>{i18n.t('section_account')}</Text>
           <MenuItem icon="person-outline" label={i18n.t('menu_personal_info')} />
+          <MenuItem 
+            icon="paw-outline" 
+            label={i18n.t('menu_my_pets')} 
+            onPress={() => router.push('/pets' as any)} 
+          />
           <MenuItem icon="card-outline" label={i18n.t('menu_payments')} />
           <MenuItem icon="notifications-outline" label={i18n.t('menu_notifications')} />
           <MenuItem icon="shield-checkmark-outline" label={i18n.t('menu_privacy')} />

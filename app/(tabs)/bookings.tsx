@@ -239,12 +239,17 @@ export default function BookingScreen() {
           <Text style={[styles.price, { color: c.text }]}>
             {item.totalPrice} MAD <Text style={[styles.priceLabel, { color: c.textMuted }]}>{i18n.t('booking_total_lower')}</Text>
           </Text>
-          {item.petType && (
+          {item.pets && item.pets.length > 0 ? (
+            <View style={styles.infoRow}>
+              <Ionicons name="paw-outline" size={14} color={c.textMuted} />
+              <Text style={[styles.petType, { color: c.textMuted }]}>{item.pets.map(p => p.name).join(', ')}</Text>
+            </View>
+          ) : item.petType ? (
             <View style={styles.infoRow}>
               <Ionicons name="paw-outline" size={14} color={c.textMuted} />
               <Text style={[styles.petType, { color: c.textMuted }]}>{item.petType}</Text>
             </View>
-          )}
+          ) : null}
         </View>
 
         {/* Actions */}

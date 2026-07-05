@@ -1,5 +1,6 @@
 import { addDoc, collection, doc, getDocs, orderBy, query, updateDoc, where, getDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
+import { PetProfile } from './petService';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'declined' | 'completed' | 'cancelled';
 
@@ -13,6 +14,7 @@ export interface Booking {
     location?: string;
     serviceType: string;
     petType: string;
+    pets?: PetProfile[];
     startDate: string; // ISO 8601 Database string
     endDate: string; // ISO 8601 Database string
     totalPrice: number;

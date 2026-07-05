@@ -3,7 +3,7 @@ import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { db } from '@/lib/firebaseConfig';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
@@ -140,6 +140,10 @@ export default function HostProfile() {
     // Location Modal State
     const [isLocationModalVisible, setLocationModalVisible] = useState(false);
 
+    // Accepted Pets Modal State
+    const [isAcceptedPetsModalVisible, setAcceptedPetsModalVisible] = useState(false);
+    const [editingAcceptedPets, setEditingAcceptedPets] = useState<string[]>([]);
+
     // Vacation Modal State
     const [isVacationModalVisible, setVacationModalVisible] = useState(false);
     const [editingVacationDates, setEditingVacationDates] = useState<string[]>([]);
@@ -233,6 +237,62 @@ export default function HostProfile() {
         } finally {
             setIsLoadingProfile(false);
         }
+    };
+
+    const openAcceptedPetsModal = () => {
+        setEditingAcceptedPets(profileData?.petsAllowed || []);
+        setAcceptedPetsModalVisible(true);
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    };
+
+    const closeAcceptedPetsModal = () => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 200,
+                useNativeDriver: true,
+            }),
+        ]).start(() => setAcceptedPetsModalVisible(false));
+    };
+
+    const saveAcceptedPets = async () => {
+        if (!user?.uid) return;
+        try {
+            setIsLoadingProfile(true);
+            closeAcceptedPetsModal();
+            await updateDoc(doc(db, "users", user.uid), {
+                petsAllowed: editingAcceptedPets
+            });
+            setProfileData((prev: any) => ({ ...prev, petsAllowed: editingAcceptedPets }));
+        } catch (error) {
+            console.error("Failed to update accepted pets", error);
+        } finally {
+            setIsLoadingProfile(false);
+        }
+    };
+
+    const toggleAcceptedPet = (petType: string) => {
+        setEditingAcceptedPets(prev => 
+            prev.includes(petType) 
+            ? prev.filter(p => p !== petType) 
+            : [...prev, petType]
+        );
     };
 
     const openVacationModal = () => {
@@ -469,8 +529,8 @@ export default function HostProfile() {
                             <SettingItem 
                                 icon="heart-outline" 
                                 label={i18n.t('host_profile_pets')} 
-                                subValue={profileData?.petsAllowed?.length ? profileData.petsAllowed.map((p: string) => i18n.t(`pet_${p}`)).join(', ') : "All pets"}
-                                onPress={() => {}} 
+                                subValue={profileData?.petsAllowed?.length ? profileData.petsAllowed.map((p: string) => i18n.t(`pet_${p}`, { defaultValue: p })).join(', ') : "All pets"}
+                                onPress={openAcceptedPetsModal} 
                             />
                         </View>
 
@@ -668,6 +728,128 @@ export default function HostProfile() {
                             <Text style={styles.saveButtonText}>{i18n.t('menu_save', { defaultValue: 'Save Configuration' })}</Text>
                         </TouchableOpacity>
                     </View>
+                </View>
+            </Modal>
+
+            {/* Accepted Pets Modal */}
+            <Modal
+                visible={isAcceptedPetsModalVisible}
+                transparent={true}
+                animationType="none"
+                onRequestClose={closeAcceptedPetsModal}
+            >
+                <View style={[styles.modalOverlay, { backgroundColor: 'transparent' }]}>
+                    <Animated.View
+                        style={[
+                            StyleSheet.absoluteFill,
+                            { backgroundColor: 'rgba(0, 0, 0, 0.5)', opacity: fadeAnim }
+                        ]}
+                    >
+                        <TouchableOpacity style={{ flex: 1 }} onPress={closeAcceptedPetsModal} activeOpacity={1} />
+                    </Animated.View>
+
+                    <Animated.View style={[styles.modalContent, { backgroundColor: c.bg2, transform: [{ translateY }] }]}>
+                        {/* Handle bar */}
+                        <View style={{ alignItems: 'center', paddingTop: 12, paddingBottom: 4 }}>
+                            <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: c.border }} />
+                        </View>
+
+                        <View style={styles.modalHeader}>
+                            <Text style={[styles.modalTitle, { color: c.text }]}>
+                                {i18n.t('host_profile_pets')}
+                            </Text>
+                            <TouchableOpacity 
+                                onPress={closeAcceptedPetsModal}
+                                style={{ width: 32, height: 32, borderRadius: 16, backgroundColor: c.border + '60', justifyContent: 'center', alignItems: 'center' }}
+                            >
+                                <Ionicons name="close" size={18} color={c.text} />
+                            </TouchableOpacity>
+                        </View>
+                        
+                        <Text style={[styles.capacityDescription, { color: c.textMuted, textAlign: 'left', marginBottom: 20 }]}>
+                            {i18n.t('host_accepted_pets_desc', { defaultValue: 'Choose which furry (or scaly) friends you welcome into your home.' })}
+                        </Text>
+
+                        <View style={{ gap: 12, marginBottom: 28 }}>
+                            {[
+                                { key: 'dogs', icon: 'dog' as keyof typeof MaterialCommunityIcons.glyphMap, desc: 'Dogs of all breeds and sizes' },
+                                { key: 'cats', icon: 'cat' as keyof typeof MaterialCommunityIcons.glyphMap, desc: 'Indoor and outdoor cats' },
+                                { key: 'exotics', icon: 'turtle' as keyof typeof MaterialCommunityIcons.glyphMap, desc: 'Birds, reptiles, rabbits & more' },
+                            ].map((pet) => {
+                                const isSelected = editingAcceptedPets.includes(pet.key);
+                                return (
+                                    <TouchableOpacity
+                                        key={pet.key}
+                                        activeOpacity={0.7}
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            padding: 16,
+                                            borderWidth: isSelected ? 1.5 : 1,
+                                            borderColor: isSelected ? c.primary : c.border,
+                                            borderRadius: 16,
+                                            backgroundColor: isSelected ? c.primary + '08' : 'transparent',
+                                        }}
+                                        onPress={() => toggleAcceptedPet(pet.key)}
+                                    >
+                                        {/* Icon */}
+                                        <View style={{
+                                            width: 44,
+                                            height: 44,
+                                            borderRadius: 12,
+                                            backgroundColor: isSelected ? c.primary + '18' : c.border + '40',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            marginRight: 14,
+                                        }}>
+                                            <MaterialCommunityIcons name={pet.icon} size={24} color={isSelected ? c.primary : c.textMuted} />
+                                        </View>
+
+                                        {/* Text content */}
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{
+                                                fontSize: 16,
+                                                fontFamily: AppFonts.bodyBold,
+                                                color: c.text,
+                                            }}>
+                                                {i18n.t(`pet_${pet.key}`, { defaultValue: pet.key.charAt(0).toUpperCase() + pet.key.slice(1) })}
+                                            </Text>
+                                            <Text style={{
+                                                fontSize: 13,
+                                                fontFamily: AppFonts.body,
+                                                color: c.textMuted,
+                                                marginTop: 2,
+                                            }}>
+                                                {i18n.t(`pet_${pet.key}_desc`, { defaultValue: pet.desc })}
+                                            </Text>
+                                        </View>
+
+                                        {/* Check indicator */}
+                                        <View style={{
+                                            width: 26,
+                                            height: 26,
+                                            borderRadius: 13,
+                                            borderWidth: isSelected ? 0 : 1.5,
+                                            borderColor: c.border,
+                                            backgroundColor: isSelected ? c.primary : 'transparent',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                        }}>
+                                            {isSelected && <Ionicons name="checkmark" size={16} color="white" />}
+                                        </View>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+
+                        <TouchableOpacity 
+                            style={[styles.saveButton, { backgroundColor: c.primary }]} 
+                            onPress={saveAcceptedPets}
+                            activeOpacity={0.8}
+                        >
+                            <Text style={styles.saveButtonText}>{i18n.t('menu_save', { defaultValue: 'Save Configuration' })}</Text>
+                        </TouchableOpacity>
+                    </Animated.View>
                 </View>
             </Modal>
             
