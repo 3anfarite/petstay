@@ -5,9 +5,13 @@ import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
 import { useScrollToTop } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState, useEffect } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAuthStore } from '@/store/useAuthStore';
+import { BookingService } from '@/lib/bookingService';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebaseConfig';
 
 export default function HostDashboard() {
     const c = useColors();
@@ -17,12 +21,53 @@ export default function HostDashboard() {
     const [refreshing, setRefreshing] = useState(false);
     const scrollRef = useRef(null);
     useScrollToTop(scrollRef);
+    
+    const [rating, setRating] = useState<string>('-');
+    const [earnings, setEarnings] = useState<number>(0);
+    const { user } = useAuthStore();
+    const currentMonthName = new Date().toLocaleString(i18n.locale || 'en-US', { month: 'short' });
 
-    const onRefresh = useCallback(() => {
+    const fetchData = async () => {
+        if (!user) return;
+        try {
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                if (data.rating) {
+                    setRating(typeof data.rating === 'number' ? data.rating.toFixed(2) : data.rating);
+                } else {
+                    setRating('New');
+                }
+            }
+
+            const bookings = await BookingService.getHostBookings(user.uid);
+            let monthEarnings = 0;
+            const currentMonth = new Date().getMonth();
+            const currentYear = new Date().getFullYear();
+            
+            bookings.forEach(b => {
+                if (b.status === 'completed' || b.status === 'confirmed') {
+                    const d = new Date(b.startDate);
+                    if (d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+                        monthEarnings += b.totalPrice;
+                    }
+                }
+            });
+            setEarnings(monthEarnings);
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
+        }
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, [user]);
+
+    const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        // Simulate network fetch
-        setTimeout(() => setRefreshing(false), 1000);
-    }, []);
+        await fetchData();
+        setRefreshing(false);
+    }, [user]);
 
     // Fallback for primaryLight until theme is updated
     const primaryLight = c.primary + '20'; // 20% opacity
@@ -39,17 +84,22 @@ export default function HostDashboard() {
                     <Text style={[styles.subtitle, { color: c.textMuted }]}>{i18n.t('host_dashboard_welcome')}</Text>
                 </View>
 
-                {/* Stats Cards */}
-                {/* Stats Cards */}
                 <View style={styles.statsContainer}>
-                    <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
-                        <Ionicons name="wallet-outline" size={24} color={c.primary} />
-                        <Text style={[styles.statValue, { color: c.text }]}>1,240 MAD</Text>
-                        <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_earnings')}</Text>
-                    </View>
+                    <TouchableOpacity 
+                        style={[styles.statCard, { backgroundColor: c.bg2 }]}
+                        onPress={() => router.push('/(host)/earnings')}
+                        activeOpacity={0.7}
+                    >
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                            <Ionicons name="wallet-outline" size={24} color={c.primary} />
+                            <Ionicons name="chevron-forward" size={14} color={c.textMuted} />
+                        </View>
+                        <Text style={[styles.statValue, { color: c.text }]}>{earnings.toLocaleString()} MAD</Text>
+                        <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_earnings', { month: currentMonthName })}</Text>
+                    </TouchableOpacity>
                     <View style={[styles.statCard, { backgroundColor: c.bg2 }]}>
                         <Ionicons name="star-outline" size={24} color={c.primary} />
-                        <Text style={[styles.statValue, { color: c.text }]}>4.92</Text>
+                        <Text style={[styles.statValue, { color: c.text }]}>{rating}</Text>
                         <Text style={[styles.statLabel, { color: c.textMuted }]}>{i18n.t('host_dashboard_rating')}</Text>
                     </View>
                 </View>
@@ -81,16 +131,6 @@ export default function HostDashboard() {
                         <View style={{ flex: 1, gap: 4 }}>
                             <Text style={[styles.tipTitle, { color: c.text }]}>{i18n.t('host_tip_update_calendar')}</Text>
                             <Text style={[styles.tipDesc, { color: c.textMuted }]}>{i18n.t('host_tip_update_calendar_desc')}</Text>
-                        </View>
-                    </TouchableOpacity>
- 
-                    <TouchableOpacity style={[styles.tipCard, { backgroundColor: c.bg2 }]}>
-                        <View style={[styles.tipIcon, { backgroundColor: '#FCE4EC' }]}>
-                            <Ionicons name="flash-outline" size={24} color="#E91E63" />
-                        </View>
-                        <View style={{ flex: 1, gap: 4 }}>
-                            <Text style={[styles.tipTitle, { color: c.text }]}>{i18n.t('host_tip_boost_listing')}</Text>
-                            <Text style={[styles.tipDesc, { color: c.textMuted }]}>{i18n.t('host_tip_boost_listing_desc')}</Text>
                         </View>
                     </TouchableOpacity>
                 </View>

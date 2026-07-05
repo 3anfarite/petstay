@@ -53,6 +53,12 @@ export default function HostLayout() {
                     href: null,
                 }}
             />
+            <Tabs.Screen
+                name="earnings"
+                options={{
+                    href: null,
+                }}
+            />
 
             <Tabs.Screen
                 name="profile"

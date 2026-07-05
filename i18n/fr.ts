@@ -22,7 +22,7 @@ export default {
 
     host_dashboard_title: "Tableau de bord",
     host_dashboard_welcome: "Bon retour, Hôte !",
-    host_dashboard_earnings: "Revenus (Déc)",
+    host_dashboard_earnings: "Gains ({{month}})",
     host_dashboard_rating: "Note globale",
     host_dashboard_activity: "Activité récente",
     host_dashboard_no_activity: "Pas de notifications récentes.",
@@ -34,6 +34,21 @@ export default {
 
     host_reservations_title: "Réservations",
     host_reservations_empty: "Aucune réservation à venir.",
+
+    // Earnings Screen
+    earnings_title: "Revenus & Versements",
+    earnings_total_balance: "Total gagné",
+    earnings_expected: "en attente",
+    earnings_withdraw: "Retirer les fonds",
+    earnings_payout_title: "Versements",
+    earnings_payout_coming_soon: "L'intégration des versements arrive bientôt ! Vous pourrez retirer vos gains directement sur votre compte bancaire.",
+    earnings_bookings: "réservations",
+    earnings_history: "Historique des transactions",
+    earnings_all_time: "Tout le temps",
+    earnings_period_total: "Total de la période",
+    earnings_no_transactions: "Aucune transaction pour cette période",
+    earnings_by_service: "Revenus par service",
+    earnings_no_service_data: "Aucune donnée de service pour cette période",
 
     host_profile_title: "Profil",
     host_profile_logout: "Se déconnecter",
@@ -273,6 +288,8 @@ export default {
     service_grooming: "Toilettage",
     service_training: "Dressage",
     service_vets: "Services Vétérinaires",
+    service_other: "Autre",
+    earnings_guest: "Voyageur",
 
     pet_all: "Tous",
     pet_dogs: "Chiens",

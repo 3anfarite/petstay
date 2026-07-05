@@ -22,7 +22,7 @@ export default {
 
     host_dashboard_title: "Dashboard",
     host_dashboard_welcome: "Welcome back, Host!",
-    host_dashboard_earnings: "Earnings (Dec)",
+    host_dashboard_earnings: "Earnings ({{month}})",
     host_dashboard_rating: "Overall Rating",
     host_dashboard_activity: "Recent Activity",
     host_dashboard_no_activity: "No recent notifications.",
@@ -34,6 +34,21 @@ export default {
 
     host_reservations_title: "Reservations",
     host_reservations_empty: "No upcoming reservations.",
+
+    // Earnings Screen
+    earnings_title: "Earnings & Payouts",
+    earnings_total_balance: "Total Earned",
+    earnings_expected: "expected",
+    earnings_withdraw: "Withdraw Payout",
+    earnings_payout_title: "Payouts",
+    earnings_payout_coming_soon: "Payout integration is coming soon! You will be able to withdraw your earnings directly to your bank account.",
+    earnings_bookings: "bookings",
+    earnings_history: "Transaction History",
+    earnings_all_time: "All Time",
+    earnings_period_total: "Period total",
+    earnings_no_transactions: "No transactions for this period",
+    earnings_by_service: "Revenue by Service",
+    earnings_no_service_data: "No service data for this period",
 
     host_profile_title: "Profile",
     host_profile_logout: "Log Out",
@@ -273,6 +288,8 @@ export default {
     service_grooming: "Grooming",
     service_training: "Training",
     service_vets: "Vet Services",
+    service_other: "Other",
+    earnings_guest: "Guest",
 
     pet_all: "All",
     pet_dogs: "Dogs",
