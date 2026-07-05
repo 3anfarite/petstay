@@ -90,6 +90,16 @@ export default {
     booking_total_lower: "total",
     bookings_count_subtitle_one: "{{count}} {{status}} booking",
     bookings_count_subtitle_other: "{{count}} {{status}} bookings",
+    
+    // Double Booking Alerts
+    booking_overlap_notif_title: "⚠️ Double Booking Warning",
+    booking_overlap_notif_body: "You have overlapping booking requests. Please check your capacity!",
+    booking_overlap_alert_title: "Overlapping Bookings Detected",
+    booking_overlap_alert_body: "You have received booking requests that overlap in time. Please check the highlighted red cards and ensure you have enough capacity before accepting.",
+    booking_overlap_banner_title: "Double Booking Warning",
+    booking_overlap_banner_body: "This request overlaps with another reservation. Please check your capacity before accepting.",
+    booking_decline_overlap_msg: "Hello {{name}}, unfortunately I have to decline your booking request for {{date}} because this time slot has already been booked. I'm sorry for the inconvenience!",
+    booking_decline_normal_msg: "Hello {{name}}, unfortunately I have to decline your booking request for {{date}}. I'm sorry for the inconvenience!",
 
     // Onboarding
     onboarding_slide1_title: "Your Pet's Second Home",

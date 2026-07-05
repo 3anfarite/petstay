@@ -90,6 +90,16 @@ export default {
     booking_total_lower: "total",
     bookings_count_subtitle_one: "{{count}} réservation {{status}}",
     bookings_count_subtitle_other: "{{count}} réservations {{status}}",
+    
+    // Double Booking Alerts
+    booking_overlap_notif_title: "⚠️ Avertissement de Double Réservation",
+    booking_overlap_notif_body: "Vous avez des demandes de réservation qui se chevauchent. Veuillez vérifier votre capacité !",
+    booking_overlap_alert_title: "Réservations Superposées Détectées",
+    booking_overlap_alert_body: "Vous avez reçu des demandes de réservation qui se chevauchent dans le temps. Veuillez vérifier les cartes mises en évidence en rouge et vous assurer d'avoir une capacité suffisante avant d'accepter.",
+    booking_overlap_banner_title: "Avertissement de Double Réservation",
+    booking_overlap_banner_body: "Cette demande chevauche une autre réservation. Veuillez vérifier votre capacité avant d'accepter.",
+    booking_decline_overlap_msg: "Bonjour {{name}}, malheureusement, je dois décliner votre demande de réservation pour le {{date}} car ce créneau horaire a déjà été réservé. Désolé pour le désagrément !",
+    booking_decline_normal_msg: "Bonjour {{name}}, malheureusement, je dois décliner votre demande de réservation pour le {{date}}. Désolé pour le désagrément !",
 
     // Onboarding
     onboarding_slide1_title: "La deuxième maison de votre animal",

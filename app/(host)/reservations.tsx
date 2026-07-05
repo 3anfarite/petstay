@@ -1,18 +1,20 @@
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
+import { Booking, BookingService } from '@/lib/bookingService';
+import { ChatService } from '@/lib/chatService';
+import { NotificationService } from '@/lib/notificationService';
+import { useAuthStore } from '@/store/useAuthStore';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { BookingService, Booking } from '@/lib/bookingService';
-import { ChatService } from '@/lib/chatService';
-import { useAuthStore } from '@/store/useAuthStore';
-import { AppFonts } from '@/constants/theme';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   Animated,
   FlatList,
   LayoutAnimation,
   Platform,
+  RefreshControl,
   StatusBar,
   StyleSheet,
   Text,
@@ -99,11 +101,12 @@ export default function HostReservationsScreen() {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const { user } = useAuthStore();
 
-  const fetchBookings = async () => {
+  const fetchBookings = async (isRefreshing = false) => {
     if (!user) return;
-    setIsLoading(true);
+    if (!isRefreshing) setIsLoading(true);
     try {
       const data = await BookingService.getHostBookings(user.uid);
       setBookings(data);
@@ -111,14 +114,57 @@ export default function HostReservationsScreen() {
       console.error('Failed to fetch bookings:', error);
     } finally {
       setIsLoading(false);
+      setRefreshing(false);
     }
+  };
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchBookings(true);
   };
 
   useEffect(() => {
     fetchBookings();
   }, [user]);
 
-  const handleUpdateStatus = (bookingId: string, status: 'confirmed' | 'declined' | 'cancelled') => {
+  const hasAlertedRef = React.useRef(false);
+
+  useEffect(() => {
+    if (bookings.length > 0 && !hasAlertedRef.current) {
+      let foundOverlap = false;
+      const pendingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed');
+
+      for (let i = 0; i < pendingBookings.length; i++) {
+        for (let j = i + 1; j < pendingBookings.length; j++) {
+          const start1 = new Date(pendingBookings[i].startDate).getTime();
+          const end1 = new Date(pendingBookings[i].endDate).getTime();
+          const start2 = new Date(pendingBookings[j].startDate).getTime();
+          const end2 = new Date(pendingBookings[j].endDate).getTime();
+
+          if (start1 < end2 && end1 > start2) {
+            foundOverlap = true;
+            break;
+          }
+        }
+        if (foundOverlap) break;
+      }
+
+      if (foundOverlap) {
+        hasAlertedRef.current = true;
+        // Trigger local notification/alert
+        NotificationService.sendLocalNotification(
+          i18n.t('booking_overlap_notif_title', { defaultValue: "⚠️ Double Booking Warning" }),
+          i18n.t('booking_overlap_notif_body', { defaultValue: "You have overlapping booking requests. Please check your capacity!" })
+        );
+        Alert.alert(
+          i18n.t('booking_overlap_alert_title', { defaultValue: "Overlapping Bookings Detected" }),
+          i18n.t('booking_overlap_alert_body', { defaultValue: "You have received booking requests that overlap in time. Please check the highlighted red cards and ensure you have enough capacity before accepting." })
+        );
+      }
+    }
+  }, [bookings]);
+
+  const handleUpdateStatus = (bookingId: string, status: 'confirmed' | 'declined' | 'cancelled', hasOverlap?: boolean) => {
     const titles = {
       confirmed: 'Accept Booking',
       declined: 'Decline Booking',
@@ -142,12 +188,27 @@ export default function HostReservationsScreen() {
             try {
               const bookingToUpdate = bookings.find(b => b.id === bookingId);
               const dbStatus = status === 'declined' ? 'cancelled' : status;
-              
+
               await BookingService.updateBookingStatus(bookingId, dbStatus);
               setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: dbStatus } : b));
 
               // If declining, send an automated message
               if (status === 'declined' && bookingToUpdate && user) {
+                const dateStr = new Date(bookingToUpdate.startDate).toLocaleDateString();
+                let declineMsg = i18n.t('booking_decline_normal_msg', { 
+                  defaultValue: `Hello ${bookingToUpdate.guestName}, unfortunately I have to decline your booking request for ${dateStr}. I'm sorry for the inconvenience!`,
+                  name: bookingToUpdate.guestName,
+                  date: dateStr
+                });
+                
+                if (hasOverlap) {
+                  declineMsg = i18n.t('booking_decline_overlap_msg', { 
+                    defaultValue: `Hello ${bookingToUpdate.guestName}, unfortunately I have to decline your booking request for ${dateStr} because this time slot has already been booked. I'm sorry for the inconvenience!`,
+                    name: bookingToUpdate.guestName,
+                    date: dateStr
+                  });
+                }
+
                 await ChatService.startChatAndSendMessage(
                   user.uid,
                   bookingToUpdate.guestId,
@@ -155,12 +216,12 @@ export default function HostReservationsScreen() {
                   bookingToUpdate.guestName,
                   user.photoURL || '',
                   bookingToUpdate.guestAvatar || '',
-                  `Hello ${bookingToUpdate.guestName}, unfortunately I have to decline your booking request for ${new Date(bookingToUpdate.startDate).toLocaleDateString()}. I'm sorry for the inconvenience!`
+                  declineMsg
                 );
               }
             } catch (error) {
               console.error('Failed to update booking:', error);
-              Alert.alert('Error', 'Could not update the booking. Please try again.');
+              Alert.alert(i18n.t('error_title', { defaultValue: 'Error' }), i18n.t('error_booking_update', { defaultValue: 'Could not update the booking. Please try again.' }));
             }
           }
         }
@@ -200,15 +261,62 @@ export default function HostReservationsScreen() {
     const statusConfig = STATUS_CONFIG[item.status] || STATUS_CONFIG.pending;
     const serviceLabel = item.serviceType ? i18n.t(`service_${item.serviceType}`, { defaultValue: item.serviceType }) : '';
 
+    const hasOverlap = (() => {
+      if (item.status !== 'pending' && item.status !== 'confirmed') return false;
+      const itemStart = new Date(item.startDate).getTime();
+      const itemEnd = new Date(item.endDate).getTime();
+
+      return bookings.some(b => {
+        if (b.id === item.id) return false;
+        if (b.status !== 'pending' && b.status !== 'confirmed') return false;
+        const bStart = new Date(b.startDate).getTime();
+        const bEnd = new Date(b.endDate).getTime();
+        return itemStart < bEnd && itemEnd > bStart;
+      });
+    })();
+
     return (
-      <View style={[styles.card, { backgroundColor: c.bg2 }]}>
+      <View style={[
+        styles.card,
+        {
+          backgroundColor: hasOverlap ? '#FEF2F2' : c.bg2,
+          borderColor: hasOverlap ? '#EF4444' : 'transparent',
+        }
+      ]}>
         {/* Status Pill */}
-        <View style={[styles.statusPill, { backgroundColor: statusConfig.bg }]}>
-          <Ionicons name={statusConfig.icon} size={14} color={statusConfig.color} />
-          <Text style={[styles.statusText, { color: statusConfig.color }]}>
-            {i18n.t(`booking_status_${item.status}`)}
-          </Text>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: hasOverlap ? 12 : 0 }}>
+          <View style={[styles.statusPill, { backgroundColor: statusConfig.bg }]}>
+            <Ionicons name={statusConfig.icon} size={14} color={statusConfig.color} />
+            <Text style={[styles.statusText, { color: statusConfig.color }]}>
+              {i18n.t(`booking_status_${item.status}`)}
+            </Text>
+          </View>
         </View>
+
+        {/* Prominent Overlap Banner */}
+        {hasOverlap && (
+          <View style={{
+            backgroundColor: '#FEE2E2',
+            padding: 12,
+            borderRadius: 8,
+            marginBottom: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: 8,
+            borderLeftWidth: 4,
+            borderLeftColor: '#EF4444'
+          }}>
+            <Ionicons name="warning" size={20} color="#DC2626" />
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#DC2626', fontFamily: AppFonts.bodyBold, fontSize: 13, marginBottom: 2 }}>
+                {i18n.t('booking_overlap_banner_title', { defaultValue: 'Double Booking Warning' })}
+              </Text>
+              <Text style={{ color: '#DC2626', fontFamily: AppFonts.body, fontSize: 12 }}>
+                {i18n.t('booking_overlap_banner_body', { defaultValue: 'This request overlaps with another reservation. Please check your capacity before accepting.' })}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Guest + Service */}
         <View style={styles.mainInfo}>
@@ -280,7 +388,7 @@ export default function HostReservationsScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.secondaryAction, { borderColor: '#D93025' }]}
-                onPress={() => item.id && handleUpdateStatus(item.id, 'declined')}
+                onPress={() => item.id && handleUpdateStatus(item.id, 'declined', hasOverlap)}
               >
                 <Text style={[styles.secondaryActionText, { color: '#D93025' }]}>{i18n.t('host_action_decline', { defaultValue: 'Decline' })}</Text>
               </TouchableOpacity>
@@ -347,6 +455,14 @@ export default function HostReservationsScreen() {
           keyExtractor={(item) => item.id!}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={c.primary}
+              colors={[c.primary]}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Ionicons name="calendar-clear-outline" size={64} color={c.textMuted} style={{ opacity: 0.3 }} />
