@@ -328,7 +328,7 @@ export default function HostListings() {
 
             {/* Editor Modal */}
             <Modal visible={isFormVisible} animationType="slide" presentationStyle="pageSheet">
-                <View style={[styles.modalContainer, { backgroundColor: c.bg2 }]}>
+                <View style={[styles.modalContainer, { backgroundColor: c.bg2, paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
                     <View style={[styles.modalHeader, { borderBottomColor: c.border }]}>
                         <TouchableOpacity onPress={() => setIsFormVisible(false)} style={styles.modalCancel}>
                             <Ionicons name="close" size={24} color={c.text} />

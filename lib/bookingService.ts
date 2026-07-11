@@ -1,4 +1,4 @@
-import { addDoc, collection, doc, getDocs, orderBy, query, updateDoc, where, getDoc } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, getDocsFromServer, getDocsFromCache, orderBy, query, updateDoc, where, getDoc } from "firebase/firestore";
 import { db } from "./firebaseConfig";
 import { PetProfile } from './petService';
 
@@ -126,7 +126,7 @@ export const BookingService = {
     /**
      * Fetch all incoming bookings where the current user is the Host
      */
-    getHostBookings: async (hostId: string): Promise<Booking[]> => {
+    getHostBookings: async (hostId: string, options: { forceRefresh?: boolean } = {}): Promise<Booking[]> => {
         try {
             const bookingsRef = collection(db, "bookings");
             const q = query(
@@ -134,7 +134,20 @@ export const BookingService = {
                 where("hostId", "==", hostId)
             );
             
-            const querySnapshot = await getDocs(q);
+            let querySnapshot;
+            if (options.forceRefresh) {
+                querySnapshot = await getDocsFromServer(q);
+            } else {
+                try {
+                    querySnapshot = await getDocsFromCache(q);
+                    if (querySnapshot.empty) {
+                        querySnapshot = await getDocsFromServer(q);
+                    }
+                } catch (e) {
+                    querySnapshot = await getDocsFromServer(q);
+                }
+            }
+
             const now = Date.now();
 
             const rawBookings = await Promise.all(querySnapshot.docs.map(async (docSnap) => {

@@ -26,6 +26,7 @@ const MAPPING = {
   'scissors': 'content-cut',
   'graduationcap.fill': 'school',
   'cross.case.fill': 'medical-services',
+  'chart.bar.fill': 'dashboard',
 } as IconMapping;
 
 /**

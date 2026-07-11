@@ -36,7 +36,7 @@ export default function EarningsScreen() {
     if (!user) return;
     if (!isRefreshing) setIsLoading(true);
     try {
-      const data = await BookingService.getHostBookings(user.uid);
+      const data = await BookingService.getHostBookings(user.uid, { forceRefresh: isRefreshing });
       setBookings(data);
     } catch (error) {
       console.error('Failed to fetch earnings data:', error);
@@ -98,13 +98,15 @@ export default function EarningsScreen() {
   const lastMonthLabel = new Date(lastMonthYear, lastMonth).toLocaleString(i18n.locale || 'en-US', { month: 'long' });
 
   // --- Service Revenue Breakdown ---
-  const SERVICE_COLORS: Record<string, string> = {
-    boarding: '#6366F1',
-    walking: '#F59E0B',
-    grooming: '#EC4899',
-    training: '#14B8A6',
-    vets: '#8B5CF6',
-    daycare: '#3B82F6',
+  // Deterministic color hashing so "boarding" always gets the same unique color
+  const getServiceColor = (serviceStr: string) => {
+    if (!serviceStr) return c.textMuted;
+    let hash = 0;
+    for (let i = 0; i < serviceStr.length; i++) {
+      hash = serviceStr.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 70%, 60%)`; // Vibrant but soft
   };
 
   const serviceRevenue = (() => {
@@ -130,10 +132,10 @@ export default function EarningsScreen() {
   const renderTransaction = ({ item }: { item: Booking }) => {
     const date = new Date(item.startDate);
     const dateStr = date.toLocaleDateString(i18n.locale || 'en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    const svcColor = SERVICE_COLORS[(item.serviceType || '').toLowerCase()] || c.textMuted;
+    const svcColor = getServiceColor((item.serviceType || '').toLowerCase());
 
     return (
-      <View style={[styles.transactionRow, { borderBottomColor: c.border }]}>
+      <View style={[styles.transactionRow, { borderBottomColor: c.border, paddingHorizontal: 20 }]}>
         <View style={[styles.transactionIcon, { backgroundColor: svcColor + '18' }]}>
           <Ionicons name="checkmark-circle" size={22} color={svcColor} />
         </View>
@@ -154,7 +156,7 @@ export default function EarningsScreen() {
 
   const ListHeader = () => (
     <>
-      {/* Balance Section — Neutral */}
+      {/* Balance Section */}
       <View style={[styles.balanceCard, { backgroundColor: c.bg2 }]}>
         <Text style={[styles.balanceLabel, { color: c.textMuted }]}>
           {i18n.t('earnings_total_balance', { defaultValue: 'Total Earned' })}
@@ -171,123 +173,125 @@ export default function EarningsScreen() {
           </View>
         )}
         <TouchableOpacity
-          style={[styles.payoutButton, { backgroundColor: c.bg, borderColor: c.border, borderWidth: 1 }]}
+          style={[styles.payoutButton, { backgroundColor: c.primary + '15' }]}
           onPress={() => Alert.alert(
             i18n.t('earnings_payout_title', { defaultValue: 'Payouts' }),
             i18n.t('earnings_payout_coming_soon', { defaultValue: 'Payout integration is coming soon! You will be able to withdraw your earnings directly to your bank account.' })
           )}
         >
-          <Ionicons name="wallet-outline" size={18} color={c.text} />
-          <Text style={[styles.payoutButtonText, { color: c.text }]}>
+          <Ionicons name="wallet-outline" size={18} color={c.primary} />
+          <Text style={[styles.payoutButtonText, { color: c.primary }]}>
             {i18n.t('earnings_withdraw', { defaultValue: 'Withdraw Payout' })}
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Monthly Comparison */}
-      <View style={styles.comparisonRow}>
-        <View style={[styles.comparisonCard, { backgroundColor: c.bg2 }]}>
-          <Text style={[styles.comparisonLabel, { color: c.textMuted }]}>{currentMonthLabel}</Text>
-          <Text style={[styles.comparisonValue, { color: c.text }]}>{thisMonthEarnings.toLocaleString()} MAD</Text>
-          <Text style={[styles.comparisonSub, { color: c.textMuted }]}>
-            {thisMonthCompleted.length} {i18n.t('earnings_bookings', { defaultValue: 'bookings' })}
-          </Text>
+      <View style={{ paddingHorizontal: 20 }}>
+        {/* Monthly Comparison */}
+        <View style={styles.comparisonRow}>
+          <View style={[styles.comparisonCard, { backgroundColor: c.bg2 }]}>
+            <Text style={[styles.comparisonLabel, { color: c.textMuted }]}>{currentMonthLabel}</Text>
+            <Text style={[styles.comparisonValue, { color: c.text }]}>{thisMonthEarnings.toLocaleString()} MAD</Text>
+            <Text style={[styles.comparisonSub, { color: c.textMuted }]}>
+              {thisMonthCompleted.length} {i18n.t('earnings_bookings', { defaultValue: 'bookings' })}
+            </Text>
+          </View>
+          <View style={[styles.comparisonCard, { backgroundColor: c.bg2 }]}>
+            <Text style={[styles.comparisonLabel, { color: c.textMuted }]}>{lastMonthLabel}</Text>
+            <Text style={[styles.comparisonValue, { color: c.text }]}>{lastMonthEarnings.toLocaleString()} MAD</Text>
+            <Text style={[styles.comparisonSub, { color: c.textMuted }]}>
+              {lastMonthCompleted.length} {i18n.t('earnings_bookings', { defaultValue: 'bookings' })}
+            </Text>
+          </View>
         </View>
-        <View style={[styles.comparisonCard, { backgroundColor: c.bg2 }]}>
-          <Text style={[styles.comparisonLabel, { color: c.textMuted }]}>{lastMonthLabel}</Text>
-          <Text style={[styles.comparisonValue, { color: c.text }]}>{lastMonthEarnings.toLocaleString()} MAD</Text>
-          <Text style={[styles.comparisonSub, { color: c.textMuted }]}>
-            {lastMonthCompleted.length} {i18n.t('earnings_bookings', { defaultValue: 'bookings' })}
-          </Text>
+
+        {/* Revenue by Service Chart */}
+        <Text style={[styles.sectionTitle, { color: c.text }]}>
+          {i18n.t('earnings_by_service', { defaultValue: 'Revenue by Service' })}
+        </Text>
+        <View style={[styles.chartCard, { backgroundColor: c.bg2 }]}>
+          {serviceRevenue.length === 0 ? (
+            <Text style={[styles.chartEmpty, { color: c.textMuted }]}>
+              {i18n.t('earnings_no_service_data', { defaultValue: 'No service data for this period' })}
+            </Text>
+          ) : (
+            serviceRevenue.map(({ service, total }) => {
+              const barColor = getServiceColor(service);
+              const barWidth = (total / maxServiceRevenue) * 100;
+              const label = i18n.t(`service_${service}`, { defaultValue: service.charAt(0).toUpperCase() + service.slice(1) });
+
+              return (
+                <View key={service} style={styles.chartRow}>
+                  <View style={styles.chartLabelRow}>
+                    <View style={[styles.chartDot, { backgroundColor: barColor }]} />
+                    <Text style={[styles.chartLabel, { color: c.text }]}>{label}</Text>
+                    <Text style={[styles.chartAmount, { color: c.textMuted }]}>{total.toLocaleString()} MAD</Text>
+                  </View>
+                  <View style={[styles.chartBarBg, { backgroundColor: c.bg }]}>
+                    <View style={[styles.chartBarFill, { backgroundColor: barColor, width: `${Math.max(barWidth, 4)}%` }]} />
+                  </View>
+                </View>
+              );
+            })
+          )}
         </View>
-      </View>
 
-      {/* Revenue by Service Chart */}
-      <Text style={[styles.sectionTitle, { color: c.text }]}>
-        {i18n.t('earnings_by_service', { defaultValue: 'Revenue by Service' })}
-      </Text>
-      <View style={[styles.chartCard, { backgroundColor: c.bg2 }]}>
-        {serviceRevenue.length === 0 ? (
-          <Text style={[styles.chartEmpty, { color: c.textMuted }]}>
-            {i18n.t('earnings_no_service_data', { defaultValue: 'No service data for this period' })}
-          </Text>
-        ) : (
-          serviceRevenue.map(({ service, total }) => {
-            const barColor = SERVICE_COLORS[service] || c.textMuted;
-            const barWidth = (total / maxServiceRevenue) * 100;
-            const label = i18n.t(`service_${service}`, { defaultValue: service.charAt(0).toUpperCase() + service.slice(1) });
-
+        {/* Period Tabs */}
+        <Text style={[styles.sectionTitle, { color: c.text, marginTop: 8 }]}>
+          {i18n.t('earnings_history', { defaultValue: 'Transaction History' })}
+        </Text>
+        <View style={styles.periodTabs}>
+          {(['thisMonth', 'lastMonth', 'allTime'] as PeriodTab[]).map(tab => {
+            const isActive = activePeriod === tab;
+            const labels: Record<PeriodTab, string> = {
+              thisMonth: currentMonthLabel,
+              lastMonth: lastMonthLabel,
+              allTime: i18n.t('earnings_all_time', { defaultValue: 'All Time' }),
+            };
             return (
-              <View key={service} style={styles.chartRow}>
-                <View style={styles.chartLabelRow}>
-                  <View style={[styles.chartDot, { backgroundColor: barColor }]} />
-                  <Text style={[styles.chartLabel, { color: c.text }]}>{label}</Text>
-                  <Text style={[styles.chartAmount, { color: c.textMuted }]}>{total.toLocaleString()} MAD</Text>
-                </View>
-                <View style={[styles.chartBarBg, { backgroundColor: c.bg }]}>
-                  <View style={[styles.chartBarFill, { backgroundColor: barColor, width: `${Math.max(barWidth, 4)}%` }]} />
-                </View>
-              </View>
+              <TouchableOpacity
+                key={tab}
+                onPress={() => setActivePeriod(tab)}
+                style={[
+                  styles.periodTab,
+                  { backgroundColor: isActive ? c.primary : c.bg2 },
+                ]}
+              >
+                <Text style={[
+                  styles.periodTabText,
+                  { color: isActive ? '#fff' : c.textMuted },
+                ]}>
+                  {labels[tab]}
+                </Text>
+              </TouchableOpacity>
             );
-          })
-        )}
-      </View>
+          })}
+        </View>
 
-      {/* Period Tabs */}
-      <Text style={[styles.sectionTitle, { color: c.text, marginTop: 8 }]}>
-        {i18n.t('earnings_history', { defaultValue: 'Transaction History' })}
-      </Text>
-      <View style={styles.periodTabs}>
-        {(['thisMonth', 'lastMonth', 'allTime'] as PeriodTab[]).map(tab => {
-          const isActive = activePeriod === tab;
-          const labels: Record<PeriodTab, string> = {
-            thisMonth: currentMonthLabel,
-            lastMonth: lastMonthLabel,
-            allTime: i18n.t('earnings_all_time', { defaultValue: 'All Time' }),
-          };
-          return (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActivePeriod(tab)}
-              style={[
-                styles.periodTab,
-                { backgroundColor: isActive ? c.text : c.bg2 },
-              ]}
-            >
-              <Text style={[
-                styles.periodTabText,
-                { color: isActive ? c.bg : c.textMuted },
-              ]}>
-                {labels[tab]}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
-
-      {/* Earnings for selected period */}
-      <View style={[styles.periodSummary, { backgroundColor: c.bg2 }]}>
-        <Text style={[styles.periodSummaryLabel, { color: c.textMuted }]}>
-          {i18n.t('earnings_period_total', { defaultValue: 'Period total' })}
-        </Text>
-        <Text style={[styles.periodSummaryValue, { color: c.text }]}>
-          {activeEarnings.toLocaleString()} MAD
-        </Text>
+        {/* Earnings for selected period */}
+        <View style={[styles.periodSummary, { backgroundColor: c.bg2 }]}>
+          <Text style={[styles.periodSummaryLabel, { color: c.textMuted }]}>
+            {i18n.t('earnings_period_total', { defaultValue: 'Period total' })}
+          </Text>
+          <Text style={[styles.periodSummaryValue, { color: c.text }]}>
+            {activeEarnings.toLocaleString()} MAD
+          </Text>
+        </View>
       </View>
     </>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: c.bg, paddingTop: insets.top }]}>
+    <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <Ionicons name="chevron-back" size={24} color={c.text} />
+      <View style={[styles.header, { backgroundColor: c.bg2 }]}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+          <Ionicons name="arrow-back" size={24} color={c.text} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: c.text }]}>
           {i18n.t('earnings_title', { defaultValue: 'Earnings & Payouts' })}
         </Text>
-        <View style={{ width: 32 }} />
+        <View style={styles.backBtn} />
       </View>
 
       <FlatList
@@ -321,7 +325,6 @@ export default function EarningsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   header: {
     flexDirection: 'row',
@@ -341,20 +344,15 @@ const styles = StyleSheet.create({
     fontFamily: AppFonts.bodyBold,
   },
   listContent: {
-    paddingHorizontal: 20,
     paddingBottom: 40,
   },
   // Balance Card
   balanceCard: {
-    borderRadius: 24,
+
     padding: 28,
+    paddingTop: 8,
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 20,
-    elevation: 6,
   },
   balanceLabel: {
     fontSize: 14,
