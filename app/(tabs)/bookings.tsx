@@ -75,11 +75,8 @@ const skeletonStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   }
 });
 
@@ -438,7 +435,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
-    elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   },
   tabText: {
     fontSize: 14,
@@ -456,11 +454,8 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   },
   statusPill: {
     flexDirection: 'row',
@@ -626,7 +621,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
     shadowRadius: 16,
-    elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   },
   exploreButtonText: {
     color: 'white',

@@ -34,6 +34,22 @@ export const useAuthStore = create<AuthState>((set) => ({
 
                     if (docSnap.exists()) {
                         userRole = docSnap.data()?.role || 'guest'; // Keep guest fallback for very old docs
+                    } else {
+                        // Check if the user was literally just created (within the last 5 seconds)
+                        // This prevents a race condition where the auth listener fires before the signup function finishes writing the Firestore document!
+                        const creationTime = new Date(firebaseUser.metadata.creationTime || '').getTime();
+                        const now = new Date().getTime();
+                        
+                        if (now - creationTime < 5000) {
+                            console.log("New user detected, waiting for Firestore document to be created...");
+                            userRole = 'unassigned';
+                        } else {
+                            // GHOST SESSION DETECTED: They are authenticated but have no database profile!
+                            console.warn("Ghost session detected (No Firestore Profile). Forcing logout.");
+                            await auth.signOut();
+                            set({ user: null, activeRole: 'unassigned', isLoading: false });
+                            return;
+                        }
                     }
 
                     set({

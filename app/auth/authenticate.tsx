@@ -1,4 +1,5 @@
 import { AppFonts } from '@/constants/theme';
+import { BackButton } from '@/components/ui/BackButton';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { AuthService } from '@/lib/authService';
@@ -136,9 +137,7 @@ export default function AuthScreen() {
                 style={{ flex: 1 }}
             >
                 {/* Close Button */}
-                <TouchableOpacity onPress={() => router.back()} style={[styles.backButton, { backgroundColor: c.bg2 }]}>
-                    <Ionicons name="close" size={22} color={c.text} />
-                </TouchableOpacity>
+                <BackButton icon="close" style={styles.backButton} />
 
                 <ScrollView
                     style={{ flex: 1 }}
@@ -387,11 +386,8 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.12,
-        shadowRadius: 10,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
     },
     buttonText: {
         color: 'white',

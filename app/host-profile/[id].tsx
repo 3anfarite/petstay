@@ -23,6 +23,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import HostCard from '@/components/host-card';
+import { BackButton } from '@/components/ui/BackButton';
 import { AppFonts } from '@/constants/theme';
 
 const { width } = Dimensions.get('window');
@@ -55,12 +56,7 @@ function HostProfileSkeleton() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header / Cover skeleton */}
                 <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: c.primary + '10' }]}>
-                    <TouchableOpacity
-                        style={[styles.backButton, { backgroundColor: c.bg }]}
-                        onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color={c.text} />
-                    </TouchableOpacity>
+                    <BackButton style={styles.backButton} icon="arrow-back" />
 
                     <View style={styles.profileInfo}>
                         {/* Avatar */}
@@ -159,12 +155,7 @@ export default function PublicHostProfile() {
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
                 {/* Header / Cover */}
                 <View style={[styles.header, { paddingTop: insets.top + 20, backgroundColor: c.primary + '10' }]}>
-                    <TouchableOpacity 
-                        style={[styles.backButton, { backgroundColor: c.bg }]} 
-                        onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color={c.text} />
-                    </TouchableOpacity>
+                    <BackButton style={styles.backButton} icon="arrow-back" />
 
                     <View style={styles.profileInfo}>
                         <Image
@@ -264,7 +255,8 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 10,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,

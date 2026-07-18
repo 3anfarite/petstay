@@ -183,9 +183,6 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 24,
         alignItems: 'center',
-        shadowOffset: { width: 0, height: 8 },
-        shadowRadius: 16,
-        elevation: 4, // for android
     },
     iconBox: {
         width: 56,
@@ -232,11 +229,8 @@ const styles = StyleSheet.create({
         borderRadius: 30,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 12,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
     },
     continueText: {
         fontSize: 18,

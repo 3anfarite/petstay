@@ -1,4 +1,5 @@
 import { AppFonts } from '@/constants/theme';
+import { BackButton } from '@/components/ui/BackButton';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Booking, BookingService } from '@/lib/bookingService';
@@ -285,9 +286,7 @@ export default function EarningsScreen() {
     <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
       {/* Header */}
       <View style={[styles.header, { backgroundColor: c.bg2 }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={c.text} />
-        </TouchableOpacity>
+        <BackButton style={styles.backBtn} icon="arrow-back" />
         <Text style={[styles.headerTitle, { color: c.text }]}>
           {i18n.t('earnings_title', { defaultValue: 'Earnings & Payouts' })}
         </Text>
@@ -402,11 +401,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     gap: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   },
   comparisonLabel: {
     fontSize: 13,
@@ -505,11 +501,8 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 28,
     gap: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
   },
   chartEmpty: {
     fontSize: 14,

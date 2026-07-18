@@ -1,4 +1,5 @@
 import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
+import { BackButton } from '@/components/ui/BackButton';
 import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -109,9 +110,7 @@ export default function HostSetupScreen() {
                 style={{ flex: 1 }}
             >
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={28} color={c.text} />
-                    </TouchableOpacity>
+                    <BackButton style={{ marginLeft: 16, marginTop: 10 }} />
                 </View>
 
                 <ScrollView
@@ -313,11 +312,8 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
-        shadowRadius: 8,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
     },
     submitText: {
         color: 'white',

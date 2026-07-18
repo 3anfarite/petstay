@@ -30,7 +30,7 @@ const SkeletonPulse = ({ width, height, borderRadius, style }: any) => {
 };
 
 const ListingSkeleton = ({ c }: { c: any }) => (
-    <View style={{ backgroundColor: c.bg2, borderRadius: 20, padding: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 8, elevation: 2 }}>
+    <View style={{ backgroundColor: c.bg2, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' }}>
         <SkeletonPulse width={90} height={24} borderRadius={12} />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
             <View style={{ flex: 1, gap: 8 }}>
@@ -528,11 +528,8 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 20,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-        elevation: 4,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
     },
     statusPill: {
         flexDirection: 'row',
@@ -686,11 +683,8 @@ const styles = StyleSheet.create({
     formSection: {
         borderRadius: 20,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.04,
-        shadowRadius: 8,
-        elevation: 2,
+        borderWidth: 1,
+        borderColor: "rgba(0,0,0,0.06)",
     },
     sectionLabel: {
         fontSize: 17,

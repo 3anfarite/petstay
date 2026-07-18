@@ -145,17 +145,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 18,
         padding: 12,
-        marginBottom: 14,
+        marginBottom: 16,
         gap: 14,
-        ...Platform.select({
-            ios: {
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.06,
-                shadowRadius: 10,
-            },
-            android: { elevation: 2 },
-        }),
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.06)',
     },
     imageWrapper: {
         borderRadius: 14,

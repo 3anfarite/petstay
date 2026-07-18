@@ -1,8 +1,8 @@
 import { useColors } from "@/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from 'expo-image';
 import React from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Image } from 'expo-image';
 
 type HostCardProps = {
   name: string;
@@ -37,10 +37,10 @@ export default function HostCard({
       <View style={styles.imageContainer}>
         <Image source={{ uri: image }} style={styles.image} />
         <TouchableOpacity style={styles.favoriteButton} onPress={onToggleWishlist}>
-          <Ionicons 
-            name={isWishlisted ? "heart" : "heart-outline"} 
-            size={24} 
-            color={isWishlisted ? "#FF385C" : c.bg2} 
+          <Ionicons
+            name={isWishlisted ? "heart" : "heart-outline"}
+            size={24}
+            color={isWishlisted ? "#FF385C" : c.bg2}
           />
         </TouchableOpacity>
         <View style={styles.servicesContainer}>
@@ -85,21 +85,9 @@ export const makeStyles = (c: ReturnType<typeof useColors>) =>
       backgroundColor: c.bg2,
       borderRadius: 16,
       overflow: "hidden",
-      marginBottom: 24,
-      ...Platform.select({
-        ios: {
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-        },
-        android: {
-          elevation: 3,
-        },
-        web: {
-          boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-        },
-      }),
+      marginBottom: 20,
+      borderWidth: 1,
+      borderColor: 'rgba(0,0,0,0.06)',
     },
     imageContainer: {
       position: "relative",
