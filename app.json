@@ -12,7 +12,14 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.lmchm.petstay",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLSchemes": [
+              "com.googleusercontent.apps.653735360683-rlhehoq4l4j44id0lg2qkpqvigeuhtl0"
+            ]
+          }
+        ]
       }
     },
     "android": {
@@ -67,7 +74,8 @@
           "locationAlwaysAndWhenInUsePermission": "Allow $(PRODUCT_NAME) to use your location to find nearby hosts even when the app is in the background."
         }
       ],
-      "expo-image-picker"
+      "expo-image-picker",
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": true,

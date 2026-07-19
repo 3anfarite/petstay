@@ -1,5 +1,5 @@
 import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { db } from '@/lib/firebaseConfig';
@@ -30,7 +30,7 @@ const SkeletonPulse = ({ width, height, borderRadius, style }: any) => {
 };
 
 const ListingSkeleton = ({ c }: { c: any }) => (
-    <View style={{ backgroundColor: c.bg2, borderRadius: 20, padding: 20, borderWidth: 1, borderColor: 'rgba(0,0,0,0.06)' }}>
+    <View style={[{ backgroundColor: c.bg2, borderRadius: 20, padding: 20 }, CardShadow]}>
         <SkeletonPulse width={90} height={24} borderRadius={12} />
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
             <View style={{ flex: 1, gap: 8 }}>
@@ -528,8 +528,7 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 20,
         padding: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
     },
     statusPill: {
         flexDirection: 'row',
@@ -683,8 +682,7 @@ const styles = StyleSheet.create({
     formSection: {
         borderRadius: 20,
         padding: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
     },
     sectionLabel: {
         fontSize: 17,

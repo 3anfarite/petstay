@@ -1,5 +1,6 @@
 import { useColors } from "@/hooks/use-theme-color";
 import { Ionicons } from "@expo/vector-icons";
+import { AppFonts, CardShadow } from "@/constants/theme";
 import { Image } from 'expo-image';
 import React from "react";
 import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -86,8 +87,7 @@ export const makeStyles = (c: ReturnType<typeof useColors>) =>
       borderRadius: 16,
       overflow: "hidden",
       marginBottom: 20,
-      borderWidth: 1,
-      borderColor: 'rgba(0,0,0,0.06)',
+      ...CardShadow,
     },
     imageContainer: {
       position: "relative",

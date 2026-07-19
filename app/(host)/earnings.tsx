@@ -1,4 +1,4 @@
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { BackButton } from '@/components/ui/BackButton';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -401,8 +401,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     gap: 4,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+    ...CardShadow,
   },
   comparisonLabel: {
     fontSize: 13,
@@ -501,8 +500,7 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 28,
     gap: 16,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+    ...CardShadow,
   },
   chartEmpty: {
     fontSize: 14,

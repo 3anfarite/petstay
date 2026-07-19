@@ -1,4 +1,4 @@
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Booking, BookingService } from '@/lib/bookingService';
@@ -75,8 +75,7 @@ const skeletonStyles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+    ...CardShadow,
   }
 });
 
@@ -529,8 +528,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     padding: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+    ...CardShadow,
   },
   statusPill: {
     flexDirection: 'row',

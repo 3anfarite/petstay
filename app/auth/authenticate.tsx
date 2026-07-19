@@ -1,17 +1,15 @@
-import { AppFonts } from '@/constants/theme';
 import { BackButton } from '@/components/ui/BackButton';
+import { AppFonts } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { AuthService } from '@/lib/authService';
 import { Ionicons } from '@expo/vector-icons';
-import * as AuthSession from 'expo-auth-session';
+import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import * as WebBrowser from 'expo-web-browser';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
     ActivityIndicator,
     Alert,
-    Animated,
     KeyboardAvoidingView,
     LayoutAnimation,
     Platform,
@@ -24,7 +22,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+    webClientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || '',
+    iosClientId: process.env.EXPO_PUBLIC_IOS_CLIENT_ID || '',
+});
 
 type AuthMode = 'login' | 'signup';
 
@@ -58,38 +59,32 @@ export default function AuthScreen() {
 
     const pwStrength = mode === 'signup' ? getPasswordStrength(password) : null;
 
-    // Google Auth Configuration
-    const [request, response, promptAsync] = AuthSession.useAuthRequest(
-        {
-            clientId: process.env.EXPO_PUBLIC_WEB_CLIENT_ID || process.env.EXPO_PUBLIC_WEB_CLEINT_ID || process.env.EXPO_WEB_CLEINT_ID || '',
-            scopes: ['openid', 'profile', 'email'],
-            responseType: AuthSession.ResponseType.IdToken,
-            redirectUri: AuthSession.makeRedirectUri(),
-        },
-        {
-            authorizationEndpoint: 'https://accounts.google.com/o/oauth2/v2/auth',
-            tokenEndpoint: 'https://oauth2.googleapis.com/token',
-            revocationEndpoint: 'https://oauth2.googleapis.com/revoke',
-        }
-    );
+    const handleGoogleSignIn = async () => {
+        try {
+            setIsLoadingAuth(true);
+            await GoogleSignin.hasPlayServices();
+            const response = await GoogleSignin.signIn();
 
-    useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.params;
-            if (id_token) {
-                setIsLoadingAuth(true);
-                AuthService.signInWithGoogle(id_token)
-                    .then(() => {
-                        setIsLoadingAuth(false);
-                        // No router.replace needed here! _layout.tsx will dynamically handle it because user & role changed globally!
-                    })
-                    .catch((err) => {
-                        setIsLoadingAuth(false);
-                        Alert.alert('Google Sign-In Failed', err.message);
-                    });
+            if (isSuccessResponse(response)) {
+                const idToken = response.data?.idToken;
+                if (!idToken) {
+                    throw new Error('No ID token returned from Google Sign-In');
+                }
+                await AuthService.signInWithGoogle(idToken);
+                // _layout.tsx handles navigation based on user & role state
+            } else {
+                // User cancelled or flow was interrupted
+                console.log('Google Sign-In was not successful:', response);
             }
+        } catch (error: any) {
+            if (error.code !== '12501' && error.code !== 'SIGN_IN_CANCELLED') {
+                console.error('Google Sign-In Error:', error);
+                Alert.alert('Google Sign-In Failed', error.message || 'Something went wrong');
+            }
+        } finally {
+            setIsLoadingAuth(false);
         }
-    }, [response]);
+    };
 
     const switchMode = (newMode: AuthMode) => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -258,8 +253,8 @@ export default function AuthScreen() {
 
                         <TouchableOpacity
                             style={[styles.socialButton, { backgroundColor: c.bg2, borderColor: c.border }]}
-                            onPress={() => promptAsync()}
-                            disabled={!request || isLoadingAuth}
+                            onPress={handleGoogleSignIn}
+                            disabled={isLoadingAuth}
                             activeOpacity={0.8}
                         >
                             <Ionicons name="logo-google" size={20} color="#4285F4" style={{ position: 'absolute', left: 20 }} />

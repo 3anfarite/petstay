@@ -1,5 +1,5 @@
 import { useLanguage } from '@/components/LanguageProvider';
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
 import { Ionicons } from '@expo/vector-icons';
@@ -169,8 +169,7 @@ const styles = StyleSheet.create({
         borderRadius: 24,
         alignItems: 'center',
         gap: 8,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
     },
     statValue: {
         fontSize: 24,
@@ -192,11 +191,10 @@ const styles = StyleSheet.create({
     actionCard: {
         flexDirection: 'row',
         alignItems: 'center',
+        borderRadius: 20,
         padding: 20,
-        borderRadius: 24,
-        gap: 16,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
+        marginBottom: 24,
     },
     actionTextContainer: {
         flex: 1,
@@ -214,12 +212,12 @@ const styles = StyleSheet.create({
     tipCard: {
         width: '100%',
         flexDirection: 'row',
-        padding: 16,
-        borderRadius: 20,
+        padding: 20,
+        borderRadius: 24,
         alignItems: 'center',
         gap: 16,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
+        marginBottom: 24,
     },
     tipIcon: {
         width: 48,

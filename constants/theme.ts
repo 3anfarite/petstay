@@ -57,3 +57,22 @@ export const AppFonts = {
   body: 'Lato_400Regular',
   bodyBold: 'Lato_700Bold',
 };
+
+export const CardShadow = Platform.select({
+  ios: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderWidth: 0,
+  },
+  android: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    elevation: 0,
+  },
+  default: {
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+  }
+});

@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { ListingService } from '@/lib/listingService';
 
 import { AuthService } from '@/lib/authService';
@@ -900,8 +900,7 @@ const styles = StyleSheet.create({
         padding: 24,
         borderRadius: 24,
         marginBottom: 24,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
     },
     profileMain: {
         flexDirection: 'row',
@@ -968,8 +967,7 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 24,
         marginBottom: 20,
-        borderWidth: 1,
-        borderColor: "rgba(0,0,0,0.06)",
+        ...CardShadow,
     },
     cardTitle: {
         fontSize: 17,

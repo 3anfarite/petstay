@@ -1,5 +1,5 @@
 import { useColors } from '@/hooks/use-theme-color';
-import { AppFonts } from '@/constants/theme';
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useRef, useEffect } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -147,8 +147,7 @@ const styles = StyleSheet.create({
         padding: 12,
         marginBottom: 16,
         gap: 14,
-        borderWidth: 1,
-        borderColor: 'rgba(0,0,0,0.06)',
+        ...CardShadow,
     },
     imageWrapper: {
         borderRadius: 14,

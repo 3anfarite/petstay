@@ -7,8 +7,10 @@ import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { Alert, Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Dimensions, StatusBar, StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+import { AuthService } from '@/lib/authService';
 
 const { width, height } = Dimensions.get('window');
 
@@ -17,6 +19,32 @@ export default function WelcomeScreen() {
     const c = useColors();
     const insets = useSafeAreaInsets();
     const { locale, setLocale } = useLanguage();
+    const [isLoadingAuth, setIsLoadingAuth] = React.useState(false);
+
+    const handleGoogleSignIn = async () => {
+        try {
+            setIsLoadingAuth(true);
+            await GoogleSignin.hasPlayServices();
+            const response = await GoogleSignin.signIn();
+
+            if (isSuccessResponse(response)) {
+                const idToken = response.data?.idToken;
+                if (!idToken) {
+                    throw new Error('No ID token returned from Google Sign-In');
+                }
+                await AuthService.signInWithGoogle(idToken);
+            } else {
+                console.log('Google Sign-In was not successful:', response);
+            }
+        } catch (error: any) {
+            if (error.code !== '12501' && error.code !== 'SIGN_IN_CANCELLED') {
+                console.error('Google Sign-In Error:', error);
+                Alert.alert('Google Sign-In Failed', error.message || 'Something went wrong');
+            }
+        } finally {
+            setIsLoadingAuth(false);
+        }
+    };
 
     const showLanguagePicker = () => {
         Alert.alert(
@@ -77,8 +105,16 @@ export default function WelcomeScreen() {
                         </Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={[styles.button, styles.socialButton, { borderColor: c.border }]}>
-                        <Ionicons name="logo-google" size={20} color={c.text} />
+                    <TouchableOpacity
+                        style={[styles.button, styles.socialButton, { borderColor: c.border }]}
+                        onPress={handleGoogleSignIn}
+                        disabled={isLoadingAuth}
+                    >
+                        {isLoadingAuth ? (
+                            <ActivityIndicator size="small" color={c.text} />
+                        ) : (
+                            <Ionicons name="logo-google" size={20} color={c.text} />
+                        )}
                         <Text style={[styles.buttonText, { color: c.text }]}>
                             {i18n.t('auth_continue_google', { locale })}
                         </Text>
