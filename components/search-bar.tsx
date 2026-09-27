@@ -7,9 +7,12 @@ import {
   Animated,
   Easing,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  View,
+  Text
 } from 'react-native';
 
+import { AppFonts, CardShadow } from '@/constants/theme';
 import { FilterModalContent, FilterState } from './filter-modal';
 import ExpandingModal from './search-modal';
 
@@ -45,16 +48,21 @@ export const SearchBar: React.FC<Props> = ({ onPress, onApply, listings = [] }) 
     <>
       <TouchableOpacity
         ref={containerRef}
-        activeOpacity={0.9}
-        style={[styles.container, { backgroundColor: c.bg2, borderColor: c.border }]}
+        activeOpacity={0.95}
+        style={[styles.container, { backgroundColor: c.bg2 }]}
         onPress={() => {
           // call optional external handler if provided
           onPress?.();
           open();
         }}
       >
-        <Feather name="search" size={20} color={c.text} />
-        <Animated.Text style={[styles.label, { color: c.textMuted, opacity: labelOpacity }]}>{i18n.t('search_placeholder')}</Animated.Text>
+        <View style={styles.searchIconContainer}>
+            <Feather name="search" size={24} color={c.text} style={styles.searchIcon} />
+        </View>
+        <Animated.View style={[styles.textContainer, { opacity: labelOpacity }]}>
+            <Text style={[styles.title, { color: c.text }]}>{i18n.t('search_title', { defaultValue: 'Find a sitter' })}</Text>
+            <Text style={[styles.subtitle, { color: c.textMuted }]}>{i18n.t('search_subtitle', { defaultValue: 'Any service • Any date • Any pet' })}</Text>
+        </Animated.View>
       </TouchableOpacity>
 
       <ExpandingModal
@@ -79,20 +87,38 @@ export const SearchBar: React.FC<Props> = ({ onPress, onApply, listings = [] }) 
 const makeStyles = (c: ReturnType<typeof useColors>) =>
   StyleSheet.create({
     container: {
-      height: 48,
-      borderRadius: 24,
+      height: 60,
+      borderRadius: 30,
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: 16,
+      paddingHorizontal: 20,
       marginHorizontal: 16,
-      marginVertical: 8,
-      gap: 8,
+      marginTop: 8,
+      marginBottom: 12,
+      gap: 16,
       backgroundColor: c.bg2,
-
-      borderWidth: 1,
+      ...CardShadow,
+      borderWidth: 0,
     },
-    label: {
-      fontSize: 16,
+    searchIconContainer: {
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    searchIcon: {
+      fontWeight: 'bold',
+    },
+    textContainer: {
+      flex: 1,
+      justifyContent: 'center',
+    },
+    title: {
+      fontSize: 15,
+      fontFamily: AppFonts.title,
+      marginBottom: 2,
+    },
+    subtitle: {
+      fontSize: 13,
+      fontFamily: AppFonts.body,
     },
     bar: {
       height: 48,

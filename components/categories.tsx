@@ -33,20 +33,20 @@ export const Categories = ({ selectedCategory, onCategorySelect }: CategoriesPro
               styles.cat,
               {
                 borderBottomWidth: isActive ? 2 : 0,
-                borderBottomColor: isActive ? c.primary : 'transparent',
+                borderBottomColor: isActive ? c.text : 'transparent',
               },
             ]}
           >
             <IconSymbol
               name={item.icon as any}
               size={24}
-              color={isActive ? c.primary : c.textMuted}
+              color={isActive ? c.text : c.textMuted}
             />
             <Text
               style={[
                 styles.catText,
                 {
-                  color: isActive ? c.primary : c.textMuted,
+                  color: isActive ? c.text : c.textMuted,
                   fontWeight: isActive ? '600' : '500',
                 },
               ]}

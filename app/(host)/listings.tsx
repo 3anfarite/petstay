@@ -1,4 +1,5 @@
 import { LocationCoords, LocationPickerModal } from '@/components/host/LocationPickerModal';
+import { BackButton } from '@/components/ui/BackButton';
 import { AppFonts, CardShadow } from '@/constants/theme';
 import { useColors } from '@/hooks/use-theme-color';
 import i18n from '@/i18n';
@@ -30,23 +31,17 @@ const SkeletonPulse = ({ width, height, borderRadius, style }: any) => {
 };
 
 const ListingSkeleton = ({ c }: { c: any }) => (
-    <View style={[{ backgroundColor: c.bg2, borderRadius: 20, padding: 20 }, CardShadow]}>
-        <SkeletonPulse width={90} height={24} borderRadius={12} />
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 16 }}>
-            <View style={{ flex: 1, gap: 8 }}>
-                <SkeletonPulse width="70%" height={20} />
-                <SkeletonPulse width="50%" height={16} />
+    <View style={[{ backgroundColor: c.bg2, borderRadius: 20, overflow: 'hidden' }, CardShadow]}>
+        <SkeletonPulse width="100%" height={180} borderRadius={0} />
+        <View style={{ padding: 16, gap: 10 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                <SkeletonPulse width="55%" height={20} />
+                <SkeletonPulse width={80} height={20} />
             </View>
-            <SkeletonPulse width={70} height={50} borderRadius={14} />
-        </View>
-        <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
-            <SkeletonPulse width={80} height={28} borderRadius={10} />
-            <SkeletonPulse width={80} height={28} borderRadius={10} />
-            <SkeletonPulse width={80} height={28} borderRadius={10} />
-        </View>
-        <View style={{ flexDirection: 'row', gap: 12, marginTop: 20 }}>
-            <SkeletonPulse width="80%" height={44} borderRadius={14} style={{ flex: 1 }} />
-            <SkeletonPulse width={48} height={44} borderRadius={14} />
+            <SkeletonPulse width="40%" height={16} />
+            <View style={{ flexDirection: 'row', gap: 8, marginTop: 4 }}>
+                <SkeletonPulse width={72} height={26} borderRadius={13} />
+            </View>
         </View>
     </View>
 );
@@ -59,6 +54,7 @@ export default function HostListings() {
 
     const [listings, setListings] = useState<Listing[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [statusFilter, setStatusFilter] = useState<'active' | 'inactive'>('active');
 
     // Modal Form States
     const [isFormVisible, setIsFormVisible] = useState(false);
@@ -238,20 +234,51 @@ export default function HostListings() {
         }
     };
 
+    const activeCount = listings.filter(l => l.status === 'active').length;
+    const inactiveCount = listings.filter(l => l.status === 'inactive').length;
+    const filteredListings = listings.filter(l => l.status === statusFilter);
+
     return (
         <View style={[styles.container, { backgroundColor: c.bg2, paddingTop: insets.top }]}>
+            {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerTop}>
-                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                        <Ionicons name="arrow-back" size={24} color={c.text} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={openCreateForm} style={[styles.addButton, { backgroundColor: c.text }]}>
-                        <Ionicons name="add" size={20} color={c.bg} />
-                        <Text style={[styles.addText, { color: c.bg }]}>{i18n.t('host_listings_new')}</Text>
+                    <BackButton style={styles.backBtn} icon="arrow-back" />
+                    <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_listings_title')}</Text>
+                    <TouchableOpacity onPress={openCreateForm} style={[styles.addButton, { backgroundColor: c.primary }]}>
+                        <Ionicons name="add" size={22} color="white" />
                     </TouchableOpacity>
                 </View>
-                <Text style={[styles.title, { color: c.text }]}>{i18n.t('host_listings_title')}</Text>
+                {!isLoading && listings.length > 0 && (
+                    <Text style={[styles.listingCount, { color: c.textMuted }]}>
+                        {listings.length} {listings.length === 1 ? 'listing' : 'listings'}
+                    </Text>
+                )}
             </View>
+
+            {/* Filter Tabs */}
+            {!isLoading && listings.length > 0 && (
+                <View style={styles.filterRow}>
+                    <TouchableOpacity
+                        style={[styles.filterTab, { backgroundColor: statusFilter === 'active' ? c.primary : c.bg }]}
+                        onPress={() => setStatusFilter('active')}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[styles.filterTabText, { color: statusFilter === 'active' ? 'white' : c.textMuted }]}>
+                            {i18n.t('host_card_status_active', { defaultValue: 'Active' })} ({activeCount})
+                        </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.filterTab, { backgroundColor: statusFilter === 'inactive' ? c.primary : c.bg }]}
+                        onPress={() => setStatusFilter('inactive')}
+                        activeOpacity={0.8}
+                    >
+                        <Text style={[styles.filterTabText, { color: statusFilter === 'inactive' ? 'white' : c.textMuted }]}>
+                            {i18n.t('host_card_status_inactive', { defaultValue: 'Inactive' })} ({inactiveCount})
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             {isLoading ? (
                 <View style={styles.listContent}>
@@ -260,67 +287,112 @@ export default function HostListings() {
                 </View>
             ) : (
                 <FlatList
-                    data={listings}
+                    data={filteredListings}
                     keyExtractor={item => item.id!}
                     contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={<Text style={[styles.emptyText, { color: c.textMuted }]}>{i18n.t('host_listings_empty')}</Text>}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <View style={[styles.emptyIconCircle, { backgroundColor: c.primary + '12' }]}>
+                                <Ionicons name="storefront-outline" size={48} color={c.primary} />
+                            </View>
+                            <Text style={[styles.emptyTitle, { color: c.text }]}>
+                                {statusFilter === 'inactive'
+                                    ? i18n.t('host_listings_no_inactive', { defaultValue: 'No inactive listings' })
+                                    : i18n.t('host_listings_empty')}
+                            </Text>
+                            <Text style={[styles.emptySubtitle, { color: c.textMuted }]}>
+                                {statusFilter === 'inactive'
+                                    ? i18n.t('host_listings_no_inactive_desc', { defaultValue: 'All your listings are currently active' })
+                                    : 'Create your first listing to start receiving bookings'}
+                            </Text>
+                            {statusFilter === 'active' && (
+                                <TouchableOpacity
+                                    style={[styles.emptyButton, { backgroundColor: c.primary }]}
+                                    onPress={openCreateForm}
+                                >
+                                    <Ionicons name="add" size={20} color="white" />
+                                    <Text style={styles.emptyButtonText}>{i18n.t('host_listings_new')}</Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
+                    }
                     renderItem={({ item }) => {
                         const isActive = item.status === 'active';
                         const servicesList = item.services || [];
                         return (
-                            <View style={[styles.card, { backgroundColor: c.bg2 }]}>
-                                {/* Status Pill */}
-                                <View style={[styles.statusPill, { backgroundColor: isActive ? '#E6F4EA' : '#FCE8E6' }]}>
-                                    <View style={[styles.statusDot, { backgroundColor: isActive ? '#1E8E3E' : '#D93025' }]} />
-                                    <Text style={[styles.statusText, { color: isActive ? '#1E8E3E' : '#D93025' }]}>
-                                        {isActive ? i18n.t('host_card_status_active') : i18n.t('host_card_status_inactive')}
-                                    </Text>
-                                </View>
-
-                                {/* Title + Price */}
-                                <View style={styles.titleRow}>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={1}>{item.title}</Text>
-                                        <View style={styles.infoRow}>
-                                            <Ionicons name="location" size={15} color={c.textMuted} />
-                                            <Text style={[styles.cardLocation, { color: c.textMuted }]} numberOfLines={1}>{item.location}</Text>
+                            <TouchableOpacity
+                                style={[styles.card, { backgroundColor: c.bg2 }]}
+                                activeOpacity={0.95}
+                                onLongPress={() => handleDeleteListing(item.id!)}
+                                delayLongPress={600}
+                            >
+                                {/* Cover Image with Overlays */}
+                                {item.image ? (
+                                    <View style={styles.cardImageContainer}>
+                                        <Image source={{ uri: item.image }} style={styles.cardImage} contentFit="cover" />
+                                        {/* Status Badge */}
+                                        <View style={[styles.statusBadge, { backgroundColor: isActive ? 'rgba(30,142,62,0.85)' : 'rgba(217,48,37,0.85)' }]}>
+                                            <View style={[styles.statusDot, { backgroundColor: 'white' }]} />
+                                            <Text style={styles.statusBadgeText}>
+                                                {isActive ? i18n.t('host_card_status_active') : i18n.t('host_card_status_inactive')}
+                                            </Text>
                                         </View>
+                                        {/* Edit Overlay Button */}
+                                        <TouchableOpacity
+                                            style={styles.editOverlay}
+                                            onPress={() => openEditForm(item)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Ionicons name="pencil" size={14} color="white" />
+                                            <Text style={styles.editOverlayText}>{i18n.t('host_action_edit')}</Text>
+                                        </TouchableOpacity>
                                     </View>
-                                    <View style={[styles.priceChip, { backgroundColor: c.bg }]}>
-                                        <Text style={[styles.priceText, { color: c.text }]}>{item.price} MAD</Text>
-                                        <Text style={[styles.nightText, { color: c.textMuted }]}>{getServiceUnit(item.services?.[0])}</Text>
-                                    </View>
-                                </View>
-
-                                {/* Services */}
-                                {servicesList.length > 0 && (
-                                    <View style={styles.servicesRow}>
-                                        {servicesList.slice(0, 4).map((s: string) => (
-                                            <View key={s} style={[styles.serviceChip, { backgroundColor: c.bg }]}>
-                                                <Ionicons name="checkmark-circle" size={14} color={c.primary} />
-                                                <Text style={[styles.serviceChipText, { color: c.text }]}>{i18n.t(`service_${s}`, { defaultValue: s })}</Text>
-                                            </View>
-                                        ))}
+                                ) : (
+                                    <View style={[styles.cardImagePlaceholder, { backgroundColor: c.bg }]}>
+                                        <Ionicons name="image-outline" size={32} color={c.border} />
+                                        <View style={[styles.statusBadge, { backgroundColor: isActive ? 'rgba(30,142,62,0.85)' : 'rgba(217,48,37,0.85)' }]}>
+                                            <View style={[styles.statusDot, { backgroundColor: 'white' }]} />
+                                            <Text style={styles.statusBadgeText}>
+                                                {isActive ? i18n.t('host_card_status_active') : i18n.t('host_card_status_inactive')}
+                                            </Text>
+                                        </View>
+                                        <TouchableOpacity
+                                            style={styles.editOverlay}
+                                            onPress={() => openEditForm(item)}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Ionicons name="pencil" size={14} color="white" />
+                                            <Text style={styles.editOverlayText}>{i18n.t('host_action_edit')}</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 )}
 
-                                {/* Actions */}
-                                <View style={styles.cardActions}>
-                                    <TouchableOpacity
-                                        style={[styles.actionBtn, { backgroundColor: c.primary }]}
-                                        onPress={() => openEditForm(item)}
-                                    >
-                                        <Ionicons name="pencil" size={16} color="white" />
-                                        <Text style={[styles.actionBtnText, { color: 'white' }]}>{i18n.t('host_action_edit')}</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.actionBtnOutline, { borderColor: c.border }]}
-                                        onPress={() => handleDeleteListing(item.id!)}
-                                    >
-                                        <Ionicons name="trash-outline" size={16} color="#D93025" />
-                                    </TouchableOpacity>
+                                {/* Card Body */}
+                                <View style={styles.cardBody}>
+                                    <View style={styles.titleRow}>
+                                        <Text style={[styles.cardTitle, { color: c.text }]} numberOfLines={1}>{item.title}</Text>
+                                        <Text style={[styles.priceAmount, { color: c.text }]}>
+                                            {item.price} <Text style={[styles.priceCurrency, { color: c.textMuted }]}>MAD{getServiceUnit(item.services?.[0])}</Text>
+                                        </Text>
+                                    </View>
+                                    <View style={styles.locationRow}>
+                                        <Ionicons name="location-outline" size={14} color={c.textMuted} />
+                                        <Text style={[styles.cardLocation, { color: c.textMuted }]} numberOfLines={1}>{item.location}</Text>
+                                    </View>
+                                    {servicesList.length > 0 && (
+                                        <View style={styles.servicesRow}>
+                                            {servicesList.slice(0, 3).map((s: string) => (
+                                                <View key={s} style={[styles.serviceChip, { backgroundColor: c.primary + '10' }]}>
+                                                    <Text style={[styles.serviceChipText, { color: c.primary }]}>
+                                                        {i18n.t(`service_${s}`, { defaultValue: s })}
+                                                    </Text>
+                                                </View>
+                                            ))}
+                                        </View>
+                                    )}
                                 </View>
-                            </View>
+                            </TouchableOpacity>
                         );
                     }}
                 />
@@ -328,10 +400,10 @@ export default function HostListings() {
 
             {/* Editor Modal */}
             <Modal visible={isFormVisible} animationType="slide" presentationStyle="pageSheet">
-                <View style={[styles.modalContainer, { backgroundColor: c.bg2, paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
-                    <View style={[styles.modalHeader, { borderBottomColor: c.border }]}>
-                        <TouchableOpacity onPress={() => setIsFormVisible(false)} style={styles.modalCancel}>
-                            <Ionicons name="close" size={24} color={c.text} />
+                <View style={[styles.modalContainer, { backgroundColor: c.bg, paddingTop: Platform.OS === 'android' ? insets.top : 0 }]}>
+                    <View style={[styles.modalHeader, { backgroundColor: c.bg2, borderBottomColor: c.border }]}>
+                        <TouchableOpacity onPress={() => setIsFormVisible(false)} style={[styles.modalCancel, { backgroundColor: c.bg }]}>
+                            <Ionicons name="close" size={20} color={c.text} />
                         </TouchableOpacity>
                         <Text style={[styles.modalTitle, { color: c.text }]}>{editingId ? i18n.t('host_form_edit_title') : i18n.t('host_form_new_title')}</Text>
                         <TouchableOpacity
@@ -348,8 +420,6 @@ export default function HostListings() {
                     </View>
 
                     <ScrollView contentContainerStyle={styles.formContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
-                        {/* Section: Photos */}
                         <View style={[styles.formSection, { backgroundColor: c.bg2 }]}>
                             <Text style={[styles.sectionLabel, { color: c.text }]}>{i18n.t('host_form_photos')}</Text>
                             <View style={styles.photoContainer}>
@@ -370,10 +440,7 @@ export default function HostListings() {
                                     {formGallery.map((uri, i) => (
                                         <View key={i} style={[styles.galleryThumbnail, { backgroundColor: c.bg, borderColor: c.border }]}>
                                             <Image source={{ uri }} style={{ width: '100%', height: '100%', borderRadius: 12 }} />
-                                            <TouchableOpacity
-                                                style={styles.removeGalleryBtn}
-                                                onPress={() => removeGalleryImage(i)}
-                                            >
+                                            <TouchableOpacity style={styles.removeGalleryBtn} onPress={() => removeGalleryImage(i)}>
                                                 <Ionicons name="close-circle" size={22} color="white" />
                                             </TouchableOpacity>
                                         </View>
@@ -385,391 +452,112 @@ export default function HostListings() {
                             </View>
                         </View>
 
-                        {/* Section: Details */}
                         <View style={[styles.formSection, { backgroundColor: c.bg2 }]}>
                             <Text style={[styles.sectionLabel, { color: c.text }]}>Listing Details</Text>
-
                             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>
                                 {AVAILABLE_SERVICES.map(service => (
                                     <TouchableOpacity
                                         key={service}
-                                        style={[
-                                            styles.serviceSelectChip,
-                                            {
-                                                backgroundColor: formService === service ? c.primary : c.bg,
-                                                borderColor: formService === service ? c.primary : c.border
-                                            }
-                                        ]}
+                                        style={[styles.serviceSelectChip, { backgroundColor: formService === service ? c.primary : c.bg, borderColor: formService === service ? c.primary : c.border }]}
                                         onPress={() => setFormService(service)}
                                     >
-                                        <Text style={{
-                                            color: formService === service ? 'white' : c.text,
-                                            fontFamily: formService === service ? AppFonts.bodyBold : AppFonts.body
-                                        }}>
+                                        <Text style={{ color: formService === service ? 'white' : c.text, fontFamily: formService === service ? AppFonts.bodyBold : AppFonts.body }}>
                                             {i18n.t(`service_${service}`, { defaultValue: service })}
                                         </Text>
                                     </TouchableOpacity>
                                 ))}
                             </ScrollView>
-
                             <View style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]}>
                                 <Ionicons name="text-outline" size={20} color={c.textMuted} />
-                                <TextInput
-                                    style={[styles.groupInput, { color: c.text }]}
-                                    placeholder={i18n.t('host_form_title_ph')}
-                                    placeholderTextColor={c.textMuted}
-                                    value={formTitle}
-                                    onChangeText={setFormTitle}
-                                />
+                                <TextInput style={[styles.groupInput, { color: c.text }]} placeholder={i18n.t('host_form_title_ph')} placeholderTextColor={c.textMuted} value={formTitle} onChangeText={setFormTitle} />
                             </View>
-
-                            <TouchableOpacity
-                                style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]}
-                                onPress={() => setIsMapVisible(true)}
-                            >
+                            <TouchableOpacity style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]} onPress={() => setIsMapVisible(true)}>
                                 <Ionicons name="location-outline" size={20} color={c.textMuted} />
-                                <Text style={[styles.groupInput, { color: formLocation ? c.text : c.textMuted }]} numberOfLines={1}>
-                                    {formLocation || i18n.t('host_form_location_ph')}
-                                </Text>
+                                <Text style={[styles.groupInput, { color: formLocation ? c.text : c.textMuted }]} numberOfLines={1}>{formLocation || i18n.t('host_form_location_ph')}</Text>
                                 <Ionicons name="chevron-forward" size={18} color={c.textMuted} />
                             </TouchableOpacity>
-
                             <View style={[styles.inputGroup, { backgroundColor: c.bg, borderColor: c.border }]}>
                                 <Text style={{ fontSize: 18, color: c.textMuted }}>MAD</Text>
-                                <TextInput
-                                    style={[styles.groupInput, { color: c.text }]}
-                                    placeholder={i18n.t('host_form_price_ph')}
-                                    placeholderTextColor={c.textMuted}
-                                    keyboardType="numeric"
-                                    value={formPrice}
-                                    onChangeText={setFormPrice}
-                                />
+                                <TextInput style={[styles.groupInput, { color: c.text }]} placeholder={i18n.t('host_form_price_ph')} placeholderTextColor={c.textMuted} keyboardType="numeric" value={formPrice} onChangeText={setFormPrice} />
                                 <Text style={{ fontSize: 13, color: c.textMuted, fontFamily: AppFonts.body }}>{getServiceUnit(formService)}</Text>
                             </View>
                         </View>
 
-                        {/* Section: Description */}
                         <View style={[styles.formSection, { backgroundColor: c.bg2 }]}>
                             <Text style={[styles.sectionLabel, { color: c.text }]}>{i18n.t('host_form_about')}</Text>
-                            <TextInput
-                                style={[styles.textArea, { backgroundColor: c.bg, color: c.text, borderColor: c.border }]}
-                                placeholder={i18n.t('host_form_about_ph')}
-                                placeholderTextColor={c.textMuted}
-                                multiline
-                                numberOfLines={5}
-                                textAlignVertical="top"
-                                value={formAbout}
-                                onChangeText={setFormAbout}
-                            />
+                            <TextInput style={[styles.textArea, { backgroundColor: c.bg, color: c.text, borderColor: c.border }]} placeholder={i18n.t('host_form_about_ph')} placeholderTextColor={c.textMuted} multiline numberOfLines={5} textAlignVertical="top" value={formAbout} onChangeText={setFormAbout} />
                         </View>
 
-                <LocationPickerModal
-                    visible={isMapVisible}
-                    onClose={() => setIsMapVisible(false)}
-                    initialCoords={formLocationCoords}
-                    onConfirm={(addr, coords) => {
-                        setFormLocation(addr);
-                        setFormLocationCoords(coords);
-                        setIsMapVisible(false);
-                    }}
-                />
-            </ScrollView>
+                        <LocationPickerModal visible={isMapVisible} onClose={() => setIsMapVisible(false)} initialCoords={formLocationCoords} onConfirm={(addr, coords) => { setFormLocation(addr); setFormLocationCoords(coords); setIsMapVisible(false); }} />
+                    </ScrollView>
+                </View>
+            </Modal>
         </View>
-            </Modal >
-
-        </View >
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        marginBottom: 12,
-    },
-    headerTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.05)',
-    },
-    title: {
-        fontSize: 32,
-        fontFamily: AppFonts.title,
-    },
-    addButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 24,
-        gap: 6,
-    },
-    addText: {
-        fontWeight: 'bold',
-        fontSize: 14,
-    },
-    listContent: {
-        paddingHorizontal: 20,
-        paddingBottom: 40,
-        gap: 24,
-    },
-    card: {
-        borderRadius: 20,
-        padding: 20,
-        ...CardShadow,
-    },
-    statusPill: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        alignSelf: 'flex-start',
-        gap: 8,
-        paddingVertical: 6,
-        paddingHorizontal: 14,
-        borderRadius: 20,
-        marginBottom: 16,
-    },
-    statusDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    statusText: {
-        fontSize: 12,
-        fontFamily: AppFonts.bodyBold,
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    titleRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: 16,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontFamily: AppFonts.title,
-        marginBottom: 6,
-    },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-    cardLocation: {
-        fontSize: 14,
-        fontFamily: AppFonts.body,
-        flex: 1,
-    },
-    priceChip: {
-        alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 14,
-        marginLeft: 12,
-    },
-    priceText: {
-        fontSize: 18,
-        fontFamily: AppFonts.title,
-    },
-    nightText: {
-        fontSize: 11,
-        fontFamily: AppFonts.bodyBold,
-        textTransform: 'uppercase',
-        marginTop: 2,
-    },
-    servicesRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-        marginBottom: 20,
-    },
-    serviceChip: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        paddingVertical: 6,
-        paddingHorizontal: 12,
-        borderRadius: 10,
-    },
-    serviceChipText: {
-        fontSize: 13,
-        fontFamily: AppFonts.body,
-    },
-    cardActions: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    actionBtn: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 13,
-        borderRadius: 14,
-        gap: 8,
-    },
-    actionBtnOutline: {
-        width: 48,
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 13,
-        borderRadius: 14,
-        borderWidth: 1,
-    },
-    actionBtnText: {
-        fontSize: 14,
-        fontFamily: AppFonts.bodyBold,
-    },
-    emptyText: {
-        textAlign: 'center',
-        marginTop: 40,
-        fontSize: 16,
-        fontFamily: AppFonts.body,
-    },
+    container: { flex: 1 },
+    header: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 12 },
+    headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    backBtn: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
+    title: { fontSize: 20, fontFamily: AppFonts.title },
+    addButton: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+    listingCount: { fontSize: 14, fontFamily: AppFonts.body, marginTop: 8, textAlign: 'center' },
+    // Filter Tabs
+    filterRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 10, marginBottom: 16 },
+    filterTab: { flex: 1, paddingVertical: 10, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+    filterTabText: { fontSize: 14, fontFamily: AppFonts.bodyBold },
+    listContent: { paddingHorizontal: 20, paddingBottom: 40, gap: 20 },
+    // Card
+    card: { borderRadius: 20, overflow: 'hidden', ...CardShadow },
+    cardImageContainer: { width: '100%', height: 180, position: 'relative' },
+    cardImage: { width: '100%', height: '100%' },
+    cardImagePlaceholder: { width: '100%', height: 140, justifyContent: 'center', alignItems: 'center', position: 'relative' },
+    statusBadge: { position: 'absolute', top: 12, left: 12, flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 5, paddingHorizontal: 10, borderRadius: 20 },
+    statusDot: { width: 6, height: 6, borderRadius: 3 },
+    statusBadgeText: { color: 'white', fontSize: 11, fontFamily: AppFonts.bodyBold, textTransform: 'uppercase', letterSpacing: 0.5 },
+    editOverlay: { position: 'absolute', top: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: 'rgba(0,0,0,0.55)', paddingVertical: 6, paddingHorizontal: 12, borderRadius: 20 },
+    editOverlayText: { color: 'white', fontSize: 12, fontFamily: AppFonts.bodyBold },
+    cardBody: { padding: 16 },
+    titleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
+    cardTitle: { fontSize: 17, fontFamily: AppFonts.title, flex: 1, marginRight: 12 },
+    locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: 10 },
+    cardLocation: { fontSize: 13, fontFamily: AppFonts.body, flex: 1 },
+    priceAmount: { fontSize: 17, fontFamily: AppFonts.title },
+    priceCurrency: { fontSize: 12, fontFamily: AppFonts.body, fontWeight: '400' },
+    servicesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    serviceChip: { paddingVertical: 4, paddingHorizontal: 10, borderRadius: 13 },
+    serviceChipText: { fontSize: 12, fontFamily: AppFonts.bodyBold },
+    // Empty State
+    emptyContainer: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 },
+    emptyIconCircle: { width: 96, height: 96, borderRadius: 48, justifyContent: 'center', alignItems: 'center', marginBottom: 24 },
+    emptyTitle: { fontSize: 20, fontFamily: AppFonts.title, marginBottom: 8, textAlign: 'center' },
+    emptySubtitle: { fontSize: 15, fontFamily: AppFonts.body, textAlign: 'center', lineHeight: 22, marginBottom: 28 },
+    emptyButton: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 14, gap: 8 },
+    emptyButtonText: { color: 'white', fontFamily: AppFonts.bodyBold, fontSize: 16 },
     // Form Modal
-    modalContainer: {
-        flex: 1,
-    },
-    modalHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        ...Platform.select({
-            ios: { paddingTop: 20 }
-        }),
-    },
-    modalCancel: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontFamily: AppFonts.title,
-    },
-    saveBtn: {
-        paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 20,
-    },
-    saveBtnText: {
-        color: 'white',
-        fontFamily: AppFonts.bodyBold,
-        fontSize: 15,
-    },
-    formContent: {
-        padding: 20,
-        paddingBottom: 60,
-        gap: 24,
-    },
-    formSection: {
-        borderRadius: 20,
-        padding: 20,
-        ...CardShadow,
-    },
-    sectionLabel: {
-        fontSize: 17,
-        fontFamily: AppFonts.title,
-        marginBottom: 16,
-    },
-    inputGroup: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 14,
-        borderWidth: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        marginBottom: 12,
-        gap: 12,
-    },
-    serviceSelectChip: {
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 20,
-        borderWidth: 1,
-    },
-    groupInput: {
-        flex: 1,
-        fontSize: 16,
-        fontFamily: AppFonts.body,
-    },
-    textArea: {
-        borderWidth: 1,
-        borderRadius: 14,
-        padding: 16,
-        fontSize: 16,
-        fontFamily: AppFonts.body,
-        minHeight: 140,
-    },
-    photoContainer: {
-        gap: 16,
-    },
-    mainPhotoPicker: {
-        width: '100%',
-        height: 180,
-        borderRadius: 18,
-        borderWidth: 2,
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
-    photoPlaceholder: {
-        alignItems: 'center',
-        gap: 8,
-    },
-    photoIconCircle: {
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 4,
-    },
-    photoPlaceholderText: {
-        fontSize: 15,
-        fontFamily: AppFonts.bodyBold,
-    },
-    photoPlaceholderHint: {
-        fontSize: 13,
-        fontFamily: AppFonts.body,
-    },
-    galleryRow: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    galleryThumbnail: {
-        width: 80,
-        height: 80,
-        borderRadius: 14,
-        borderWidth: 2,
-        borderStyle: 'dashed',
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
-    removeGalleryBtn: {
-        position: 'absolute',
-        top: -4,
-        right: -4,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        borderRadius: 12,
-    },
+    modalContainer: { flex: 1 },
+    modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, ...Platform.select({ ios: { paddingTop: 20 } }) },
+    modalCancel: { width: 36, height: 36, borderRadius: 18, justifyContent: 'center', alignItems: 'center' },
+    modalTitle: { fontSize: 18, fontFamily: AppFonts.title },
+    saveBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20 },
+    saveBtnText: { color: 'white', fontFamily: AppFonts.bodyBold, fontSize: 15 },
+    formContent: { padding: 20, paddingBottom: 60, gap: 24 },
+    formSection: { borderRadius: 20, padding: 20, ...CardShadow },
+    sectionLabel: { fontSize: 17, fontFamily: AppFonts.title, marginBottom: 16 },
+    inputGroup: { flexDirection: 'row', alignItems: 'center', borderRadius: 14, borderWidth: 1, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 12, gap: 12 },
+    serviceSelectChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
+    groupInput: { flex: 1, fontSize: 16, fontFamily: AppFonts.body },
+    textArea: { borderWidth: 1, borderRadius: 14, padding: 16, fontSize: 16, fontFamily: AppFonts.body, minHeight: 140 },
+    photoContainer: { gap: 16 },
+    mainPhotoPicker: { width: '100%', height: 180, borderRadius: 18, borderWidth: 2, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+    photoPlaceholder: { alignItems: 'center', gap: 8 },
+    photoIconCircle: { width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', marginBottom: 4 },
+    photoPlaceholderText: { fontSize: 15, fontFamily: AppFonts.bodyBold },
+    photoPlaceholderHint: { fontSize: 13, fontFamily: AppFonts.body },
+    galleryRow: { flexDirection: 'row', gap: 12 },
+    galleryThumbnail: { width: 80, height: 80, borderRadius: 14, borderWidth: 2, borderStyle: 'dashed', justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+    removeGalleryBtn: { position: 'absolute', top: -4, right: -4, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12 },
 });
+
